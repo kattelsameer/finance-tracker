@@ -1,0 +1,28 @@
+version: '3.8'
+
+# Development compose file - MySQL only
+# Usage: docker-compose -f docker-compose.dev.yml up -d
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: finance-tracker-mysql-dev
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: finance_tracker
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: financeuser
+      MYSQL_PASSWORD: financepass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data_dev:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data_dev:
+    driver: local
