@@ -31,6 +31,10 @@ public enum ErrorCode {
     OPERATION_NOT_ALLOWED(4003, "Operation not allowed", 403),
     INVALID_TRANSFER(4004, "Invalid transfer - source and destination accounts must be different", 400),
     BUDGET_EXCEEDED(4005, "Budget limit exceeded", 400),
+    TAG_ALREADY_EXISTS(4006, "Tag with this name already exists", 409),
+    INVALID_DATE_RANGE(4007, "End date must be after start date", 400),
+    ACCOUNT_TYPE_NOT_FOUND(4008, "Account type not found", 404),
+    INVALID_CATEGORY_TYPE(4009, "Invalid category type for this transaction", 400),
     
     // Server errors (5000-5099)
     INTERNAL_ERROR(5001, "An internal error occurred", 500),

@@ -86,8 +86,8 @@ public class AuthService {
         
         // Check if account is locked
         if (user.isLocked()) {
-            if (user.getLockoutUntil() != null && 
-                    user.getLockoutUntil().isBefore(LocalDateTime.now())) {
+            if (user.getLockedUntil() != null && 
+                    Instant.now().isAfter(user.getLockedUntil())) {
                 // Lockout period has passed, reset
                 user.resetFailedAttempts();
                 userRepository.save(user);
@@ -102,7 +102,7 @@ public class AuthService {
             user.incrementFailedAttempts();
             
             if (user.getFailedLoginAttempts() >= MAX_LOGIN_ATTEMPTS) {
-                user.lockAccount(LocalDateTime.now().plusMinutes(LOCKOUT_DURATION_MINUTES));
+                user.lockAccount(LOCKOUT_DURATION_MINUTES);
                 userRepository.save(user);
                 logger.warn("Account locked due to too many failed attempts: {}", user.getUsername());
                 throw new ApiException(ErrorCode.ACCOUNT_LOCKED);
@@ -115,7 +115,7 @@ public class AuthService {
         
         // Successful login - reset failed attempts
         user.resetFailedAttempts();
-        user.setLastLoginAt(LocalDateTime.now());
+        user.setLastLoginAt(Instant.now());
         userRepository.save(user);
         
         // Generate JWT token
@@ -181,6 +181,10 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         
+        LocalDateTime createdAtLocal = user.getCreatedAt() != null 
+                ? LocalDateTime.ofInstant(user.getCreatedAt(), ZoneId.systemDefault()) 
+                : null;
+        
         return new UserResponse(
                 user.getId(),
                 user.getUsername(),
@@ -188,7 +192,7 @@ public class AuthService {
                 user.getDisplayName(),
                 user.getDefaultCurrency(),
                 user.getTimezone(),
-                user.getCreatedAt()
+                createdAtLocal
         );
     }
     
