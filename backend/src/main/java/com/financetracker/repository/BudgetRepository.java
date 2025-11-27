@@ -49,4 +49,7 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
     List<Budget> findActiveBudgetsWithAlertsEnabled(
             @Param("userId") Long userId,
             @Param("currentDate") LocalDate currentDate);
+    
+    @Query("SELECT b FROM Budget b WHERE b.user.id = :userId AND b.isActive = true")
+    List<Budget> findActiveByUserId(@Param("userId") Long userId);
 }

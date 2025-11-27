@@ -6,6 +6,7 @@ import { MainLayout } from './components/MainLayout';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { ReportsPage } from './pages/ReportsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,7 +40,7 @@ function App() {
               <Route path="categories" element={<div>Categories Page (Coming Soon)</div>} />
               <Route path="tags" element={<div>Tags Page (Coming Soon)</div>} />
               <Route path="budgets" element={<div>Budgets Page (Coming Soon)</div>} />
-              <Route path="reports" element={<div>Reports Page (Coming Soon)</div>} />
+              <Route path="reports" element={<ReportsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

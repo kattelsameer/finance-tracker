@@ -271,3 +271,80 @@ export interface PageResponse<T> {
   totalPages: number;
   last: boolean;
 }
+
+// Dashboard & Reporting Types
+
+export interface CategorySpending {
+  categoryId: number;
+  categoryName: string;
+  categoryType: 'INCOME' | 'EXPENSE';
+  totalAmount: number;
+  transactionCount: number;
+  percentageOfTotal: number;
+}
+
+export interface MonthlyTrend {
+  month: string;
+  income: number;
+  expenses: number;
+}
+
+export interface BudgetStatus {
+  budgetId: number;
+  budgetName: string;
+  categoryName?: string;
+  budgetAmount: number;
+  spentAmount: number;
+  percentageUsed: number;
+  status: 'ok' | 'warning' | 'exceeded';
+}
+
+export interface DashboardStats {
+  totalIncome: number;
+  totalExpenses: number;
+  netSavings: number;
+  totalBalance: number;
+  activeAccountsCount: number;
+  topSpendingCategories: CategorySpending[];
+  monthlyTrends: MonthlyTrend[];
+  budgetStatuses: BudgetStatus[];
+}
+
+export interface CategoryBreakdown {
+  categoryId: number;
+  categoryName: string;
+  categoryType: 'INCOME' | 'EXPENSE';
+  totalAmount: number;
+  transactionCount: number;
+  percentageOfTotal: number;
+}
+
+export interface AccountBreakdown {
+  accountId: number;
+  accountName: string;
+  income: number;
+  expenses: number;
+  netChange: number;
+  transactionCount: number;
+}
+
+export interface DailyBreakdown {
+  date: string;
+  income: number;
+  expenses: number;
+  netChange: number;
+  transactionCount: number;
+}
+
+export interface TransactionReport {
+  startDate: string;
+  endDate: string;
+  totalIncome: number;
+  totalExpenses: number;
+  netAmount: number;
+  transactionCount: number;
+  categoryBreakdown: CategoryBreakdown[];
+  accountBreakdown: AccountBreakdown[];
+  dailyBreakdown: DailyBreakdown[];
+}
+
