@@ -38,4 +38,9 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     long countActiveAccountsByUserId(@Param("userId") Long userId);
     
     List<Account> findByUserIdAndAccountTypeId(Long userId, Integer accountTypeId);
+    
+    @Query("SELECT COALESCE(SUM(a.currentBalance), 0) FROM Account a WHERE a.user.id = :userId AND a.isActive = true")
+    BigDecimal sumCurrentBalanceByUserId(@Param("userId") Long userId);
+    
+    long countByUserIdAndIsActive(Long userId, Boolean isActive);
 }

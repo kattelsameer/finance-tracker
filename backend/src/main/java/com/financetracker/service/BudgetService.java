@@ -216,7 +216,7 @@ public class BudgetService {
                 .build();
     }
     
-    private BigDecimal calculateSpentAmount(Budget budget, Long userId) {
+    public BigDecimal calculateSpentAmount(Budget budget, Long userId) {
         LocalDate startDate = calculatePeriodStartDate(budget);
         LocalDate endDate = calculatePeriodEndDate(budget);
         
