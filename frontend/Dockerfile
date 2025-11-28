@@ -12,6 +12,9 @@ RUN rm -rf node_modules package-lock.json && npm install
 # Copy source code
 COPY . .
 
+# Set API URL to empty for Docker (nginx will proxy /api requests to backend)
+ENV VITE_API_BASE_URL=""
+
 # Build the application
 RUN npm run build
 
