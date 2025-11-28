@@ -238,19 +238,18 @@ public class RecurringTransactionService {
     }
     
     private void createTransactionFromRecurring(RecurringTransaction recurring) {
-        Transaction transaction = Transaction.builder()
-                .user(recurring.getUser())
-                .account(recurring.getAccount())
-                .category(recurring.getCategory())
-                .transactionType(recurring.getTransactionType())
-                .amount(recurring.getAmount())
-                .currency(recurring.getCurrency())
-                .transactionDate(recurring.getNextOccurrence())
-                .description(recurring.getDescription())
-                .isRecurring(true)
-                .recurringTransactionId(recurring.getId())
-                .transferToAccount(recurring.getTransferToAccount())
-                .build();
+        Transaction transaction = new Transaction();
+        transaction.setUser(recurring.getUser());
+        transaction.setAccount(recurring.getAccount());
+        transaction.setCategory(recurring.getCategory());
+        transaction.setTransactionType(recurring.getTransactionType());
+        transaction.setAmount(recurring.getAmount());
+        transaction.setCurrency(recurring.getCurrency());
+        transaction.setTransactionDate(recurring.getNextOccurrence());
+        transaction.setDescription(recurring.getDescription());
+        transaction.setIsRecurring(true);
+        transaction.setRecurringTransactionId(recurring.getId());
+        transaction.setTransferToAccount(recurring.getTransferToAccount());
         
         transactionRepository.save(transaction);
     }

@@ -4,8 +4,9 @@ import com.financetracker.dto.CreateSavedSearchRequest;
 import com.financetracker.dto.SavedSearchResponse;
 import com.financetracker.entity.SavedSearch;
 import com.financetracker.entity.User;
-import com.financetracker.exception.ResourceNotFoundException;
-import com.financetracker.exception.ValidationException;
+import com.financetracker.exception.ApiException;
+import com.financetracker.exception.ErrorCode;
+// ValidationException replaced
 import com.financetracker.repository.SavedSearchRepository;
 import com.financetracker.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,7 @@ public class SavedSearchService {
     @Transactional(readOnly = true)
     public SavedSearchResponse getSavedSearchById(Long id, Long userId) {
         SavedSearch savedSearch = savedSearchRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Saved search not found"));
+                .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "Saved search not found"));
         return mapToResponse(savedSearch);
     }
     
@@ -41,11 +42,11 @@ public class SavedSearchService {
     public SavedSearchResponse createSavedSearch(CreateSavedSearchRequest request, Long userId) {
         // Check if search name already exists for user
         if (savedSearchRepository.existsByUserIdAndSearchName(userId, request.getSearchName())) {
-            throw new ValidationException("A saved search with this name already exists");
+            throw new ApiException(ErrorCode.DUPLICATE_RESOURCE, "A saved search with this name already exists");
         }
         
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "User not found"));
         
         // If this search should be default, unset any existing default
         if (Boolean.TRUE.equals(request.getIsDefault())) {
@@ -70,12 +71,12 @@ public class SavedSearchService {
     @Transactional
     public SavedSearchResponse updateSavedSearch(Long id, CreateSavedSearchRequest request, Long userId) {
         SavedSearch savedSearch = savedSearchRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Saved search not found"));
+                .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "Saved search not found"));
         
         // Check if new name conflicts with another search
         if (!savedSearch.getSearchName().equals(request.getSearchName()) &&
                 savedSearchRepository.existsByUserIdAndSearchName(userId, request.getSearchName())) {
-            throw new ValidationException("A saved search with this name already exists");
+            throw new ApiException(ErrorCode.DUPLICATE_RESOURCE, "A saved search with this name already exists");
         }
         
         // If this search should be default, unset any existing default
@@ -100,14 +101,14 @@ public class SavedSearchService {
     @Transactional
     public void deleteSavedSearch(Long id, Long userId) {
         SavedSearch savedSearch = savedSearchRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Saved search not found"));
+                .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "Saved search not found"));
         savedSearchRepository.delete(savedSearch);
     }
     
     @Transactional
     public SavedSearchResponse setDefaultSearch(Long id, Long userId) {
         SavedSearch savedSearch = savedSearchRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Saved search not found"));
+                .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "Saved search not found"));
         
         // Unset any existing default
         savedSearchRepository.findByUserIdAndIsDefaultTrue(userId)
