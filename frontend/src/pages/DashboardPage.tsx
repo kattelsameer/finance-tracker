@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { dashboardService } from '../services/dashboard.service';
 import { DashboardStats } from '../types/api';
+import { CurrencyConverter } from '../components/CurrencyConverter';
 
 export function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -190,6 +191,13 @@ export function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Currency Converter */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <CurrencyConverter />
+        </div>
+      </div>
     </div>
   );
 }

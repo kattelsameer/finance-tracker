@@ -7,6 +7,10 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ReportsPage } from './pages/ReportsPage';
+import { RecurringTransactionsPage } from './pages/RecurringTransactionsPage';
+import { ImportExportPage } from './pages/ImportExportPage';
+import AdvancedSearchPage from './pages/AdvancedSearchPage';
+import NotificationSettingsPage from './pages/NotificationSettingsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,10 +41,14 @@ function App() {
               <Route index element={<DashboardPage />} />
               <Route path="accounts" element={<div>Accounts Page (Coming Soon)</div>} />
               <Route path="transactions" element={<div>Transactions Page (Coming Soon)</div>} />
+              <Route path="search" element={<AdvancedSearchPage />} />
+              <Route path="recurring-transactions" element={<RecurringTransactionsPage />} />
+              <Route path="import-export" element={<ImportExportPage />} />
               <Route path="categories" element={<div>Categories Page (Coming Soon)</div>} />
               <Route path="tags" element={<div>Tags Page (Coming Soon)</div>} />
               <Route path="budgets" element={<div>Budgets Page (Coming Soon)</div>} />
               <Route path="reports" element={<ReportsPage />} />
+              <Route path="notification-settings" element={<NotificationSettingsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

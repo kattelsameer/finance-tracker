@@ -348,3 +348,204 @@ export interface TransactionReport {
   dailyBreakdown: DailyBreakdown[];
 }
 
+// Recurring Transactions
+
+export type Frequency = 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+
+export interface RecurringTransaction {
+  id: number;
+  accountId: number;
+  accountName: string;
+  categoryId?: number;
+  categoryName?: string;
+  transactionType: TransactionType;
+  amount: number;
+  currency: string;
+  description?: string;
+  frequency: Frequency;
+  startDate: string;
+  endDate?: string;
+  nextOccurrence: string;
+  dayOfMonth?: number;
+  dayOfWeek?: number;
+  transferToAccountId?: number;
+  transferToAccountName?: string;
+  isActive: boolean;
+  autoPost: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRecurringTransactionRequest {
+  accountId: number;
+  categoryId?: number;
+  transactionType: TransactionType;
+  amount: number;
+  currency?: string;
+  description?: string;
+  frequency: Frequency;
+  startDate: string;
+  endDate?: string;
+  dayOfMonth?: number;
+  dayOfWeek?: number;
+  transferToAccountId?: number;
+  autoPost?: boolean;
+}
+
+export interface UpdateRecurringTransactionRequest {
+  accountId?: number;
+  categoryId?: number;
+  transactionType?: TransactionType;
+  amount?: number;
+  currency?: string;
+  description?: string;
+  frequency?: Frequency;
+  startDate?: string;
+  endDate?: string;
+  dayOfMonth?: number;
+  dayOfWeek?: number;
+  transferToAccountId?: number;
+  isActive?: boolean;
+  autoPost?: boolean;
+}
+
+// Currency
+
+export interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+  exchangeRate: number;
+  lastUpdated: string;
+}
+
+export interface ConvertAmountRequest {
+  amount: number;
+  fromCurrency: string;
+  toCurrency: string;
+}
+
+export interface ConvertAmountResponse {
+  originalAmount: number;
+  convertedAmount: number;
+  fromCurrency: string;
+  toCurrency: string;
+  exchangeRate: number;
+}
+
+// Advanced Search
+
+export interface TransactionSearchRequest {
+  searchTerm?: string;
+  startDate?: string;
+  endDate?: string;
+  accountId?: number;
+  categoryId?: number;
+  transactionType?: TransactionType;
+  minAmount?: number;
+  maxAmount?: number;
+  tagIds?: number[];
+  isRecurring?: boolean;
+  currency?: string;
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortDirection?: 'ASC' | 'DESC';
+}
+
+export interface TransactionSearchResponse {
+  content: Transaction[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
+export interface SavedSearch {
+  id: number;
+  searchName: string;
+  searchCriteria: string; // JSON string
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSavedSearchRequest {
+  searchName: string;
+  searchCriteria: string; // JSON string
+  isDefault?: boolean;
+}
+
+// Notifications
+
+export type NotificationType =
+  | 'BUDGET_ALERT'
+  | 'BUDGET_EXCEEDED'
+  | 'RECURRING_TRANSACTION_DUE'
+  | 'LOW_BALANCE_WARNING'
+  | 'LARGE_TRANSACTION'
+  | 'UNUSUAL_SPENDING'
+  | 'MONTHLY_SUMMARY'
+  | 'ACCOUNT_INACTIVE'
+  | 'CURRENCY_RATE_CHANGE';
+
+export type NotificationPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+
+export interface Notification {
+  id: number;
+  notificationType: NotificationType;
+  title: string;
+  message?: string;
+  priority: NotificationPriority;
+  isRead: boolean;
+  isSent: boolean;
+  relatedEntityType?: string;
+  relatedEntityId?: number;
+  actionUrl?: string;
+  createdAt: string;
+  readAt?: string;
+  sentAt?: string;
+}
+
+export interface NotificationPreference {
+  id: number;
+  budgetAlertsEnabled: boolean;
+  lowBalanceAlertsEnabled: boolean;
+  recurringRemindersEnabled: boolean;
+  largeTransactionAlertsEnabled: boolean;
+  unusualSpendingAlertsEnabled: boolean;
+  monthlySummaryEnabled: boolean;
+  emailNotificationsEnabled: boolean;
+  inAppNotificationsEnabled: boolean;
+  lowBalanceThreshold: number;
+  largeTransactionThreshold: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateNotificationPreferenceRequest {
+  budgetAlertsEnabled?: boolean;
+  lowBalanceAlertsEnabled?: boolean;
+  recurringRemindersEnabled?: boolean;
+  largeTransactionAlertsEnabled?: boolean;
+  unusualSpendingAlertsEnabled?: boolean;
+  monthlySummaryEnabled?: boolean;
+  emailNotificationsEnabled?: boolean;
+  inAppNotificationsEnabled?: boolean;
+  lowBalanceThreshold?: number;
+  largeTransactionThreshold?: number;
+}
+
+export interface PaginatedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}

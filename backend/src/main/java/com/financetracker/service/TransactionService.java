@@ -7,10 +7,13 @@ import com.financetracker.entity.Transaction.TransactionType;
 import com.financetracker.exception.ApiException;
 import com.financetracker.exception.ErrorCode;
 import com.financetracker.repository.*;
+import com.financetracker.specification.TransactionSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -257,6 +260,30 @@ public class TransactionService {
         transactionRepository.delete(transaction);
         
         logger.info("Transaction deleted: {} for user: {}", transactionId, userId);
+    }
+    
+    @Transactional(readOnly = true)
+    public Page<TransactionResponse> advancedSearch(TransactionSearchRequest searchRequest, Long userId) {
+        // Build specification using TransactionSpecification
+        Specification<Transaction> spec = TransactionSpecification.buildSearchSpecification(searchRequest, userId);
+        
+        // Create pageable with sorting
+        Sort sort = Sort.by(
+            searchRequest.getSortDirection() != null && 
+            searchRequest.getSortDirection().equalsIgnoreCase("ASC") 
+                ? Sort.Direction.ASC 
+                : Sort.Direction.DESC,
+            searchRequest.getSortBy() != null ? searchRequest.getSortBy() : "transactionDate"
+        );
+        
+        Pageable pageable = PageRequest.of(
+            searchRequest.getPage() != null ? searchRequest.getPage() : 0,
+            searchRequest.getSize() != null ? searchRequest.getSize() : 20,
+            sort
+        );
+        
+        Page<Transaction> transactions = transactionRepository.findAll(spec, pageable);
+        return transactions.map(this::mapToResponse);
     }
     
     private Specification<Transaction> buildSpecification(Long userId, TransactionFilter filter) {

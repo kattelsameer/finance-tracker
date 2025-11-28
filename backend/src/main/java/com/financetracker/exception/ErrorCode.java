@@ -24,22 +24,27 @@ public enum ErrorCode {
     TRANSACTION_NOT_FOUND(3004, "Transaction not found", 404),
     BUDGET_NOT_FOUND(3005, "Budget not found", 404),
     TAG_NOT_FOUND(3006, "Tag not found", 404),
+    RECURRING_TRANSACTION_NOT_FOUND(3007, "Recurring transaction not found", 404),
+    CURRENCY_NOT_FOUND(3008, "Currency not found", 404),
     
     // Business logic errors (4000-4099)
     INSUFFICIENT_BALANCE(4001, "Insufficient account balance", 400),
     DUPLICATE_RESOURCE(4002, "Resource already exists", 409),
     OPERATION_NOT_ALLOWED(4003, "Operation not allowed", 403),
     INVALID_TRANSFER(4004, "Invalid transfer - source and destination accounts must be different", 400),
+    INVALID_TRANSFER_TRANSACTION(4004, "Transfer transaction requires transferToAccountId", 400),
     BUDGET_EXCEEDED(4005, "Budget limit exceeded", 400),
     TAG_ALREADY_EXISTS(4006, "Tag with this name already exists", 409),
     INVALID_DATE_RANGE(4007, "End date must be after start date", 400),
     ACCOUNT_TYPE_NOT_FOUND(4008, "Account type not found", 404),
     INVALID_CATEGORY_TYPE(4009, "Invalid category type for this transaction", 400),
+    INVALID_OPERATION(4010, "Invalid operation", 400),
     
     // Server errors (5000-5099)
     INTERNAL_ERROR(5001, "An internal error occurred", 500),
     DATABASE_ERROR(5002, "Database error occurred", 500),
-    EXTERNAL_SERVICE_ERROR(5003, "External service error", 503);
+    EXTERNAL_SERVICE_ERROR(5003, "External service error", 503),
+    EXTERNAL_API_ERROR(5004, "External API error", 503);
     
     private final int code;
     private final String message;
