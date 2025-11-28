@@ -10,6 +10,7 @@ import { ReportsPage } from './pages/ReportsPage';
 import { RecurringTransactionsPage } from './pages/RecurringTransactionsPage';
 import { ImportExportPage } from './pages/ImportExportPage';
 import AdvancedSearchPage from './pages/AdvancedSearchPage';
+import NotificationSettingsPage from './pages/NotificationSettingsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,6 +48,7 @@ function App() {
               <Route path="tags" element={<div>Tags Page (Coming Soon)</div>} />
               <Route path="budgets" element={<div>Budgets Page (Coming Soon)</div>} />
               <Route path="reports" element={<ReportsPage />} />
+              <Route path="notification-settings" element={<NotificationSettingsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

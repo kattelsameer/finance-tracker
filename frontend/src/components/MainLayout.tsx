@@ -14,8 +14,12 @@ import {
   Search,
   Repeat,
   FileSpreadsheet,
+  Bell,
+  Settings as SettingsIcon,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { NotificationCenter } from './NotificationCenter';
+import { notificationService } from '../services/notification.service';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -35,10 +39,32 @@ export function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    loadUnreadCount();
+    const interval = setInterval(loadUnreadCount, 60000); // Poll every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadUnreadCount = async () => {
+    try {
+      const count = await notificationService.getUnreadCount();
+      setUnreadCount(count);
+    } catch (error) {
+      console.error('Failed to load unread count:', error);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
+  };
+
+  const handleOpenNotificationSettings = () => {
+    setNotificationCenterOpen(false);
+    navigate('/notification-settings');
   };
 
   return (
@@ -151,6 +177,38 @@ export function MainLayout() {
             <div className="flex-1 flex items-center">
               <h1 className="text-lg font-semibold text-gray-900">Finance Tracker</h1>
             </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setNotificationCenterOpen(true)}
+                className="relative p-2 text-gray-600 hover:text-gray-900"
+                title="Notifications"
+              >
+                <Bell className="h-6 w-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 h-4 w-4 bg-red-600 text-white text-xs rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop header */}
+        <div className="hidden lg:block sticky top-0 z-10 bg-white border-b border-gray-200 h-16">
+          <div className="flex items-center justify-end h-full px-6 gap-2">
+            <button
+              onClick={() => setNotificationCenterOpen(true)}
+              className="relative p-2 text-gray-600 hover:text-gray-900"
+              title="Notifications"
+            >
+              <Bell className="h-6 w-6" />
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 h-5 w-5 bg-red-600 text-white text-xs rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
           </div>
         </div>
 
@@ -160,6 +218,18 @@ export function MainLayout() {
               <Outlet />
             </div>
           </div>
+        </main>
+      </div>
+
+      {/* Notification Center */}
+      <NotificationCenter
+        isOpen={notificationCenterOpen}
+        onClose={() => {
+          setNotificationCenterOpen(false);
+          loadUnreadCount();
+        }}
+        onOpenSettings={handleOpenNotificationSettings}
+      />
         </main>
       </div>
     </div>
