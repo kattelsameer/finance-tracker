@@ -1,5 +1,5 @@
-import apiClient from '../lib/api-client';
-import {
+import { apiClient } from '../lib/api-client';
+import type {
   Notification,
   NotificationPreference,
   UpdateNotificationPreferenceRequest,
@@ -14,31 +14,29 @@ export const notificationService = {
     page: number = 0,
     size: number = 20
   ): Promise<PaginatedResponse<Notification>> {
-    const response = await apiClient.get<PaginatedResponse<Notification>>(
+    return apiClient.get<PaginatedResponse<Notification>>(
       '/api/notifications',
       { params: { page, size } }
     );
-    return response.data;
   },
 
   /**
    * Get unread notifications
    */
   async getUnreadNotifications(): Promise<Notification[]> {
-    const response = await apiClient.get<Notification[]>(
+    return apiClient.get<Notification[]>(
       '/api/notifications/unread'
     );
-    return response.data;
   },
 
   /**
    * Get unread notification count
    */
   async getUnreadCount(): Promise<number> {
-    const response = await apiClient.get<{ count: number }>(
+    const data = await apiClient.get<{ count: number }>(
       '/api/notifications/unread/count'
     );
-    return response.data.count;
+    return data.count;
   },
 
   /**
@@ -66,10 +64,9 @@ export const notificationService = {
    * Get notification preferences
    */
   async getPreferences(): Promise<NotificationPreference> {
-    const response = await apiClient.get<NotificationPreference>(
+    return apiClient.get<NotificationPreference>(
       '/api/notifications/preferences'
     );
-    return response.data;
   },
 
   /**
@@ -78,11 +75,10 @@ export const notificationService = {
   async updatePreferences(
     request: UpdateNotificationPreferenceRequest
   ): Promise<NotificationPreference> {
-    const response = await apiClient.put<NotificationPreference>(
+    return apiClient.put<NotificationPreference>(
       '/api/notifications/preferences',
       request
     );
-    return response.data;
   },
 
   /**

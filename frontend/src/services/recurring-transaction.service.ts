@@ -8,23 +8,19 @@ import type {
 export const recurringTransactionService = {
   async getAll(activeOnly = false): Promise<RecurringTransaction[]> {
     const params = activeOnly ? '?activeOnly=true' : '';
-    const response = await apiClient.get(`/api/v1/recurring-transactions${params}`);
-    return response.data;
+    return apiClient.get<RecurringTransaction[]>(`/api/v1/recurring-transactions${params}`);
   },
 
   async getById(id: number): Promise<RecurringTransaction> {
-    const response = await apiClient.get(`/api/v1/recurring-transactions/${id}`);
-    return response.data;
+    return apiClient.get<RecurringTransaction>(`/api/v1/recurring-transactions/${id}`);
   },
 
   async create(request: CreateRecurringTransactionRequest): Promise<RecurringTransaction> {
-    const response = await apiClient.post('/api/v1/recurring-transactions', request);
-    return response.data;
+    return apiClient.post<RecurringTransaction>('/api/v1/recurring-transactions', request);
   },
 
   async update(id: number, request: UpdateRecurringTransactionRequest): Promise<RecurringTransaction> {
-    const response = await apiClient.put(`/api/v1/recurring-transactions/${id}`, request);
-    return response.data;
+    return apiClient.put<RecurringTransaction>(`/api/v1/recurring-transactions/${id}`, request);
   },
 
   async delete(id: number): Promise<void> {

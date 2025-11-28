@@ -25,7 +25,7 @@ describe('authService', () => {
       (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       const credentials = {
-        usernameOrEmail: 'test@example.com',
+        username: 'test@example.com',
         password: 'password123',
       };
 
@@ -40,7 +40,7 @@ describe('authService', () => {
       (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValue(error);
 
       const credentials = {
-        usernameOrEmail: 'test@example.com',
+        username: 'test@example.com',
         password: 'wrongpassword',
       };
 

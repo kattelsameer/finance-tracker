@@ -1,18 +1,30 @@
-# Backend Unit Tests
+# Backend Tests
 
 ## Test Coverage
 
-This directory contains comprehensive unit tests for the Finance Tracker backend application.
+This directory contains comprehensive tests for the Finance Tracker backend application.
+
+### Integration Tests (Controller Tests)
+
+All API endpoints are covered by integration tests located in `java/com/financetracker/controller/`:
+
+- **AuthControllerIntegrationTest** - Authentication tests (register, login, logout, check auth)
+- **AccountControllerIntegrationTest** - Account CRUD tests
+- **TransactionControllerIntegrationTest** - Transaction CRUD tests
+- **CategoryControllerIntegrationTest** - Category CRUD tests
+- **DashboardControllerIntegrationTest** - Dashboard stats endpoint tests
+- **BudgetControllerIntegrationTest** - Budget CRUD tests
+- **TagControllerIntegrationTest** - Tag CRUD tests
+- **NotificationControllerIntegrationTest** - Notification endpoint tests
+- **RecurringTransactionControllerIntegrationTest** - Recurring transaction CRUD tests
+- **SearchControllerIntegrationTest** - Search endpoint tests
+- **ImportExportControllerIntegrationTest** - Import/Export endpoint tests
 
 ### Service Tests
 
 - **AccountServiceTest** - Tests for account management (create, read, update, delete, archive, restore)
 - **TransactionServiceTest** - Tests for transaction operations (expense, income, transfer, search, pagination)
 - **BudgetServiceTest** - Tests for budget management (create, update, calculate progress, alerts)
-
-### Controller Tests
-
-- **AccountControllerTest** - Integration tests for Account REST API endpoints using @WebMvcTest
 
 ### Repository Tests
 
@@ -21,11 +33,17 @@ This directory contains comprehensive unit tests for the Finance Tracker backend
 ## Running Tests
 
 ```bash
+# Run ALL integration tests (recommended - covers all backend APIs)
+./gradlew test --tests "com.financetracker.ApiTestSuite"
+
+# Alternative: Run all controller tests
+./gradlew test --tests "com.financetracker.controller.*"
+
 # Run all tests
 ./gradlew test
 
 # Run specific test class
-./gradlew test --tests "com.financetracker.service.AccountServiceTest"
+./gradlew test --tests "com.financetracker.controller.AuthControllerIntegrationTest"
 
 # Run with coverage
 ./gradlew test jacocoTestReport

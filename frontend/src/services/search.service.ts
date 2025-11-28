@@ -1,5 +1,5 @@
-import apiClient from '../lib/api-client';
-import {
+import { apiClient } from '../lib/api-client';
+import type {
   TransactionSearchRequest,
   TransactionSearchResponse,
   SavedSearch,
@@ -13,27 +13,24 @@ export const searchService = {
   async advancedSearch(
     searchRequest: TransactionSearchRequest
   ): Promise<TransactionSearchResponse> {
-    const response = await apiClient.post<TransactionSearchResponse>(
+    return apiClient.post<TransactionSearchResponse>(
       '/api/search/transactions',
       searchRequest
     );
-    return response.data;
   },
 
   /**
    * Get all saved searches for the current user
    */
   async getAllSavedSearches(): Promise<SavedSearch[]> {
-    const response = await apiClient.get<SavedSearch[]>('/api/search/saved');
-    return response.data;
+    return apiClient.get<SavedSearch[]>('/api/search/saved');
   },
 
   /**
    * Get a specific saved search
    */
   async getSavedSearch(id: number): Promise<SavedSearch> {
-    const response = await apiClient.get<SavedSearch>(`/api/search/saved/${id}`);
-    return response.data;
+    return apiClient.get<SavedSearch>(`/api/search/saved/${id}`);
   },
 
   /**
@@ -42,11 +39,10 @@ export const searchService = {
   async createSavedSearch(
     request: CreateSavedSearchRequest
   ): Promise<SavedSearch> {
-    const response = await apiClient.post<SavedSearch>(
+    return apiClient.post<SavedSearch>(
       '/api/search/saved',
       request
     );
-    return response.data;
   },
 
   /**
@@ -56,11 +52,10 @@ export const searchService = {
     id: number,
     request: CreateSavedSearchRequest
   ): Promise<SavedSearch> {
-    const response = await apiClient.put<SavedSearch>(
+    return apiClient.put<SavedSearch>(
       `/api/search/saved/${id}`,
       request
     );
-    return response.data;
   },
 
   /**
@@ -74,9 +69,8 @@ export const searchService = {
    * Set a saved search as default
    */
   async setDefaultSearch(id: number): Promise<SavedSearch> {
-    const response = await apiClient.patch<SavedSearch>(
+    return apiClient.patch<SavedSearch>(
       `/api/search/saved/${id}/set-default`
     );
-    return response.data;
   },
 };

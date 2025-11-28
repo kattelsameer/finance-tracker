@@ -8,7 +8,7 @@ spring:
   # JPA/Hibernate
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
@@ -51,13 +51,11 @@ management:
       show-details: when_authorized
 
 # JWT Configuration
-jwt:
-  secret: ${JWT_SECRET:default-dev-secret-key-that-should-be-changed-in-production-at-least-256-bits}
-  expiration: ${JWT_EXPIRATION:3600000}  # 1 hour in milliseconds
-  cookie-name: auth_token
-
-# Application Configuration
 app:
+  jwt:
+    secret: ${JWT_SECRET:default-dev-secret-key-that-should-be-changed-in-production-at-least-256-bits}
+    expiration-ms: ${JWT_EXPIRATION:3600000}  # 1 hour in milliseconds
+    cookie-name: auth_token
   cors:
     allowed-origins: http://localhost:5173,http://localhost:3000
   security:

@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/api-client';
-import { TransactionReport } from '../types/api';
+import type { TransactionReport } from '../types/api';
 
 export const reportService = {
   async getTransactionReport(
@@ -16,16 +16,14 @@ export const reportService = {
     if (accountId) params.append('accountId', accountId.toString());
     if (categoryId) params.append('categoryId', categoryId.toString());
     
-    const response = await apiClient.get<TransactionReport>(`/api/v1/reports/transactions?${params.toString()}`);
-    return response.data;
+    return apiClient.get<TransactionReport>(`/api/v1/reports/transactions?${params.toString()}`);
   },
 
   async exportToCSV(startDate: string, endDate: string): Promise<Blob> {
     const params = new URLSearchParams({ startDate, endDate });
-    const response = await apiClient.get(`/api/v1/reports/transactions/export?${params.toString()}`, {
+    return apiClient.get<Blob>(`/api/v1/reports/transactions/export?${params.toString()}`, {
       responseType: 'blob'
     });
-    return response.data;
   },
 
   downloadCSV(blob: Blob, filename: string): void {

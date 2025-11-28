@@ -13,20 +13,18 @@ export const importExportService = {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await apiClient.post('/api/v1/import-export/import/csv', formData, {
+    return apiClient.post<ImportResult>('/api/v1/import-export/import/csv', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     });
-    return response.data;
   },
 
   async exportCSV(startDate: string, endDate: string): Promise<Blob> {
     const params = new URLSearchParams({ startDate, endDate });
-    const response = await apiClient.get(`/api/v1/import-export/export/csv?${params.toString()}`, {
+    return apiClient.get<Blob>(`/api/v1/import-export/export/csv?${params.toString()}`, {
       responseType: 'blob'
     });
-    return response.data;
   },
 
   downloadCSV(blob: Blob, filename: string): void {

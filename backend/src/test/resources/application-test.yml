@@ -17,9 +17,12 @@ spring:
   flyway:
     enabled: false
 
-jwt:
-  secret: test-secret-key-for-testing-purposes-only-12345678901234567890
-  expiration: 3600000
+app:
+  jwt:
+    secret: test-secret-key-for-testing-purposes-only-minimum-256-bits-required-here
+    expiration: 3600000
+  cors:
+    allowed-origins: http://localhost:5173
 
 logging:
   level:

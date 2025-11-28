@@ -1,6 +1,6 @@
 CREATE TABLE currencies (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    code VARCHAR(3) NOT NULL UNIQUE,
+    code VARCHAR(3) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
     symbol VARCHAR(10) NOT NULL,
     exchange_rate DECIMAL(20, 10) NOT NULL DEFAULT 1.0,
@@ -12,7 +12,7 @@ CREATE TABLE currencies (
     INDEX idx_code (code),
     INDEX idx_is_active (is_active),
     INDEX idx_is_base_currency (is_base_currency)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insert default currencies
 INSERT INTO currencies (code, name, symbol, exchange_rate, is_base_currency, is_active) VALUES

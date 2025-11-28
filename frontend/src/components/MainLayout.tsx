@@ -230,8 +230,6 @@ export function MainLayout() {
         }}
         onOpenSettings={handleOpenNotificationSettings}
       />
-        </main>
-      </div>
     </div>
   );
 }
