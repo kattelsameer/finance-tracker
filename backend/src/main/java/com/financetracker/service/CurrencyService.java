@@ -2,8 +2,8 @@ package com.financetracker.service;
 
 import com.financetracker.dto.currency.*;
 import com.financetracker.entity.Currency;
+import com.financetracker.exception.ApiException;
 import com.financetracker.exception.ErrorCode;
-import com.financetracker.exception.FinanceTrackerException;
 import com.financetracker.repository.CurrencyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,10 +58,9 @@ public class CurrencyService {
     @Transactional(readOnly = true)
     public CurrencyDto getCurrencyByCode(String code) {
         Currency currency = currencyRepository.findByCode(code.toUpperCase())
-                .orElseThrow(() -> new FinanceTrackerException(
+                .orElseThrow(() -> new ApiException(
                         ErrorCode.CURRENCY_NOT_FOUND,
-                        "Currency not found: " + code,
-                        HttpStatus.NOT_FOUND
+                        "Currency not found: " + code
                 ));
         return mapToDto(currency);
     }
@@ -72,10 +71,9 @@ public class CurrencyService {
     @Transactional(readOnly = true)
     public CurrencyDto getBaseCurrency() {
         Currency currency = currencyRepository.findByIsBaseCurrencyTrue()
-                .orElseThrow(() -> new FinanceTrackerException(
+                .orElseThrow(() -> new ApiException(
                         ErrorCode.CURRENCY_NOT_FOUND,
-                        "Base currency not configured",
-                        HttpStatus.INTERNAL_SERVER_ERROR
+                        "Base currency not configured"
                 ));
         return mapToDto(currency);
     }
@@ -100,18 +98,16 @@ public class CurrencyService {
             );
         }
         
-        Currency fromCurrency = currencyRepository.findByCode(fromCode)
-                .orElseThrow(() -> new FinanceTrackerException(
+        Currency fromCurrency = currencyRepository.findByCode(fromCode.toUpperCase())
+                .orElseThrow(() -> new ApiException(
                         ErrorCode.CURRENCY_NOT_FOUND,
-                        "Currency not found: " + fromCode,
-                        HttpStatus.NOT_FOUND
+                        "Source currency not found: " + fromCode
                 ));
         
         Currency toCurrency = currencyRepository.findByCode(toCode)
-                .orElseThrow(() -> new FinanceTrackerException(
+                .orElseThrow(() -> new ApiException(
                         ErrorCode.CURRENCY_NOT_FOUND,
-                        "Currency not found: " + toCode,
-                        HttpStatus.NOT_FOUND
+                        "Currency not found: " + toCode
                 ));
         
         // Calculate conversion rate
@@ -142,10 +138,9 @@ public class CurrencyService {
         log.info("Updating exchange rates from API...");
         
         Currency baseCurrency = currencyRepository.findByIsBaseCurrencyTrue()
-                .orElseThrow(() -> new FinanceTrackerException(
+                .orElseThrow(() -> new ApiException(
                         ErrorCode.CURRENCY_NOT_FOUND,
-                        "Base currency not configured",
-                        HttpStatus.INTERNAL_SERVER_ERROR
+                        "Base currency not configured"
                 ));
         
         try {
@@ -174,10 +169,10 @@ public class CurrencyService {
             }
         } catch (Exception e) {
             log.error("Failed to update exchange rates from API", e);
-            throw new FinanceTrackerException(
+            throw new ApiException(
                     ErrorCode.EXTERNAL_API_ERROR,
                     "Failed to update exchange rates: " + e.getMessage(),
-                    HttpStatus.SERVICE_UNAVAILABLE
+                    e
             );
         }
     }
@@ -188,17 +183,15 @@ public class CurrencyService {
     @CacheEvict(value = "currencyConversions", allEntries = true)
     public CurrencyDto updateExchangeRate(ExchangeRateUpdateRequest request) {
         Currency currency = currencyRepository.findByCode(request.getCurrencyCode().toUpperCase())
-                .orElseThrow(() -> new FinanceTrackerException(
+                .orElseThrow(() -> new ApiException(
                         ErrorCode.CURRENCY_NOT_FOUND,
-                        "Currency not found: " + request.getCurrencyCode(),
-                        HttpStatus.NOT_FOUND
+                        "Currency not found: " + request.getCurrencyCode()
                 ));
         
         if (currency.getIsBaseCurrency()) {
-            throw new FinanceTrackerException(
+            throw new ApiException(
                     ErrorCode.INVALID_OPERATION,
-                    "Cannot update exchange rate for base currency",
-                    HttpStatus.BAD_REQUEST
+                    "Cannot update exchange rate for base currency"
             );
         }
         

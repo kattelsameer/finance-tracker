@@ -1,0 +1,131 @@
+version: '3.8'
+
+# Production Docker Compose Configuration
+# This file is optimized for production deployment with enhanced security
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: finance-tracker-mysql-prod
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-finance_tracker}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: ${TZ:-UTC}
+    # NOTE: In production, do NOT expose MySQL port externally
+    # Use docker exec or port forwarding for database access
+    # ports:
+    #   - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backups:/backups:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max_connections=200
+      - --innodb_buffer_pool_size=512M
+      - --innodb_log_file_size=128M
+      - --innodb_flush_log_at_trx_commit=2
+      - --slow_query_log=1
+      - --slow_query_log_file=/var/log/mysql/slow.log
+      - --long_query_time=2
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - finance-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Finance Tracker Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: finance-tracker-backend:latest
+    container_name: finance-tracker-backend-prod
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-finance_tracker}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL:-WARN}
+      LOGGING_LEVEL_COM_FINANCETRACKER: ${LOGGING_LEVEL:-INFO}
+      JAVA_OPTS: ${JAVA_OPTS:--Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200}
+      TZ: ${TZ:-UTC}
+    # In production, use a reverse proxy (nginx/traefik) instead of exposing directly
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - backend_logs:/app/logs
+      - ./backups:/app/backups:ro
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    networks:
+      - finance-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # Finance Tracker Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: finance-tracker-frontend:latest
+    container_name: finance-tracker-frontend-prod
+    restart: always
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      TZ: ${TZ:-UTC}
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - finance-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  mysql_data:
+    driver: local
+  backend_logs:
+    driver: local
+
+networks:
+  finance-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

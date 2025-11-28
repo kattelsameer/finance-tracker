@@ -10,6 +10,8 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -178,7 +180,8 @@ public class ImportExportService {
     }
     
     private Set<String> getExistingTransactionKeys(Long userId) {
-        List<Transaction> existingTransactions = transactionRepository.findByUserId(userId);
+        Page<Transaction> transactionPage = transactionRepository.findByUserId(userId, Pageable.unpaged());
+        List<Transaction> existingTransactions = transactionPage.getContent();
         
         return existingTransactions.stream()
                 .map(t -> String.format("%s_%s_%s_%s",
@@ -200,19 +203,20 @@ public class ImportExportService {
             category = findCategoryByName(user.getId(), record.getCategoryName());
         }
         
-        return Transaction.builder()
-                .user(user)
-                .account(account)
-                .category(category)
-                .transactionType(record.getType())
-                .amount(record.getAmount())
-                .currency("USD")
-                .transactionDate(record.getDate())
-                .description(record.getDescription())
-                .notes(record.getNotes())
-                .referenceNumber(record.getReferenceNumber())
-                .isRecurring(false)
-                .build();
+        Transaction transaction = new Transaction();
+        transaction.setUser(user);
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        transaction.setTransactionType(record.getType());
+        transaction.setAmount(record.getAmount());
+        transaction.setCurrency("USD");
+        transaction.setTransactionDate(record.getDate());
+        transaction.setDescription(record.getDescription());
+        transaction.setNotes(record.getNotes());
+        transaction.setReferenceNumber(record.getReferenceNumber());
+        transaction.setIsRecurring(false);
+        
+        return transaction;
     }
     
     private Account findOrCreateAccount(User user, String accountName) {
@@ -233,7 +237,10 @@ public class ImportExportService {
     }
     
     private Category findCategoryByName(Long userId, String categoryName) {
-        List<Category> categories = categoryRepository.findByUserIdOrderByDisplayOrderAsc(userId);
+        // Fetch all categories and find by name
+        List<Category> categories = categoryRepository.findAll().stream()
+                .filter(c -> c.getUser() != null && c.getUser().getId().equals(userId))
+                .toList();
         return categories.stream()
                 .filter(c -> c.getCategoryName().equalsIgnoreCase(categoryName))
                 .findFirst()

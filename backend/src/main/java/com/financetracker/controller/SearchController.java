@@ -2,8 +2,8 @@ package com.financetracker.controller;
 
 import com.financetracker.dto.CreateSavedSearchRequest;
 import com.financetracker.dto.SavedSearchResponse;
-import com.financetracker.dto.TransactionResponse;
-import com.financetracker.dto.TransactionSearchRequest;
+import com.financetracker.dto.transaction.TransactionResponse;
+import com.financetracker.dto.transaction.TransactionSearchRequest;
 import com.financetracker.security.UserPrincipal;
 import com.financetracker.service.SavedSearchService;
 import com.financetracker.service.TransactionService;

@@ -8,7 +8,8 @@ import com.financetracker.entity.Notification.NotificationType;
 import com.financetracker.entity.Notification.Priority;
 import com.financetracker.entity.NotificationPreference;
 import com.financetracker.entity.User;
-import com.financetracker.exception.ResourceNotFoundException;
+import com.financetracker.exception.ApiException;
+import com.financetracker.exception.ErrorCode;
 import com.financetracker.repository.NotificationPreferenceRepository;
 import com.financetracker.repository.NotificationRepository;
 import com.financetracker.repository.UserRepository;
@@ -70,7 +71,7 @@ public class NotificationService {
     public void markAsRead(Long notificationId, Long userId) {
         int updated = notificationRepository.markAsRead(notificationId, userId, Instant.now());
         if (updated == 0) {
-            throw new ResourceNotFoundException("Notification not found");
+            throw new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "Notification not found");
         }
     }
     
@@ -88,10 +89,10 @@ public class NotificationService {
     @Transactional
     public void deleteNotification(Long notificationId, Long userId) {
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
+                .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "Notification not found"));
         
         if (!notification.getUser().getId().equals(userId)) {
-            throw new ResourceNotFoundException("Notification not found");
+            throw new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "Notification not found");
         }
         
         notificationRepository.delete(notification);
@@ -112,7 +113,7 @@ public class NotificationService {
             String actionUrl) {
         
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "User not found"));
         
         // Check user preferences
         NotificationPreference pref = getOrCreatePreference(userId);
@@ -202,7 +203,7 @@ public class NotificationService {
         return preferenceRepository.findByUserId(userId)
                 .orElseGet(() -> {
                     User user = userRepository.findById(userId)
-                            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                            .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "User not found"));
                     
                     NotificationPreference pref = NotificationPreference.builder()
                             .user(user)

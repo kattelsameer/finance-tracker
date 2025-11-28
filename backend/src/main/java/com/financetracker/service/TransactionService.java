@@ -265,7 +265,7 @@ public class TransactionService {
     @Transactional(readOnly = true)
     public Page<TransactionResponse> advancedSearch(TransactionSearchRequest searchRequest, Long userId) {
         // Build specification using TransactionSpecification
-        Specification<Transaction> spec = TransactionSpecification.buildSearchSpecification(searchRequest, userId);
+        Specification<Transaction> spec = TransactionSpecification.buildSearchSpecification(userId, searchRequest);
         
         // Create pageable with sorting
         Sort sort = Sort.by(
