@@ -48,9 +48,9 @@ const AdvancedSearchPage: React.FC = () => {
   const loadFilterOptions = async () => {
     try {
       const [accountsData, categoriesData, tagsData, savedSearchesData] = await Promise.all([
-        accountService.getAllAccounts(),
-        categoryService.getAllCategories(),
-        tagService.getAllTags(),
+        accountService.getAll(),
+        categoryService.getAll(),
+        tagService.getAll(),
         searchService.getAllSavedSearches(),
       ]);
       setAccounts(accountsData);

@@ -61,7 +61,7 @@ describe('accountService', () => {
 
   describe('create', () => {
     it('should create a new account', async () => {
-      const newAccount = { name: 'New Account', balance: 0, accountTypeId: 1 };
+      const newAccount = { accountName: 'New Account', initialBalance: 0, accountTypeId: 1 };
       const createdAccount = { id: 3, ...newAccount };
       (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(createdAccount);
 
@@ -74,8 +74,8 @@ describe('accountService', () => {
 
   describe('update', () => {
     it('should update an existing account', async () => {
-      const updateData = { name: 'Updated Account' };
-      const updatedAccount = { id: 1, name: 'Updated Account', balance: 1000 };
+      const updateData = { accountName: 'Updated Account' };
+      const updatedAccount = { id: 1, accountName: 'Updated Account', balance: 1000 };
       (apiClient.put as ReturnType<typeof vi.fn>).mockResolvedValue(updatedAccount);
 
       const result = await accountService.update(1, updateData);
