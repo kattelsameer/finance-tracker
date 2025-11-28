@@ -9,6 +9,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { RecurringTransactionsPage } from './pages/RecurringTransactionsPage';
 import { ImportExportPage } from './pages/ImportExportPage';
+import AdvancedSearchPage from './pages/AdvancedSearchPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +40,7 @@ function App() {
               <Route index element={<DashboardPage />} />
               <Route path="accounts" element={<div>Accounts Page (Coming Soon)</div>} />
               <Route path="transactions" element={<div>Transactions Page (Coming Soon)</div>} />
+              <Route path="search" element={<AdvancedSearchPage />} />
               <Route path="recurring-transactions" element={<RecurringTransactionsPage />} />
               <Route path="import-export" element={<ImportExportPage />} />
               <Route path="categories" element={<div>Categories Page (Coming Soon)</div>} />

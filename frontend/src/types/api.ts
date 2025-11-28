@@ -432,3 +432,49 @@ export interface ConvertAmountResponse {
   toCurrency: string;
   exchangeRate: number;
 }
+
+// Advanced Search
+
+export interface TransactionSearchRequest {
+  searchTerm?: string;
+  startDate?: string;
+  endDate?: string;
+  accountId?: number;
+  categoryId?: number;
+  transactionType?: TransactionType;
+  minAmount?: number;
+  maxAmount?: number;
+  tagIds?: number[];
+  isRecurring?: boolean;
+  currency?: string;
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortDirection?: 'ASC' | 'DESC';
+}
+
+export interface TransactionSearchResponse {
+  content: Transaction[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
+export interface SavedSearch {
+  id: number;
+  searchName: string;
+  searchCriteria: string; // JSON string
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSavedSearchRequest {
+  searchName: string;
+  searchCriteria: string; // JSON string
+  isDefault?: boolean;
+}

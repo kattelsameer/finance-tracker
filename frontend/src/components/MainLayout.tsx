@@ -11,6 +11,9 @@ import {
   LogOut,
   Menu,
   X,
+  Search,
+  Repeat,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -18,6 +21,9 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Accounts', href: '/accounts', icon: Wallet },
   { name: 'Transactions', href: '/transactions', icon: ArrowLeftRight },
+  { name: 'Search', href: '/search', icon: Search },
+  { name: 'Recurring', href: '/recurring-transactions', icon: Repeat },
+  { name: 'Import/Export', href: '/import-export', icon: FileSpreadsheet },
   { name: 'Categories', href: '/categories', icon: FolderTree },
   { name: 'Tags', href: '/tags', icon: Tag },
   { name: 'Budgets', href: '/budgets', icon: Target },
