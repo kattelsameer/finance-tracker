@@ -408,3 +408,27 @@ export interface UpdateRecurringTransactionRequest {
   isActive?: boolean;
   autoPost?: boolean;
 }
+
+// Currency
+
+export interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+  exchangeRate: number;
+  lastUpdated: string;
+}
+
+export interface ConvertAmountRequest {
+  amount: number;
+  fromCurrency: string;
+  toCurrency: string;
+}
+
+export interface ConvertAmountResponse {
+  originalAmount: number;
+  convertedAmount: number;
+  fromCurrency: string;
+  toCurrency: string;
+  exchangeRate: number;
+}
