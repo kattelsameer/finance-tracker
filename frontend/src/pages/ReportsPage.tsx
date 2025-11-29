@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { reportService } from '../services/report.service';
+import { useAuth } from '../contexts/AuthContext';
 import type { TransactionReport } from '../types/api';
 import {
   TrendingUp,
@@ -16,6 +17,9 @@ import {
 } from 'lucide-react';
 
 export function ReportsPage() {
+  const { user } = useAuth();
+  const defaultCurrency = user?.defaultCurrency || 'NPR';
+  
   const [report, setReport] = useState<TransactionReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +61,7 @@ export function ReportsPage() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: defaultCurrency
     }).format(amount);
   };
 
@@ -71,26 +75,26 @@ export function ReportsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 min-w-0">
       {/* Header with Export Button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">Transaction Reports</h2>
-          <p className="text-gray-500 text-sm mt-1">Analyze your financial activity</p>
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold text-gray-900">Transaction Reports</h2>
+          <p className="text-sm text-gray-500 mt-1">Analyze your financial activity</p>
         </div>
         <button
           onClick={handleExportCSV}
           disabled={!report}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm flex-shrink-0"
         >
-          <FileDown className="h-5 w-5" />
-          Export to CSV
+          <FileDown className="h-4 w-4" />
+          Export CSV
         </button>
       </div>
 
       {/* Date Range Filter */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col md:flex-row md:items-end gap-4">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-4">
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
@@ -101,7 +105,7 @@ export function ReportsPage() {
                 type="date"
                 value={dateRange.startDate}
                 onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               />
             </div>
             <div>
@@ -113,15 +117,15 @@ export function ReportsPage() {
                 type="date"
                 value={dateRange.endDate}
                 onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               />
             </div>
           </div>
           <button
             onClick={fetchReport}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
           >
-            <RefreshCw className="h-5 w-5" />
+            <RefreshCw className="h-4 w-4" />
             Generate Report
           </button>
         </div>
@@ -129,9 +133,10 @@ export function ReportsPage() {
 
       {/* Error Alert */}
       {error && (
-        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-xl text-red-700">
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
           <AlertCircle className="h-5 w-5 flex-shrink-0" />
-          <span>{error}</span>
+          <span className="text-sm">{error}</span>
+          <button onClick={() => setError(null)} className="ml-auto text-red-500 hover:text-red-700 font-bold">×</button>
         </div>
       )}
 

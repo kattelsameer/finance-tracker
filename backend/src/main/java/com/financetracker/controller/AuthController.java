@@ -58,6 +58,14 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
     
+    @PutMapping("/me")
+    public ResponseEntity<UserResponse> updateProfile(
+            @Valid @RequestBody UpdateProfileRequest request,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        UserResponse response = authService.updateProfile(userPrincipal.getId(), request);
+        return ResponseEntity.ok(response);
+    }
+    
     @PostMapping("/change-password")
     public ResponseEntity<Map<String, String>> changePassword(
             @Valid @RequestBody ChangePasswordRequest request,

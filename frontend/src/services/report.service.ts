@@ -16,12 +16,12 @@ export const reportService = {
     if (accountId) params.append('accountId', accountId.toString());
     if (categoryId) params.append('categoryId', categoryId.toString());
     
-    return apiClient.get<TransactionReport>(`/api/v1/reports/transactions?${params.toString()}`);
+    return apiClient.get<TransactionReport>(`/reports/transactions?${params.toString()}`);
   },
 
   async exportToCSV(startDate: string, endDate: string): Promise<Blob> {
     const params = new URLSearchParams({ startDate, endDate });
-    return apiClient.get<Blob>(`/api/v1/reports/transactions/export?${params.toString()}`, {
+    return apiClient.get<Blob>(`/reports/transactions/export?${params.toString()}`, {
       responseType: 'blob'
     });
   },

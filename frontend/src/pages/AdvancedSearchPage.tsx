@@ -3,6 +3,7 @@ import { searchService } from '../services/search.service';
 import { accountService } from '../services/account.service';
 import { categoryService } from '../services/category.service';
 import { tagService } from '../services/tag.service';
+import { useAuth } from '../contexts/AuthContext';
 import {
   TransactionSearchRequest,
   Transaction,
@@ -36,6 +37,9 @@ import {
 } from 'lucide-react';
 
 const AdvancedSearchPage: React.FC = () => {
+  const { user } = useAuth();
+  const defaultCurrency = user?.defaultCurrency || 'NPR';
+  
   // Search criteria state
   const [searchCriteria, setSearchCriteria] = useState<TransactionSearchRequest>({
     page: 0,
@@ -158,7 +162,7 @@ const AdvancedSearchPage: React.FC = () => {
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency || 'USD',
+      currency: currency || defaultCurrency,
     }).format(amount);
   };
 
@@ -182,38 +186,38 @@ const AdvancedSearchPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800">Advanced Search</h2>
-          <p className="text-slate-500">Find transactions with powerful filters</p>
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold text-gray-900">Advanced Search</h2>
+          <p className="text-sm text-gray-500 mt-1">Find transactions with powerful filters</p>
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${
+          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all flex-shrink-0 ${
             showFilters 
-              ? 'bg-blue-100 text-blue-700 border-blue-200' 
-              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+              ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm' 
+              : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
           }`}
         >
           <Filter className="h-4 w-4" />
-          {showFilters ? 'Hide Filters' : 'Show Filters'}
+          <span className="font-medium">{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
         </button>
       </div>
 
       {/* Saved Searches */}
       {savedSearches.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-2 mb-3">
             <Star className="h-4 w-4 text-amber-500" />
-            <h3 className="text-sm font-semibold text-slate-700">Saved Searches</h3>
+            <h3 className="text-sm font-semibold text-gray-700">Saved Searches</h3>
           </div>
           <div className="flex flex-wrap gap-2">
             {savedSearches.map(savedSearch => (
               <div
                 key={savedSearch.id}
-                className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+                className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
               >
                 <button
                   onClick={() => handleLoadSavedSearch(savedSearch)}
@@ -224,9 +228,9 @@ const AdvancedSearchPage: React.FC = () => {
                 </button>
                 <button
                   onClick={() => handleDeleteSavedSearch(savedSearch.id)}
-                  className="text-slate-400 hover:text-rose-500 transition-colors"
+                  className="p-1 text-gray-400 hover:text-red-500 transition-colors rounded"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
             ))}
@@ -236,12 +240,12 @@ const AdvancedSearchPage: React.FC = () => {
 
       {/* Search Filters */}
       {showFilters && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {/* Search Term */}
-            <div className="lg:col-span-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                <Search className="h-4 w-4 text-slate-400" />
+            <div className="sm:col-span-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Search className="h-4 w-4 text-gray-400" />
                 Search Term
               </label>
               <input
@@ -249,47 +253,47 @@ const AdvancedSearchPage: React.FC = () => {
                 value={searchCriteria.searchTerm || ''}
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, searchTerm: e.target.value })}
                 placeholder="Search description or notes..."
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 transition-colors"
               />
             </div>
 
             {/* Date Range */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                <Calendar className="h-4 w-4 text-slate-400" />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Calendar className="h-4 w-4 text-gray-400" />
                 Start Date
               </label>
               <input
                 type="date"
                 value={searchCriteria.startDate || ''}
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, startDate: e.target.value })}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
 
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                <Calendar className="h-4 w-4 text-slate-400" />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Calendar className="h-4 w-4 text-gray-400" />
                 End Date
               </label>
               <input
                 type="date"
                 value={searchCriteria.endDate || ''}
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, endDate: e.target.value })}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
 
             {/* Account */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                <Wallet className="h-4 w-4 text-slate-400" />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Wallet className="h-4 w-4 text-gray-400" />
                 Account
               </label>
               <select
                 value={searchCriteria.accountId || ''}
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, accountId: e.target.value ? Number(e.target.value) : undefined })}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value="">All Accounts</option>
                 {accounts.map(account => (
@@ -302,14 +306,14 @@ const AdvancedSearchPage: React.FC = () => {
 
             {/* Category */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                <FolderTree className="h-4 w-4 text-slate-400" />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <FolderTree className="h-4 w-4 text-gray-400" />
                 Category
               </label>
               <select
                 value={searchCriteria.categoryId || ''}
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, categoryId: e.target.value ? Number(e.target.value) : undefined })}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value="">All Categories</option>
                 {categories.map(category => (
@@ -322,14 +326,14 @@ const AdvancedSearchPage: React.FC = () => {
 
             {/* Transaction Type */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                <ArrowRightLeft className="h-4 w-4 text-slate-400" />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <ArrowRightLeft className="h-4 w-4 text-gray-400" />
                 Type
               </label>
               <select
                 value={searchCriteria.transactionType || ''}
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, transactionType: e.target.value as TransactionType || undefined })}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value="">All Types</option>
                 <option value="INCOME">Income</option>
@@ -340,8 +344,8 @@ const AdvancedSearchPage: React.FC = () => {
 
             {/* Amount Range */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                <DollarSign className="h-4 w-4 text-slate-400" />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <DollarSign className="h-4 w-4 text-gray-400" />
                 Min Amount
               </label>
               <input
@@ -350,13 +354,13 @@ const AdvancedSearchPage: React.FC = () => {
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, minAmount: e.target.value ? Number(e.target.value) : undefined })}
                 placeholder="0.00"
                 step="0.01"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 transition-colors"
               />
             </div>
 
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                <DollarSign className="h-4 w-4 text-slate-400" />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <DollarSign className="h-4 w-4 text-gray-400" />
                 Max Amount
               </label>
               <input
@@ -365,20 +369,20 @@ const AdvancedSearchPage: React.FC = () => {
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, maxAmount: e.target.value ? Number(e.target.value) : undefined })}
                 placeholder="0.00"
                 step="0.01"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 transition-colors"
               />
             </div>
 
             {/* Recurring */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                <Repeat className="h-4 w-4 text-slate-400" />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Repeat className="h-4 w-4 text-gray-400" />
                 Recurring
               </label>
               <select
                 value={searchCriteria.isRecurring === undefined ? '' : searchCriteria.isRecurring.toString()}
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, isRecurring: e.target.value === '' ? undefined : e.target.value === 'true' })}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value="">All</option>
                 <option value="true">Recurring Only</option>
@@ -388,34 +392,34 @@ const AdvancedSearchPage: React.FC = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-6 pt-4 border-t border-gray-100 flex flex-wrap gap-3">
             <button
               onClick={handleSearch}
               disabled={loading}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all "
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
             >
               {loading ? (
                 <>
-                  <Sparkles className="h-5 w-5 animate-pulse" />
+                  <Sparkles className="h-4 w-4 animate-pulse" />
                   Searching...
                 </>
               ) : (
                 <>
-                  <Search className="h-5 w-5" />
+                  <Search className="h-4 w-4" />
                   Search
                 </>
               )}
             </button>
             <button
               onClick={handleReset}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
             >
               <RotateCcw className="h-4 w-4" />
               Reset
             </button>
             <button
               onClick={() => setShowSaveSearch(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-100 text-emerald-700 font-medium rounded-xl hover:bg-emerald-200 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium rounded-lg hover:bg-emerald-100 transition-colors"
             >
               <Save className="h-4 w-4" />
               Save Search

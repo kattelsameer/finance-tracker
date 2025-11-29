@@ -25,6 +25,13 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+export interface UpdateProfileRequest {
+  displayName?: string;
+  email?: string;
+  defaultCurrency?: string;
+  timezone?: string;
+}
+
 export interface AuthResponse {
   userId: number;
   username: string;

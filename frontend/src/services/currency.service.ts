@@ -3,18 +3,18 @@ import type { Currency, ConvertAmountRequest, ConvertAmountResponse } from '../t
 
 export const currencyService = {
   async getAll(): Promise<Currency[]> {
-    return apiClient.get<Currency[]>('/api/v1/currencies');
+    return apiClient.get<Currency[]>('/currencies');
   },
 
   async getByCode(code: string): Promise<Currency> {
-    return apiClient.get<Currency>(`/api/v1/currencies/${code}`);
+    return apiClient.get<Currency>(`/currencies/${code}`);
   },
 
   async convert(request: ConvertAmountRequest): Promise<ConvertAmountResponse> {
-    return apiClient.post<ConvertAmountResponse>('/api/v1/currencies/convert', request);
+    return apiClient.post<ConvertAmountResponse>('/currencies/convert', request);
   },
 
   async refreshRates(): Promise<void> {
-    await apiClient.post('/api/v1/currencies/refresh-rates');
+    await apiClient.post('/currencies/refresh-rates');
   }
 };

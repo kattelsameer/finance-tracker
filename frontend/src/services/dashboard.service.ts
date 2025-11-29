@@ -8,7 +8,7 @@ export const dashboardService = {
     if (endDate) params.append('endDate', endDate);
     
     const queryString = params.toString();
-    const url = `/api/v1/dashboard/stats${queryString ? `?${queryString}` : ''}`;
+    const url = `/dashboard/stats${queryString ? `?${queryString}` : ''}`;
     
     return apiClient.get<DashboardStats>(url);
   }

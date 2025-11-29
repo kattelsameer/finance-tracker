@@ -18,7 +18,7 @@ export const ENDPOINTS = {
   },
   // Accounts
   ACCOUNTS: '/accounts',
-  ACCOUNT_TYPES: '/account-types',
+  ACCOUNT_TYPES: '/accounts/types',
   // Categories
   CATEGORIES: '/categories',
   // Transactions

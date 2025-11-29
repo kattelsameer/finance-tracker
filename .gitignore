@@ -70,3 +70,7 @@ docker/mysql/data/
 .playwright-mcp/
 package-lock.json
 
+# Temp files
+cookies.txt
+/tmp/
+bin/

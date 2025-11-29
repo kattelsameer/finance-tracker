@@ -4,6 +4,7 @@ import type {
   LoginRequest,
   RegisterRequest,
   ChangePasswordRequest,
+  UpdateProfileRequest,
   AuthResponse,
   User,
 } from '../types/api';
@@ -25,6 +26,10 @@ export const authService = {
 
   async getCurrentUser(): Promise<User> {
     return apiClient.get<User>(ENDPOINTS.AUTH.ME);
+  },
+
+  async updateProfile(data: UpdateProfileRequest): Promise<User> {
+    return apiClient.put<User>(ENDPOINTS.AUTH.ME, data);
   },
 
   async changePassword(data: ChangePasswordRequest): Promise<{ message: string }> {

@@ -70,6 +70,10 @@ class ApiClient {
             this.csrfToken = null;
             // Retry with new CSRF token
             return this.fetchCsrfToken().then(() => {
+              // Ensure the new CSRF token is added to the retry request
+              if (error.config && error.config.headers && this.csrfToken) {
+                error.config.headers['X-XSRF-TOKEN'] = this.csrfToken;
+              }
               return this.client.request(error.config!);
             });
           }

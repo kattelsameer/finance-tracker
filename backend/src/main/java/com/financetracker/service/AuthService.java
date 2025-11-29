@@ -63,7 +63,7 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setDisplayName(request.getDisplayName() != null ? 
                 request.getDisplayName() : request.getUsername());
-        user.setDefaultCurrency("USD");
+        user.setDefaultCurrency("NPR");
         user.setTimezone("UTC");
         
         user = userRepository.save(user);
@@ -194,6 +194,41 @@ public class AuthService {
                 user.getTimezone(),
                 createdAtLocal
         );
+    }
+    
+    @Transactional
+    public UserResponse updateProfile(Long userId, UpdateProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+        
+        // Update email if provided and different
+        if (request.getEmail() != null && !request.getEmail().equalsIgnoreCase(user.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new ApiException(ErrorCode.EMAIL_ALREADY_EXISTS);
+            }
+            user.setEmail(request.getEmail().toLowerCase());
+        }
+        
+        // Update display name if provided
+        if (request.getDisplayName() != null) {
+            user.setDisplayName(request.getDisplayName());
+        }
+        
+        // Update default currency if provided
+        if (request.getDefaultCurrency() != null) {
+            user.setDefaultCurrency(request.getDefaultCurrency());
+        }
+        
+        // Update timezone if provided
+        if (request.getTimezone() != null) {
+            user.setTimezone(request.getTimezone());
+        }
+        
+        userRepository.save(user);
+        
+        logger.info("Profile updated for user: {}", user.getUsername());
+        
+        return getCurrentUser(userId);
     }
     
     private void setAuthCookie(HttpServletResponse response, String token) {

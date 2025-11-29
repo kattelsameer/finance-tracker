@@ -35,9 +35,9 @@ public class User {
     @Column(name = "display_name", length = 100)
     private String displayName;
 
-    @Column(name = "default_currency", length = 3, columnDefinition = "CHAR(3) DEFAULT 'USD'")
+    @Column(name = "default_currency", length = 3, columnDefinition = "CHAR(3) DEFAULT 'NPR'")
     @Builder.Default
-    private String defaultCurrency = "USD";
+    private String defaultCurrency = "NPR";
 
     @Column(length = 50, columnDefinition = "VARCHAR(50) DEFAULT 'UTC'")
     @Builder.Default
