@@ -18,7 +18,8 @@ import {
   TrendingDown,
   MoreVertical,
   Eye,
-  EyeOff
+  EyeOff,
+  LucideIcon
 } from 'lucide-react';
 
 const ACCOUNT_COLORS = [
@@ -26,7 +27,7 @@ const ACCOUNT_COLORS = [
   '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
 ];
 
-const ACCOUNT_ICONS: { [key: string]: any } = {
+const ACCOUNT_ICONS: Record<string, LucideIcon> = {
   'wallet': Wallet,
   'credit-card': CreditCard,
   'landmark': Landmark,
@@ -79,8 +80,9 @@ export function AccountsPage() {
       if (typesData.length > 0) {
         setFormData(prev => ({ ...prev, accountTypeId: typesData[0].id }));
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch accounts');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to fetch accounts');
     } finally {
       setLoading(false);
     }
@@ -110,8 +112,9 @@ export function AccountsPage() {
       setEditingAccount(null);
       resetForm();
       fetchData();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save account');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to save account');
     } finally {
       setSaving(false);
     }
@@ -122,8 +125,9 @@ export function AccountsPage() {
       await accountService.delete(id);
       setDeleteConfirm(null);
       fetchData();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete account');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to delete account');
     }
   };
 

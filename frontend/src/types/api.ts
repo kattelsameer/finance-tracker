@@ -54,7 +54,7 @@ export interface ErrorResponse {
 export interface FieldError {
   field: string;
   message: string;
-  rejectedValue?: any;
+  rejectedValue?: unknown;
 }
 
 export interface AccountType {

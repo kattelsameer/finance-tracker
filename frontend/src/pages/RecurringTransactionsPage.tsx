@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { recurringTransactionService } from '../services/recurring-transaction.service';
 import { useAuth } from '../contexts/AuthContext';
 import type { RecurringTransaction, Frequency, TransactionType } from '../types/api';
@@ -17,8 +17,7 @@ import {
   CalendarOff,
   TrendingUp,
   TrendingDown,
-  ArrowRightLeft,
-  RefreshCw
+  ArrowRightLeft
 } from 'lucide-react';
 
 export function RecurringTransactionsPage() {
@@ -30,29 +29,31 @@ export function RecurringTransactionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeOnly, setActiveOnly] = useState(true);
 
-  useEffect(() => {
-    fetchRecurringTransactions();
-  }, [activeOnly]);
-
-  const fetchRecurringTransactions = async () => {
+  const fetchRecurringTransactions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await recurringTransactionService.getAll(activeOnly);
       setRecurringTransactions(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch recurring transactions');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to fetch recurring transactions');
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeOnly]);
+
+  useEffect(() => {
+    fetchRecurringTransactions();
+  }, [fetchRecurringTransactions]);
 
   const handleToggleActive = async (id: number, currentStatus: boolean) => {
     try {
       await recurringTransactionService.update(id, { isActive: !currentStatus });
       fetchRecurringTransactions();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update recurring transaction');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to update recurring transaction');
     }
   };
 
@@ -62,8 +63,9 @@ export function RecurringTransactionsPage() {
     try {
       await recurringTransactionService.delete(id);
       fetchRecurringTransactions();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete recurring transaction');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to delete recurring transaction');
     }
   };
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { transactionService } from '../services/transaction.service';
 import { accountService } from '../services/account.service';
 import { categoryService } from '../services/category.service';
@@ -13,13 +13,10 @@ import {
   TrendingUp,
   TrendingDown,
   ArrowRightLeft,
-  Calendar,
-  MoreVertical,
   Edit,
   Trash2,
   X,
   AlertCircle,
-  RefreshCw,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -33,7 +30,7 @@ export function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
+  const [, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -61,9 +58,28 @@ export function TransactionsPage() {
     fetchData();
   }, []);
 
+  const fetchTransactions = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response: PageResponse<Transaction> = await transactionService.getAll(filter);
+      setTransactions(response.content);
+      setPagination({
+        page: response.number,
+        totalPages: response.totalPages,
+        totalElements: response.totalElements
+      });
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to fetch transactions');
+    } finally {
+      setLoading(false);
+    }
+  }, [filter]);
+
   useEffect(() => {
     fetchTransactions();
-  }, [filter]);
+  }, [fetchTransactions]);
 
   const fetchData = async () => {
     try {
@@ -75,26 +91,8 @@ export function TransactionsPage() {
       setAccounts(accountsData);
       setCategories(categoriesData);
       setTags(tagsData);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to fetch data:', err);
-    }
-  };
-
-  const fetchTransactions = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response: PageResponse<Transaction> = await transactionService.getAll(filter);
-      setTransactions(response.content);
-      setPagination({
-        page: response.number,
-        totalPages: response.totalPages,
-        totalElements: response.totalElements
-      });
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch transactions');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -110,8 +108,9 @@ export function TransactionsPage() {
       setEditingTransaction(null);
       resetForm();
       fetchTransactions();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save transaction');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to save transaction');
     }
   };
 
@@ -120,8 +119,9 @@ export function TransactionsPage() {
     try {
       await transactionService.delete(id);
       fetchTransactions();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete transaction');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to delete transaction');
     }
   };
 
@@ -269,7 +269,7 @@ export function TransactionsPage() {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Type</label>
                 <select
                   value={filter.transactionType || ''}
-                  onChange={(e) => setFilter({ ...filter, transactionType: e.target.value as any || undefined, page: 0 })}
+                  onChange={(e) => setFilter({ ...filter, transactionType: (e.target.value as 'INCOME' | 'EXPENSE' | 'TRANSFER') || undefined, page: 0 })}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Types</option>
@@ -455,7 +455,7 @@ export function TransactionsPage() {
                       <button
                         key={type}
                         type="button"
-                        onClick={() => setFormData({ ...formData, transactionType: type as any, categoryId: undefined })}
+                        onClick={() => setFormData({ ...formData, transactionType: type as 'INCOME' | 'EXPENSE' | 'TRANSFER', categoryId: undefined })}
                         className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-colors ${
                           formData.transactionType === type
                             ? type === 'INCOME' ? 'bg-emerald-100 text-emerald-700 border-2 border-emerald-500'

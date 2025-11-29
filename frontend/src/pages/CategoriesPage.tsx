@@ -6,8 +6,7 @@ import {
   Plus, 
   Edit3, 
   Trash2, 
-  AlertCircle, 
-  RefreshCw,
+  AlertCircle,
   ChevronRight,
   ChevronDown,
   X
@@ -40,8 +39,9 @@ export function CategoriesPage() {
       setError(null);
       const data = await categoryService.getAll();
       setCategories(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch categories');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to fetch categories');
     } finally {
       setLoading(false);
     }
@@ -78,8 +78,9 @@ export function CategoriesPage() {
       setEditingCategory(null);
       resetForm();
       fetchCategories();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save category');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to save category');
     } finally {
       setSaving(false);
     }
@@ -90,8 +91,9 @@ export function CategoriesPage() {
       await categoryService.delete(id);
       setDeleteConfirm(null);
       fetchCategories();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete category');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to delete category');
     }
   };
 

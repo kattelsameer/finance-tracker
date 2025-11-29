@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { currencyService } from '../services/currency.service';
 import type { Currency } from '../types/api';
 import { ArrowDownUp, DollarSign, AlertCircle, RefreshCw } from 'lucide-react';
@@ -17,22 +17,7 @@ export function CurrencyConverter() {
     fetchCurrencies();
   }, []);
 
-  useEffect(() => {
-    if (amount && fromCurrency && toCurrency) {
-      handleConvert();
-    }
-  }, [amount, fromCurrency, toCurrency]);
-
-  const fetchCurrencies = async () => {
-    try {
-      const data = await currencyService.getAll();
-      setCurrencies(data);
-    } catch (err: any) {
-      setError('Failed to fetch currencies');
-    }
-  };
-
-  const handleConvert = async () => {
+  const handleConvert = useCallback(async () => {
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
       setConvertedAmount(null);
@@ -49,10 +34,26 @@ export function CurrencyConverter() {
       });
       setConvertedAmount(result.convertedAmount);
       setExchangeRate(result.exchangeRate);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to convert currency');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to convert currency');
     } finally {
       setLoading(false);
+    }
+  }, [amount, fromCurrency, toCurrency]);
+
+  useEffect(() => {
+    if (amount && fromCurrency && toCurrency) {
+      handleConvert();
+    }
+  }, [amount, fromCurrency, toCurrency, handleConvert]);
+
+  const fetchCurrencies = async () => {
+    try {
+      const data = await currencyService.getAll();
+      setCurrencies(data);
+    } catch {
+      setError('Failed to fetch currencies');
     }
   };
 

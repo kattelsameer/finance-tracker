@@ -1,5 +1,4 @@
-import { Construction, Clock, Sparkles, ArrowRight } from 'lucide-react';
-import { LucideIcon } from 'lucide-react';
+import { Construction, Clock, Sparkles, ArrowRight, type LucideIcon } from 'lucide-react';
 
 interface ComingSoonProps {
   title: string;
@@ -8,7 +7,7 @@ interface ComingSoonProps {
   features?: string[];
 }
 
-export function ComingSoon({ title, description, icon: Icon = Construction, features }: ComingSoonProps) {
+export function ComingSoon({ title, description, icon: Icon = Construction, features }: Readonly<ComingSoonProps>) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
       <div className="max-w-lg w-full">
@@ -39,8 +38,8 @@ export function ComingSoon({ title, description, icon: Icon = Construction, feat
               Coming Features
             </h3>
             <ul className="space-y-3">
-              {features.map((feature, index) => (
-                <li key={index} className="flex items-start gap-3">
+              {features.map((feature) => (
+                <li key={feature} className="flex items-start gap-3">
                   <div className="w-6 h-6 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <ArrowRight className="w-3 h-3 text-blue-600" />
                   </div>

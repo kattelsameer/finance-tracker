@@ -17,8 +17,7 @@ import {
   TrendingUp,
   AlertTriangle,
   CheckCircle2,
-  MoreVertical,
-  Filter
+  MoreVertical
 } from 'lucide-react';
 
 const PERIOD_LABELS: Record<PeriodType, string> = {
@@ -67,8 +66,9 @@ export function BudgetsPage() {
       ]);
       setBudgets(budgetsData);
       setCategories(categoriesData.filter(c => c.categoryType === 'EXPENSE'));
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch budgets');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to fetch budgets');
     } finally {
       setLoading(false);
     }
@@ -96,8 +96,9 @@ export function BudgetsPage() {
       setEditingBudget(null);
       resetForm();
       fetchData();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save budget');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to save budget');
     } finally {
       setSaving(false);
     }
@@ -108,8 +109,9 @@ export function BudgetsPage() {
       await budgetService.delete(id);
       setDeleteConfirm(null);
       fetchData();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete budget');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to delete budget');
     }
   };
 

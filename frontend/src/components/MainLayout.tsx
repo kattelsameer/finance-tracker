@@ -17,7 +17,7 @@ import {
   Bell,
   Settings,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { NotificationCenter } from './NotificationCenter';
 import { notificationService } from '../services/notification.service';
 
@@ -43,20 +43,22 @@ export function MainLayout() {
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const loadUnreadCount = async () => {
+  const loadUnreadCount = useCallback(async () => {
     try {
       const count = await notificationService.getUnreadCount();
       setUnreadCount(count);
-    } catch (error) {
-      console.error('Failed to load unread count:', error);
+    } catch {
+      console.error('Failed to load unread count');
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // Initial load and polling for notification count is a valid use case
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadUnreadCount();
     const interval = setInterval(loadUnreadCount, 60000); // Poll every minute
     return () => clearInterval(interval);
-  }, []);
+  }, [loadUnreadCount]);
 
   const handleLogout = async () => {
     await logout();
@@ -79,8 +81,10 @@ export function MainLayout() {
     <div className="min-h-screen bg-gray-50">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-40 lg:hidden bg-black/50"
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          className="fixed inset-0 z-40 lg:hidden bg-black/50 cursor-default border-none"
           onClick={() => setSidebarOpen(false)}
         />
       )}

@@ -43,8 +43,9 @@ export function TagsPage() {
       setError(null);
       const data = await tagService.getAll();
       setTags(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch tags');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to fetch tags');
     } finally {
       setLoading(false);
     }
@@ -67,8 +68,9 @@ export function TagsPage() {
       setEditingTag(null);
       resetForm();
       fetchTags();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save tag');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to save tag');
     } finally {
       setSaving(false);
     }
@@ -79,8 +81,9 @@ export function TagsPage() {
       await tagService.delete(id);
       setDeleteConfirm(null);
       fetchTags();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete tag');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to delete tag');
     }
   };
 

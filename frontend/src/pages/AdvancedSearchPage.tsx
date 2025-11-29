@@ -17,7 +17,6 @@ import {
   Search,
   Filter,
   Star,
-  Trash2,
   Save,
   RotateCcw,
   ChevronLeft,
@@ -28,7 +27,6 @@ import {
   Calendar,
   Wallet,
   FolderTree,
-  Tag as TagIcon,
   DollarSign,
   Repeat,
   X,
@@ -57,7 +55,7 @@ const AdvancedSearchPage: React.FC = () => {
   // Filter options state
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
+  const [, setTags] = useState<Tag[]>([]);
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
 
   // UI state
@@ -153,10 +151,12 @@ const AdvancedSearchPage: React.FC = () => {
     setSearchCriteria({ ...searchCriteria, page: newPage });
   };
 
+  // Search when page changes
   useEffect(() => {
-    if (transactions.length > 0 || searchCriteria.page === 0) {
+    if (searchCriteria.page > 0) {
       handleSearch();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchCriteria.page]);
 
   const formatCurrency = (amount: number, currency: string) => {

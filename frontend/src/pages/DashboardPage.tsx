@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { dashboardService } from '../services/dashboard.service';
 import { DashboardStats } from '../types/api';
 import { CurrencyConverter } from '../components/CurrencyConverter';
@@ -25,22 +25,23 @@ export function DashboardPage() {
     endDate: new Date().toISOString().split('T')[0]
   });
 
-  useEffect(() => {
-    fetchDashboardStats();
-  }, [dateRange]);
-
-  const fetchDashboardStats = async () => {
+  const fetchDashboardStats = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await dashboardService.getDashboardStats(dateRange.startDate, dateRange.endDate);
       setStats(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch dashboard stats');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to fetch dashboard stats');
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange.startDate, dateRange.endDate]);
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, [fetchDashboardStats]);
 
   const formatCurrency = (amount: number) => {
     const currency = user?.defaultCurrency || 'NPR';

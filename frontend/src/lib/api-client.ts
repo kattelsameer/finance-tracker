@@ -103,27 +103,27 @@ class ApiClient {
     }
   }
 
-  public async get<T>(url: string, config?: any): Promise<T> {
+  public async get<T>(url: string, config?: Record<string, unknown>): Promise<T> {
     const response = await this.client.get<T>(url, config);
     return response.data;
   }
 
-  public async post<T>(url: string, data?: any, config?: any): Promise<T> {
+  public async post<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T> {
     const response = await this.client.post<T>(url, data, config);
     return response.data;
   }
 
-  public async put<T>(url: string, data?: any, config?: any): Promise<T> {
+  public async put<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T> {
     const response = await this.client.put<T>(url, data, config);
     return response.data;
   }
 
-  public async patch<T>(url: string, data?: any, config?: any): Promise<T> {
+  public async patch<T>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<T> {
     const response = await this.client.patch<T>(url, data, config);
     return response.data;
   }
 
-  public async delete<T>(url: string, config?: any): Promise<T> {
+  public async delete<T>(url: string, config?: Record<string, unknown>): Promise<T> {
     const response = await this.client.delete<T>(url, config);
     return response.data;
   }

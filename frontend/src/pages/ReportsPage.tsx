@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { reportService } from '../services/report.service';
 import { useAuth } from '../contexts/AuthContext';
 import type { TransactionReport } from '../types/api';
@@ -28,11 +28,7 @@ export function ReportsPage() {
     endDate: new Date().toISOString().split('T')[0]
   });
 
-  useEffect(() => {
-    fetchReport();
-  }, []);
-
-  const fetchReport = async () => {
+  const fetchReport = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -41,20 +37,26 @@ export function ReportsPage() {
         dateRange.endDate
       );
       setReport(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch report');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to fetch report');
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange.startDate, dateRange.endDate]);
+
+  useEffect(() => {
+    fetchReport();
+  }, [fetchReport]);
 
   const handleExportCSV = async () => {
     try {
       const blob = await reportService.exportToCSV(dateRange.startDate, dateRange.endDate);
       const filename = `transactions_${dateRange.startDate}_to_${dateRange.endDate}.csv`;
       reportService.downloadCSV(blob, filename);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to export CSV');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to export CSV');
     }
   };
 
