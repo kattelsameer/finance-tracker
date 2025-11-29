@@ -1,6 +1,19 @@
 import { useEffect, useState } from 'react';
 import { reportService } from '../services/report.service';
 import type { TransactionReport } from '../types/api';
+import {
+  TrendingUp,
+  TrendingDown,
+  ArrowRightLeft,
+  FileDown,
+  Calendar,
+  PieChart,
+  Wallet,
+  BarChart3,
+  CalendarDays,
+  AlertCircle,
+  RefreshCw
+} from 'lucide-react';
 
 export function ReportsPage() {
   const [report, setReport] = useState<TransactionReport | null>(null);
@@ -50,114 +63,165 @@ export function ReportsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-600">Loading report...</div>
+      <div className="flex flex-col items-center justify-center h-96">
+        <div className="w-12 h-12 border-4 border-gray-200 rounded-full animate-spin border-t-blue-600"></div>
+        <p className="mt-4 text-gray-500 font-medium">Generating report...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Transaction Reports</h1>
+    <div className="space-y-8">
+      {/* Header with Export Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">Transaction Reports</h2>
+          <p className="text-gray-500 text-sm mt-1">Analyze your financial activity</p>
+        </div>
         <button
           onClick={handleExportCSV}
           disabled={!report}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
+          <FileDown className="h-5 w-5" />
           Export to CSV
         </button>
       </div>
 
       {/* Date Range Filter */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex gap-4 items-end">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-            <input
-              type="date"
-              value={dateRange.startDate}
-              onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-            <input
-              type="date"
-              value={dateRange.endDate}
-              onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col md:flex-row md:items-end gap-4">
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Calendar className="h-4 w-4 text-gray-400" />
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={dateRange.startDate}
+                onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Calendar className="h-4 w-4 text-gray-400" />
+                End Date
+              </label>
+              <input
+                type="date"
+                value={dateRange.endDate}
+                onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
           </div>
           <button
             onClick={fetchReport}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
           >
+            <RefreshCw className="h-5 w-5" />
             Generate Report
           </button>
         </div>
       </div>
 
+      {/* Error Alert */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
-          {error}
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-xl text-red-700">
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
       {report && (
         <>
-          {/* Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-500">Total Income</h3>
-              <p className="mt-2 text-2xl font-bold text-green-600">{formatCurrency(report.totalIncome)}</p>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-medium text-gray-500">Total Income</span>
+                <div className="p-2.5 bg-emerald-50 rounded-xl">
+                  <TrendingUp className="h-5 w-5 text-emerald-600" />
+                </div>
+              </div>
+              <p className="text-2xl font-semibold text-gray-900">{formatCurrency(report.totalIncome)}</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-500">Total Expenses</h3>
-              <p className="mt-2 text-2xl font-bold text-red-600">{formatCurrency(report.totalExpenses)}</p>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-medium text-gray-500">Total Expenses</span>
+                <div className="p-2.5 bg-red-50 rounded-xl">
+                  <TrendingDown className="h-5 w-5 text-red-600" />
+                </div>
+              </div>
+              <p className="text-2xl font-semibold text-gray-900">{formatCurrency(report.totalExpenses)}</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-500">Net Amount</h3>
-              <p className={`mt-2 text-2xl font-bold ${report.netAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-medium text-gray-500">Net Amount</span>
+                <div className={`p-2.5 rounded-xl ${report.netAmount >= 0 ? 'bg-teal-50' : 'bg-orange-50'}`}>
+                  <ArrowRightLeft className={`h-5 w-5 ${report.netAmount >= 0 ? 'text-teal-600' : 'text-orange-600'}`} />
+                </div>
+              </div>
+              <p className={`text-2xl font-semibold ${report.netAmount >= 0 ? 'text-teal-600' : 'text-orange-600'}`}>
                 {formatCurrency(report.netAmount)}
               </p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-500">Transactions</h3>
-              <p className="mt-2 text-2xl font-bold text-gray-900">{report.transactionCount}</p>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-medium text-gray-500">Transactions</span>
+                <div className="p-2.5 bg-blue-50 rounded-xl">
+                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                </div>
+              </div>
+              <p className="text-2xl font-semibold text-gray-900">{report.transactionCount}</p>
             </div>
           </div>
 
           {/* Category Breakdown */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Category Breakdown</h2>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+              <div className="p-2 bg-purple-50 rounded-lg">
+                <PieChart className="h-5 w-5 text-purple-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900">Category Breakdown</h3>
+            </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="w-full">
                 <thead>
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Transactions</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">% of Total</th>
+                  <tr className="bg-gray-50">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Count</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">% Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-100">
                   {report.categoryBreakdown.map((cat) => (
-                    <tr key={`${cat.categoryId}-${cat.categoryType}`}>
-                      <td className="px-4 py-3 text-sm text-gray-900">{cat.categoryName}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          cat.categoryType === 'INCOME' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    <tr key={`${cat.categoryId}-${cat.categoryType}`} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{cat.categoryName}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                          cat.categoryType === 'INCOME' 
+                            ? 'bg-emerald-50 text-emerald-700' 
+                            : 'bg-red-50 text-red-700'
                         }`}>
+                          {cat.categoryType === 'INCOME' ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
                           {cat.categoryType}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-right">{formatCurrency(cat.totalAmount)}</td>
-                      <td className="px-4 py-3 text-sm text-right text-gray-600">{cat.transactionCount}</td>
-                      <td className="px-4 py-3 text-sm text-right text-gray-600">{cat.percentageOfTotal.toFixed(1)}%</td>
+                      <td className="px-6 py-4 text-sm text-right font-medium text-gray-900">{formatCurrency(cat.totalAmount)}</td>
+                      <td className="px-6 py-4 text-sm text-right text-gray-600">{cat.transactionCount}</td>
+                      <td className="px-6 py-4 text-sm text-right">
+                        <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded-lg text-gray-600 font-medium">
+                          {cat.percentageOfTotal.toFixed(1)}%
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -166,29 +230,40 @@ export function ReportsPage() {
           </div>
 
           {/* Account Breakdown */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Account Breakdown</h2>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <Wallet className="h-5 w-5 text-blue-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900">Account Breakdown</h3>
+            </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="w-full">
                 <thead>
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Income</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Expenses</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Net Change</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Transactions</th>
+                  <tr className="bg-gray-50">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Account</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Income</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Expenses</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Net Change</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Count</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-100">
                   {report.accountBreakdown.map((acc) => (
-                    <tr key={acc.accountId}>
-                      <td className="px-4 py-3 text-sm text-gray-900">{acc.accountName}</td>
-                      <td className="px-4 py-3 text-sm text-right text-green-600">{formatCurrency(acc.income)}</td>
-                      <td className="px-4 py-3 text-sm text-right text-red-600">{formatCurrency(acc.expenses)}</td>
-                      <td className={`px-4 py-3 text-sm text-right ${acc.netChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatCurrency(acc.netChange)}
+                    <tr key={acc.accountId} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{acc.accountName}</td>
+                      <td className="px-6 py-4 text-sm text-right">
+                        <span className="text-emerald-600 font-medium">{formatCurrency(acc.income)}</span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-right text-gray-600">{acc.transactionCount}</td>
+                      <td className="px-6 py-4 text-sm text-right">
+                        <span className="text-red-600 font-medium">{formatCurrency(acc.expenses)}</span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-right">
+                        <span className={`font-semibold ${acc.netChange >= 0 ? 'text-teal-600' : 'text-orange-600'}`}>
+                          {formatCurrency(acc.netChange)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-right text-gray-600">{acc.transactionCount}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -197,29 +272,40 @@ export function ReportsPage() {
           </div>
 
           {/* Daily Breakdown */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Daily Breakdown</h2>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+              <div className="p-2 bg-teal-50 rounded-lg">
+                <CalendarDays className="h-5 w-5 text-teal-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900">Daily Breakdown</h3>
+            </div>
             <div className="overflow-x-auto max-h-96">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="sticky top-0 bg-white">
+              <table className="w-full">
+                <thead className="sticky top-0 bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Income</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Expenses</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Net</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Transactions</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Income</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Expenses</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Net</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Count</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-100">
                   {report.dailyBreakdown.map((day) => (
-                    <tr key={day.date}>
-                      <td className="px-4 py-3 text-sm text-gray-900">{day.date}</td>
-                      <td className="px-4 py-3 text-sm text-right text-green-600">{formatCurrency(day.income)}</td>
-                      <td className="px-4 py-3 text-sm text-right text-red-600">{formatCurrency(day.expenses)}</td>
-                      <td className={`px-4 py-3 text-sm text-right ${day.netChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatCurrency(day.netChange)}
+                    <tr key={day.date} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{day.date}</td>
+                      <td className="px-6 py-4 text-sm text-right">
+                        <span className="text-emerald-600 font-medium">{formatCurrency(day.income)}</span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-right text-gray-600">{day.transactionCount}</td>
+                      <td className="px-6 py-4 text-sm text-right">
+                        <span className="text-red-600 font-medium">{formatCurrency(day.expenses)}</span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-right">
+                        <span className={`font-semibold ${day.netChange >= 0 ? 'text-teal-600' : 'text-orange-600'}`}>
+                          {formatCurrency(day.netChange)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-right text-gray-600">{day.transactionCount}</td>
                     </tr>
                   ))}
                 </tbody>

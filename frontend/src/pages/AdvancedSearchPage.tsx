@@ -12,6 +12,28 @@ import {
   SavedSearch,
   TransactionType,
 } from '../types/api';
+import {
+  Search,
+  Filter,
+  Star,
+  Trash2,
+  Save,
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
+  TrendingDown,
+  ArrowRightLeft,
+  Calendar,
+  Wallet,
+  FolderTree,
+  Tag as TagIcon,
+  DollarSign,
+  Repeat,
+  X,
+  Sparkles,
+  FileSearch
+} from 'lucide-react';
 
 const AdvancedSearchPage: React.FC = () => {
   // Search criteria state
@@ -108,7 +130,7 @@ const AdvancedSearchPage: React.FC = () => {
     try {
       const criteria = JSON.parse(savedSearch.searchCriteria) as TransactionSearchRequest;
       setSearchCriteria(criteria);
-      await handleSearch();
+      // Don't auto-search, let user review criteria first
     } catch (error) {
       console.error('Failed to load saved search:', error);
     }
@@ -148,40 +170,63 @@ const AdvancedSearchPage: React.FC = () => {
     });
   };
 
+  const getTypeConfig = (type: TransactionType) => {
+    switch (type) {
+      case 'INCOME':
+        return { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: TrendingUp };
+      case 'EXPENSE':
+        return { bg: 'bg-rose-100', text: 'text-rose-700', icon: TrendingDown };
+      case 'TRANSFER':
+        return { bg: 'bg-blue-100', text: 'text-blue-700', icon: ArrowRightLeft };
+    }
+  };
+
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Advanced Search</h1>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800">Advanced Search</h2>
+          <p className="text-slate-500">Find transactions with powerful filters</p>
+        </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${
+            showFilters 
+              ? 'bg-blue-100 text-blue-700 border-blue-200' 
+              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+          }`}
         >
-          {showFilters ? 'Hide' : 'Show'} Filters
+          <Filter className="h-4 w-4" />
+          {showFilters ? 'Hide Filters' : 'Show Filters'}
         </button>
       </div>
 
       {/* Saved Searches */}
       {savedSearches.length > 0 && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Saved Searches</h3>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Star className="h-4 w-4 text-amber-500" />
+            <h3 className="text-sm font-semibold text-slate-700">Saved Searches</h3>
+          </div>
           <div className="flex flex-wrap gap-2">
             {savedSearches.map(savedSearch => (
               <div
                 key={savedSearch.id}
-                className="flex items-center gap-2 px-3 py-2 bg-white border rounded-lg"
+                className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
               >
                 <button
                   onClick={() => handleLoadSavedSearch(savedSearch)}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-blue-600 hover:text-blue-700 font-medium text-sm"
                 >
                   {savedSearch.searchName}
-                  {savedSearch.isDefault && ' ⭐'}
+                  {savedSearch.isDefault && <Star className="h-3 w-3 inline ml-1 text-amber-500 fill-amber-500" />}
                 </button>
                 <button
                   onClick={() => handleDeleteSavedSearch(savedSearch.id)}
-                  className="text-red-500 hover:text-red-700 text-sm"
+                  className="text-slate-400 hover:text-rose-500 transition-colors"
                 >
-                  ×
+                  <X className="h-4 w-4" />
                 </button>
               </div>
             ))}
@@ -191,11 +236,12 @@ const AdvancedSearchPage: React.FC = () => {
 
       {/* Search Filters */}
       {showFilters && (
-        <div className="mb-6 p-6 bg-white rounded-lg shadow-md">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {/* Search Term */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="lg:col-span-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                <Search className="h-4 w-4 text-slate-400" />
                 Search Term
               </label>
               <input
@@ -203,44 +249,47 @@ const AdvancedSearchPage: React.FC = () => {
                 value={searchCriteria.searchTerm || ''}
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, searchTerm: e.target.value })}
                 placeholder="Search description or notes..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400"
               />
             </div>
 
             {/* Date Range */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                <Calendar className="h-4 w-4 text-slate-400" />
                 Start Date
               </label>
               <input
                 type="date"
                 value={searchCriteria.startDate || ''}
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, startDate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                <Calendar className="h-4 w-4 text-slate-400" />
                 End Date
               </label>
               <input
                 type="date"
                 value={searchCriteria.endDate || ''}
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, endDate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             {/* Account */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                <Wallet className="h-4 w-4 text-slate-400" />
                 Account
               </label>
               <select
                 value={searchCriteria.accountId || ''}
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, accountId: e.target.value ? Number(e.target.value) : undefined })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">All Accounts</option>
                 {accounts.map(account => (
@@ -253,13 +302,14 @@ const AdvancedSearchPage: React.FC = () => {
 
             {/* Category */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                <FolderTree className="h-4 w-4 text-slate-400" />
                 Category
               </label>
               <select
                 value={searchCriteria.categoryId || ''}
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, categoryId: e.target.value ? Number(e.target.value) : undefined })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">All Categories</option>
                 {categories.map(category => (
@@ -272,13 +322,14 @@ const AdvancedSearchPage: React.FC = () => {
 
             {/* Transaction Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                <ArrowRightLeft className="h-4 w-4 text-slate-400" />
                 Type
               </label>
               <select
                 value={searchCriteria.transactionType || ''}
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, transactionType: e.target.value as TransactionType || undefined })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">All Types</option>
                 <option value="INCOME">Income</option>
@@ -289,7 +340,8 @@ const AdvancedSearchPage: React.FC = () => {
 
             {/* Amount Range */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                <DollarSign className="h-4 w-4 text-slate-400" />
                 Min Amount
               </label>
               <input
@@ -298,12 +350,13 @@ const AdvancedSearchPage: React.FC = () => {
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, minAmount: e.target.value ? Number(e.target.value) : undefined })}
                 placeholder="0.00"
                 step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                <DollarSign className="h-4 w-4 text-slate-400" />
                 Max Amount
               </label>
               <input
@@ -312,34 +365,20 @@ const AdvancedSearchPage: React.FC = () => {
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, maxAmount: e.target.value ? Number(e.target.value) : undefined })}
                 placeholder="0.00"
                 step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Currency */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Currency
-              </label>
-              <input
-                type="text"
-                value={searchCriteria.currency || ''}
-                onChange={(e) => setSearchCriteria({ ...searchCriteria, currency: e.target.value })}
-                placeholder="USD"
-                maxLength={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400"
               />
             </div>
 
             {/* Recurring */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                <Repeat className="h-4 w-4 text-slate-400" />
                 Recurring
               </label>
               <select
                 value={searchCriteria.isRecurring === undefined ? '' : searchCriteria.isRecurring.toString()}
                 onChange={(e) => setSearchCriteria({ ...searchCriteria, isRecurring: e.target.value === '' ? undefined : e.target.value === 'true' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">All</option>
                 <option value="true">Recurring Only</option>
@@ -349,24 +388,36 @@ const AdvancedSearchPage: React.FC = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <button
               onClick={handleSearch}
               disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all "
             >
-              {loading ? 'Searching...' : 'Search'}
+              {loading ? (
+                <>
+                  <Sparkles className="h-5 w-5 animate-pulse" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="h-5 w-5" />
+                  Search
+                </>
+              )}
             </button>
             <button
               onClick={handleReset}
-              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors"
             >
+              <RotateCcw className="h-4 w-4" />
               Reset
             </button>
             <button
               onClick={() => setShowSaveSearch(true)}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-100 text-emerald-700 font-medium rounded-xl hover:bg-emerald-200 transition-colors"
             >
+              <Save className="h-4 w-4" />
               Save Search
             </button>
           </div>
@@ -375,29 +426,37 @@ const AdvancedSearchPage: React.FC = () => {
 
       {/* Save Search Modal */}
       {showSaveSearch && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">Save Search</h3>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-blue-100 rounded-xl">
+                <Save className="h-5 w-5 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800">Save Search</h3>
+            </div>
             <input
               type="text"
               value={saveSearchName}
               onChange={(e) => setSaveSearchName(e.target.value)}
-              placeholder="Search name..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4"
+              placeholder="Give your search a name..."
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400 mb-4"
             />
-            <label className="flex items-center gap-2 mb-4">
+            <label className="flex items-center gap-3 mb-6 p-3 bg-amber-50 rounded-xl border border-amber-200 cursor-pointer">
               <input
                 type="checkbox"
                 checked={saveAsDefault}
                 onChange={(e) => setSaveAsDefault(e.target.checked)}
-                className="rounded"
+                className="w-5 h-5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
               />
-              <span className="text-sm text-gray-700">Set as default search</span>
+              <div>
+                <span className="text-sm font-medium text-amber-800">Set as default search</span>
+                <p className="text-xs text-amber-600">This search will load automatically</p>
+              </div>
             </label>
             <div className="flex gap-3">
               <button
                 onClick={handleSaveSearch}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="flex-1 px-4 py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all"
               >
                 Save
               </button>
@@ -407,7 +466,7 @@ const AdvancedSearchPage: React.FC = () => {
                   setSaveSearchName('');
                   setSaveAsDefault(false);
                 }}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                className="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors"
               >
                 Cancel
               </button>
@@ -418,97 +477,115 @@ const AdvancedSearchPage: React.FC = () => {
 
       {/* Results */}
       {transactions.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="p-4 bg-gray-50 border-b">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Results ({totalElements} transactions found)
-            </h3>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <FileSearch className="h-5 w-5 text-blue-600" />
+              </div>
+              <h3 className="font-bold text-slate-800">
+                Results <span className="text-slate-500 font-normal">({totalElements} transactions)</span>
+              </h3>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Account</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Amount</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {transactions.map(transaction => (
-                  <tr key={transaction.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-900">
-                      {formatDate(transaction.transactionDate)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
-                      {transaction.description}
-                      {transaction.isRecurring && (
-                        <span className="ml-2 text-xs text-blue-600">↻</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {transaction.accountName}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {transaction.categoryName || '-'}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              <tbody className="divide-y divide-slate-100">
+                {transactions.map((transaction, idx) => {
+                  const typeConfig = getTypeConfig(transaction.transactionType);
+                  const TypeIcon = typeConfig.icon;
+                  
+                  return (
+                    <tr key={transaction.id} className={`hover:bg-slate-50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
+                      <td className="px-6 py-4 text-sm font-medium text-slate-800">
+                        {formatDate(transaction.transactionDate)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-700">
+                        <div className="flex items-center gap-2">
+                          {transaction.description}
+                          {transaction.isRecurring && (
+                            <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">
+                              <Repeat className="h-3 w-3 inline" />
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {transaction.accountName}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {transaction.categoryName || <span className="text-slate-400">—</span>}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold ${typeConfig.bg} ${typeConfig.text}`}>
+                          <TypeIcon className="h-3 w-3" />
+                          {transaction.transactionType}
+                        </span>
+                      </td>
+                      <td className={`px-6 py-4 text-sm text-right font-semibold ${
                         transaction.transactionType === 'INCOME'
-                          ? 'bg-green-100 text-green-800'
+                          ? 'text-emerald-600'
                           : transaction.transactionType === 'EXPENSE'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-blue-100 text-blue-800'
+                          ? 'text-rose-600'
+                          : 'text-blue-600'
                       }`}>
-                        {transaction.transactionType}
-                      </span>
-                    </td>
-                    <td className={`px-4 py-3 text-sm text-right font-medium ${
-                      transaction.transactionType === 'INCOME'
-                        ? 'text-green-600'
-                        : transaction.transactionType === 'EXPENSE'
-                        ? 'text-red-600'
-                        : 'text-blue-600'
-                    }`}>
-                      {formatCurrency(transaction.amount, transaction.currency)}
-                    </td>
-                  </tr>
-                ))}
+                        {formatCurrency(transaction.amount, transaction.currency)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="p-4 bg-gray-50 border-t flex items-center justify-between">
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
               <button
                 onClick={() => handlePageChange(searchCriteria.page! - 1)}
                 disabled={searchCriteria.page === 0}
-                className="px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                className="inline-flex items-center gap-1 px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium text-slate-700"
               >
+                <ChevronLeft className="h-4 w-4" />
                 Previous
               </button>
-              <span className="text-sm text-gray-600">
-                Page {(searchCriteria.page || 0) + 1} of {totalPages}
+              <span className="text-sm text-slate-600">
+                Page <span className="font-semibold text-slate-800">{(searchCriteria.page || 0) + 1}</span> of <span className="font-semibold text-slate-800">{totalPages}</span>
               </span>
               <button
                 onClick={() => handlePageChange(searchCriteria.page! + 1)}
                 disabled={searchCriteria.page! >= totalPages - 1}
-                className="px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                className="inline-flex items-center gap-1 px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium text-slate-700"
               >
                 Next
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           )}
         </div>
       )}
 
+      {/* Empty State */}
       {!loading && transactions.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          No transactions found. Try adjusting your search criteria.
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
+          <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Search className="h-10 w-10 text-slate-400" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-800 mb-2">No transactions found</h3>
+          <p className="text-slate-500 max-w-md mx-auto">
+            Try adjusting your search criteria or filters to find what you're looking for.
+          </p>
         </div>
       )}
     </div>

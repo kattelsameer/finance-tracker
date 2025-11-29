@@ -1,5 +1,15 @@
 import { useState } from 'react';
 import { importExportService, type ImportResult } from '../services/import-export.service';
+import { 
+  Upload, 
+  Download, 
+  FileSpreadsheet, 
+  Calendar, 
+  CheckCircle, 
+  AlertCircle, 
+  Info,
+  Loader2
+} from 'lucide-react';
 
 export function ImportExportPage() {
   const [importing, setImporting] = useState(false);
@@ -22,8 +32,6 @@ export function ImportExportPage() {
 
       const result = await importExportService.importCSV(file);
       setImportResult(result);
-
-      // Reset file input
       event.target.value = '';
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to import transactions');
@@ -47,56 +55,69 @@ export function ImportExportPage() {
     }
   };
 
+  const downloadSampleCSV = () => {
+    const sample = 'Date,Description,Amount,Type,Account,Category,Notes,Reference\n2024-01-15,Grocery Shopping,50.00,EXPENSE,Checking,Groceries,Weekly groceries,REF001\n2024-01-16,Salary,3000.00,INCOME,Checking,Salary,Monthly salary,SAL001';
+    const blob = new Blob([sample], { type: 'text/csv' });
+    importExportService.downloadCSV(blob, 'sample_transactions.csv');
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Import & Export</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Import transactions from CSV or export your data
-        </p>
+        <h2 className="text-xl font-semibold text-slate-800">Import & Export</h2>
+        <p className="text-sm text-slate-500 mt-1">Import transactions from CSV or export your data</p>
       </div>
 
+      {/* Error Alert */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
-          {error}
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="ml-auto text-red-500 hover:text-red-700">×</button>
         </div>
       )}
 
-      {/* Import Section */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Import Transactions</h2>
-        
-        <div className="space-y-4">
-          <div>
-            <p className="text-sm text-gray-600 mb-4">
-              Upload a CSV file with your transactions. The file should include columns for Date, Description, Amount, Type, Account, and Category.
-            </p>
-            
-            <div className="bg-gray-50 p-4 rounded-lg mb-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">CSV Format Guide:</h3>
-              <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
-                <li><strong>Date:</strong> 2024-01-15, 01/15/2024, or 15/01/2024</li>
-                <li><strong>Description:</strong> Transaction description</li>
-                <li><strong>Amount:</strong> Positive number (e.g., 50.00 or $50.00)</li>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Import Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+            <Upload className="h-5 w-5 text-blue-600" />
+            <h3 className="font-semibold text-slate-800">Import Transactions</h3>
+          </div>
+          
+          <div className="p-5 space-y-5">
+            {/* Format Guide */}
+            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Info className="h-4 w-4 text-slate-500" />
+                <span className="font-medium text-slate-700 text-sm">CSV Format</span>
+              </div>
+              <ul className="text-xs text-slate-600 space-y-1">
+                <li><strong>Date:</strong> YYYY-MM-DD or MM/DD/YYYY</li>
                 <li><strong>Type:</strong> INCOME, EXPENSE, or TRANSFER</li>
-                <li><strong>Account:</strong> Name of your account (must exist)</li>
-                <li><strong>Category:</strong> Category name (optional)</li>
-                <li><strong>Notes:</strong> Additional notes (optional)</li>
-                <li><strong>Reference:</strong> Reference number (optional)</li>
+                <li><strong>Account:</strong> Account name (must exist)</li>
               </ul>
             </div>
 
-            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <p className="mb-2 text-sm text-gray-500">
-                  <span className="font-semibold">Click to upload</span> or drag and drop
-                </p>
-                <p className="text-xs text-gray-500">CSV files only</p>
-              </div>
+            {/* Upload Area */}
+            <label className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+              importing ? 'border-blue-300 bg-blue-50' : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50'
+            }`}>
+              {importing ? (
+                <div className="flex flex-col items-center">
+                  <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+                  <p className="mt-2 text-sm text-blue-600">Importing...</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <FileSpreadsheet className="h-8 w-8 text-slate-400 mb-2" />
+                  <p className="text-sm text-slate-600">
+                    <span className="font-medium text-blue-600">Click to upload</span> or drag and drop
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">CSV files only</p>
+                </div>
+              )}
               <input
                 type="file"
                 className="hidden"
@@ -106,103 +127,110 @@ export function ImportExportPage() {
               />
             </label>
 
-            {importing && (
-              <div className="mt-4 text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p className="mt-2 text-sm text-gray-600">Importing transactions...</p>
-              </div>
-            )}
-
+            {/* Import Result */}
             {importResult && (
-              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <h3 className="text-sm font-semibold text-green-900 mb-2">Import Complete!</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm text-green-800">
-                  <div>Total Records: <span className="font-semibold">{importResult.totalRecords}</span></div>
-                  <div>Successful: <span className="font-semibold">{importResult.successfulImports}</span></div>
-                  <div>Duplicates Skipped: <span className="font-semibold">{importResult.duplicatesSkipped}</span></div>
-                  <div>Errors: <span className="font-semibold">{importResult.errors}</span></div>
+              <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle className="h-5 w-5 text-emerald-600" />
+                  <span className="font-medium text-emerald-800">Import Complete</span>
                 </div>
-                <p className="mt-2 text-xs text-green-700">{importResult.message}</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Total:</span>
+                    <span className="font-medium text-slate-800">{importResult.totalRecords}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Imported:</span>
+                    <span className="font-medium text-emerald-600">{importResult.successfulImports}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Duplicates:</span>
+                    <span className="font-medium text-amber-600">{importResult.duplicatesSkipped}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Errors:</span>
+                    <span className="font-medium text-red-600">{importResult.errors}</span>
+                  </div>
+                </div>
               </div>
             )}
           </div>
         </div>
-      </div>
 
-      {/* Export Section */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Export Transactions</h2>
-        
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            Export your transactions to a CSV file for backup or analysis.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-              <input
-                type="date"
-                value={dateRange.startDate}
-                onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-              <input
-                type="date"
-                value={dateRange.endDate}
-                onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              />
-            </div>
+        {/* Export Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+            <Download className="h-5 w-5 text-emerald-600" />
+            <h3 className="font-semibold text-slate-800">Export Transactions</h3>
           </div>
-
-          <button
-            onClick={handleExport}
-            disabled={exporting}
-            className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {exporting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Exporting...</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                <span>Export to CSV</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Sample CSV Download */}
-      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-        <div className="flex items-start">
-          <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div className="flex-1">
-            <h3 className="text-sm font-semibold text-blue-900">Need a sample CSV file?</h3>
-            <p className="text-xs text-blue-700 mt-1">
-              Download a sample CSV file to see the correct format for importing transactions.
+          
+          <div className="p-5 space-y-5">
+            <p className="text-sm text-slate-600">
+              Export your transactions to CSV for backup or analysis.
             </p>
+
+            {/* Date Range */}
+            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Calendar className="h-4 w-4 text-slate-500" />
+                <span className="font-medium text-slate-700 text-sm">Date Range</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Start</label>
+                  <input
+                    type="date"
+                    value={dateRange.startDate}
+                    onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">End</label>
+                  <input
+                    type="date"
+                    value={dateRange.endDate}
+                    onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Export Button */}
             <button
-              onClick={() => {
-                const sample = 'Date,Description,Amount,Type,Account,Category,Notes,Reference\n2024-01-15,Grocery Shopping,50.00,EXPENSE,Checking,Groceries,Weekly groceries,REF001\n2024-01-16,Salary,3000.00,INCOME,Checking,Salary,Monthly salary,SAL001';
-                const blob = new Blob([sample], { type: 'text/csv' });
-                importExportService.downloadCSV(blob, 'sample_transactions.csv');
-              }}
-              className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
+              onClick={handleExport}
+              disabled={exporting}
+              className="w-full py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
-              Download Sample CSV
+              {exporting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Export to CSV
+                </>
+              )}
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Sample CSV */}
+      <div className="bg-slate-50 rounded-lg p-5 border border-slate-200 flex items-start gap-4">
+        <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div>
+          <h4 className="font-medium text-slate-800">Need a sample file?</h4>
+          <p className="text-sm text-slate-600 mt-1 mb-3">Download a sample CSV to see the correct format.</p>
+          <button
+            onClick={downloadSampleCSV}
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
+            Download Sample CSV →
+          </button>
         </div>
       </div>
     </div>

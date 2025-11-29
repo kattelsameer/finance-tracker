@@ -15,7 +15,6 @@ import {
   Repeat,
   FileSpreadsheet,
   Bell,
-  Settings as SettingsIcon,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { NotificationCenter } from './NotificationCenter';
@@ -67,93 +66,76 @@ export function MainLayout() {
     navigate('/notification-settings');
   };
 
+  // Get page title based on current path
+  const getPageTitle = () => {
+    const currentPage = navigation.find(item => item.href === location.pathname);
+    return currentPage?.name || 'Finance Tracker';
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 lg:hidden bg-black/50"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Mobile sidebar */}
-      <div className={`fixed inset-0 z-40 lg:hidden ${sidebarOpen ? '' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
-        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
-          <div className="absolute top-0 right-0 -mr-12 pt-2">
+      <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out lg:hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex flex-col h-full">
+          {/* Mobile sidebar header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-sm">
+                <Wallet className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-lg font-semibold text-gray-900">Finance Tracker</span>
+            </div>
             <button
-              type="button"
-              className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
               onClick={() => setSidebarOpen(false)}
+              className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
             >
-              <X className="h-6 w-6 text-white" />
+              <X className="h-5 w-5 text-gray-500" />
             </button>
           </div>
-          <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
-            <div className="flex-shrink-0 flex items-center px-4">
-              <h1 className="text-xl font-bold text-indigo-600">Finance Tracker</h1>
-            </div>
-            <nav className="mt-5 px-2 space-y-1">
-              {navigation.map((item) => {
-                const isActive = location.pathname === item.href;
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`${
-                      isActive
-                        ? 'bg-indigo-50 text-indigo-600'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    } group flex items-center px-2 py-2 text-base font-medium rounded-md`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <item.icon
-                      className={`${
-                        isActive ? 'text-indigo-600' : 'text-gray-400'
-                      } mr-4 h-6 w-6`}
-                    />
-                    {item.name}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-        </div>
-      </div>
 
-      {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:border-r lg:border-gray-200 lg:bg-white">
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-            <div className="flex items-center flex-shrink-0 px-4">
-              <h1 className="text-xl font-bold text-indigo-600">Finance Tracker</h1>
-            </div>
-            <nav className="mt-5 flex-1 px-2 space-y-1">
-              {navigation.map((item) => {
-                const isActive = location.pathname === item.href;
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`${
-                      isActive
-                        ? 'bg-indigo-50 text-indigo-600'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    } group flex items-center px-2 py-2 text-sm font-medium rounded-md`}
-                  >
-                    <item.icon
-                      className={`${
-                        isActive ? 'text-indigo-600' : 'text-gray-400'
-                      } mr-3 h-5 w-5`}
-                    />
-                    {item.name}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-          <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
-            <div className="flex items-center w-full">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700">{user?.displayName}</p>
-                <p className="text-xs text-gray-500">{user?.email}</p>
+          {/* Mobile navigation */}
+          <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+            {navigation.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700 font-medium shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
+                  }`}
+                >
+                  <item.icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span className="font-medium">{item.name}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Mobile user section */}
+          <div className="p-3 border-t border-gray-200 bg-gray-50/50">
+            <div className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold shadow-sm flex-shrink-0">
+                {user?.displayName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">{user?.displayName || user?.username}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="ml-3 text-gray-400 hover:text-gray-600"
+                className="p-2.5 rounded-xl hover:bg-red-50 transition-colors text-gray-400 hover:text-red-500"
                 title="Logout"
               >
                 <LogOut className="h-5 w-5" />
@@ -163,60 +145,99 @@ export function MainLayout() {
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="lg:pl-64 flex flex-col flex-1">
-        <div className="sticky top-0 z-10 lg:hidden flex-shrink-0 flex h-16 bg-white border-b border-gray-200">
-          <button
-            type="button"
-            className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-6 w-6" />
-          </button>
-          <div className="flex-1 px-4 flex justify-between">
-            <div className="flex-1 flex items-center">
-              <h1 className="text-lg font-semibold text-gray-900">Finance Tracker</h1>
+      {/* Desktop sidebar */}
+      <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-64 lg:flex-col">
+        <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
+          {/* Desktop sidebar header */}
+          <div className="flex items-center gap-3 px-5 py-5 border-b border-gray-200">
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-sm">
+              <Wallet className="h-5 w-5 text-white" />
             </div>
-            <div className="flex items-center gap-2">
+            <span className="text-lg font-semibold text-gray-900">Finance Tracker</span>
+          </div>
+
+          {/* Desktop navigation */}
+          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+            {navigation.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700 font-medium shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <item.icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span className="text-sm truncate">{item.name}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Desktop user section */}
+          <div className="p-3 border-t border-gray-200 bg-gray-50/50">
+            <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-gray-100 transition-colors">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm flex-shrink-0">
+                {user?.displayName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">{user?.displayName || user?.username}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-lg hover:bg-gray-200 transition-colors text-gray-400 hover:text-red-500"
+                title="Logout"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content area - lg breakpoint = 1024px, sidebar width = 256px */}
+      <div className="main-content-area flex flex-col min-h-screen">
+        {/* Top header */}
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+            {/* Mobile menu button and title */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className="lg:hidden p-2 -ml-1 rounded-xl hover:bg-gray-100 transition-colors"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <Menu className="h-6 w-6 text-gray-600" />
+              </button>
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">{getPageTitle()}</h1>
+            </div>
+
+            {/* Header actions */}
+            <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={() => setNotificationCenterOpen(true)}
-                className="relative p-2 text-gray-600 hover:text-gray-900"
+                className="relative p-2.5 rounded-xl hover:bg-gray-100 transition-colors"
                 title="Notifications"
               >
-                <Bell className="h-6 w-6" />
+                <Bell className="h-5 w-5 text-gray-600" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 h-4 w-4 bg-red-600 text-white text-xs rounded-full flex items-center justify-center">
+                  <span className="absolute top-1 right-1 h-5 w-5 bg-red-500 text-white text-xs font-medium rounded-full flex items-center justify-center shadow-sm">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </button>
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* Desktop header */}
-        <div className="hidden lg:block sticky top-0 z-10 bg-white border-b border-gray-200 h-16">
-          <div className="flex items-center justify-end h-full px-6 gap-2">
-            <button
-              onClick={() => setNotificationCenterOpen(true)}
-              className="relative p-2 text-gray-600 hover:text-gray-900"
-              title="Notifications"
-            >
-              <Bell className="h-6 w-6" />
-              {unreadCount > 0 && (
-                <span className="absolute top-0 right-0 h-5 w-5 bg-red-600 text-white text-xs rounded-full flex items-center justify-center">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-
-        <main className="flex-1">
-          <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <Outlet />
-            </div>
+        {/* Page content */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto w-full">
+            <Outlet />
           </div>
         </main>
       </div>

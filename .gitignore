@@ -67,4 +67,6 @@ coverage/
 
 # Docker
 docker/mysql/data/
+.playwright-mcp/
+package-lock.json
 

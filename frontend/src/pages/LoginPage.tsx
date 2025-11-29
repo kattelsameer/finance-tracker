@@ -1,106 +1,115 @@
 import { useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import type { ErrorResponse } from '../types/api';
+import { Mail, Lock, AlertCircle, Loader2, Wallet } from 'lucide-react';
 
 export function LoginPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const from = (location.state as any)?.from?.pathname || '/';
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
+    setLoading(true);
 
     try {
       await login({ username, password });
-      navigate(from, { replace: true });
-    } catch (err) {
-      const error = err as ErrorResponse;
-      setError(error.message || 'Login failed. Please try again.');
+      navigate('/');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Invalid username or password');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Finance Tracker
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Sign in to your account
-          </p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="w-full max-w-sm">
+        {/* Logo and Brand */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-6 shadow-lg">
+            <Wallet className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-semibold text-gray-900">Welcome back</h1>
+          <p className="text-gray-500 mt-2">Sign in to continue to Finance Tracker</p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+          {/* Error Alert */}
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-800">{error}</div>
+            <div className="flex items-center gap-3 p-4 mb-6 bg-red-50 border border-red-100 rounded-xl text-red-700 text-sm">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <span>{error}</span>
             </div>
           )}
-          <div className="rounded-md shadow-sm -space-y-px">
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="username" className="sr-only">
-                Username
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Username or Email
               </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                autoComplete="username"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  autoComplete="username"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all"
+                  placeholder="Enter your username or email"
+                />
+              </div>
             </div>
+
             <div>
-              <label htmlFor="password" className="sr-only">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all"
+                  placeholder="Enter your password"
+                />
+              </div>
             </div>
-          </div>
 
-          <div>
             <button
               type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+              className="w-full py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-sm"
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
             </button>
-          </div>
+          </form>
+        </div>
 
-          <div className="text-center">
-            <Link
-              to="/register"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              Don't have an account? Sign up
-            </Link>
-          </div>
-        </form>
+        {/* Footer */}
+        <p className="text-center text-sm text-gray-500 mt-8">
+          Don't have an account?{' '}
+          <Link to="/register" className="text-blue-600 hover:text-blue-700 font-medium">
+            Create account
+          </Link>
+        </p>
       </div>
     </div>
   );

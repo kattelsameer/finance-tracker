@@ -15,7 +15,7 @@ export const notificationService = {
     size: number = 20
   ): Promise<PaginatedResponse<Notification>> {
     return apiClient.get<PaginatedResponse<Notification>>(
-      '/api/notifications',
+      '/notifications',
       { params: { page, size } }
     );
   },
@@ -25,7 +25,7 @@ export const notificationService = {
    */
   async getUnreadNotifications(): Promise<Notification[]> {
     return apiClient.get<Notification[]>(
-      '/api/notifications/unread'
+      '/notifications/unread'
     );
   },
 
@@ -34,7 +34,7 @@ export const notificationService = {
    */
   async getUnreadCount(): Promise<number> {
     const data = await apiClient.get<{ count: number }>(
-      '/api/notifications/unread/count'
+      '/notifications/unread/count'
     );
     return data.count;
   },
@@ -43,21 +43,21 @@ export const notificationService = {
    * Mark a notification as read
    */
   async markAsRead(id: number): Promise<void> {
-    await apiClient.patch(`/api/notifications/${id}/read`);
+    await apiClient.patch(`/notifications/${id}/read`);
   },
 
   /**
    * Mark all notifications as read
    */
   async markAllAsRead(): Promise<void> {
-    await apiClient.patch('/api/notifications/read-all');
+    await apiClient.patch('/notifications/read-all');
   },
 
   /**
    * Delete a notification
    */
   async deleteNotification(id: number): Promise<void> {
-    await apiClient.delete(`/api/notifications/${id}`);
+    await apiClient.delete(`/notifications/${id}`);
   },
 
   /**
@@ -65,7 +65,7 @@ export const notificationService = {
    */
   async getPreferences(): Promise<NotificationPreference> {
     return apiClient.get<NotificationPreference>(
-      '/api/notifications/preferences'
+      '/notifications/preferences'
     );
   },
 
@@ -76,7 +76,7 @@ export const notificationService = {
     request: UpdateNotificationPreferenceRequest
   ): Promise<NotificationPreference> {
     return apiClient.put<NotificationPreference>(
-      '/api/notifications/preferences',
+      '/notifications/preferences',
       request
     );
   },
@@ -85,6 +85,6 @@ export const notificationService = {
    * Clean up old notifications
    */
   async cleanupOldNotifications(): Promise<void> {
-    await apiClient.delete('/api/notifications/cleanup');
+    await apiClient.delete('/notifications/cleanup');
   },
 };

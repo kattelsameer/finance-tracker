@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/finance_tracker?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: ${DB_USER:finance_user}
-    password: ${DB_PASSWORD:finance_password}
+    username: ${DB_USER:financeuser}
+    password: ${DB_PASSWORD:financepass}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 10
