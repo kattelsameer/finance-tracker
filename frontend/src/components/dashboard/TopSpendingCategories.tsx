@@ -39,14 +39,14 @@ export function TopSpendingCategories({ categories, formatCurrency }: Readonly<T
                     <span className="text-sm font-semibold text-gray-900">{category.categoryName}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-bold text-gray-900">{formatCurrency(category.totalAmount)}</span>
-                    <span className="text-xs text-gray-500 ml-2">{category.percentageOfTotal?.toFixed(0) || 0}%</span>
+                    <span className="text-sm font-bold text-gray-900">{formatCurrency(category.amount ?? 0)}</span>
+                    <span className="text-xs text-gray-500 ml-2">{(category.percentage ?? 0).toFixed(0)}%</span>
                   </div>
                 </div>
                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full bg-red-600 transition-all duration-300"
-                    style={{ width: `${category.percentageOfTotal || 0}%` }}
+                    style={{ width: `${category.percentage ?? 0}%` }}
                   />
                 </div>
               </div>

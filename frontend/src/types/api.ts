@@ -284,10 +284,8 @@ export interface PageResponse<T> {
 export interface CategorySpending {
   categoryId: number;
   categoryName: string;
-  categoryType: 'INCOME' | 'EXPENSE';
-  totalAmount: number;
-  transactionCount: number;
-  percentageOfTotal: number;
+  amount: number;
+  percentage: number;
 }
 
 export interface MonthlyTrend {
@@ -320,10 +318,10 @@ export interface DashboardStats {
 export interface CategoryBreakdown {
   categoryId: number;
   categoryName: string;
-  categoryType: 'INCOME' | 'EXPENSE';
-  totalAmount: number;
-  transactionCount: number;
-  percentageOfTotal: number;
+  transactionType: 'INCOME' | 'EXPENSE';
+  amount: number;
+  count: number;
+  percentage: number;
 }
 
 export interface AccountBreakdown {
@@ -331,7 +329,7 @@ export interface AccountBreakdown {
   accountName: string;
   income: number;
   expenses: number;
-  netChange: number;
+  netAmount: number;
   transactionCount: number;
 }
 
@@ -339,8 +337,7 @@ export interface DailyBreakdown {
   date: string;
   income: number;
   expenses: number;
-  netChange: number;
-  transactionCount: number;
+  netAmount: number;
 }
 
 export interface TransactionReport {

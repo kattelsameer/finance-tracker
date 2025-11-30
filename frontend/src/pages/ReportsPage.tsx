@@ -144,7 +144,6 @@ export function ReportsPage() {
                     <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Income</th>
                     <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Expenses</th>
                     <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Net</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Count</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -152,17 +151,16 @@ export function ReportsPage() {
                     <tr key={day.date} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{day.date}</td>
                       <td className="px-6 py-4 text-sm text-right">
-                        <span className="text-emerald-600 font-medium">{formatCurrency(day.income)}</span>
+                        <span className="text-emerald-600 font-medium">{formatCurrency(day.income ?? 0)}</span>
                       </td>
                       <td className="px-6 py-4 text-sm text-right">
-                        <span className="text-red-600 font-medium">{formatCurrency(day.expenses)}</span>
+                        <span className="text-red-600 font-medium">{formatCurrency(day.expenses ?? 0)}</span>
                       </td>
                       <td className="px-6 py-4 text-sm text-right">
-                        <span className={`font-semibold ${day.netChange >= 0 ? 'text-teal-600' : 'text-orange-600'}`}>
-                          {formatCurrency(day.netChange)}
+                        <span className={`font-semibold ${(day.netAmount ?? 0) >= 0 ? 'text-teal-600' : 'text-orange-600'}`}>
+                          {formatCurrency(day.netAmount ?? 0)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-right text-gray-600">{day.transactionCount}</td>
                     </tr>
                   ))}
                 </tbody>

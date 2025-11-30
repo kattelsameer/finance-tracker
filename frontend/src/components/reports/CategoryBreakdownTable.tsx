@@ -28,23 +28,23 @@ export function CategoryBreakdownTable({ categories, formatCurrency }: CategoryB
           </thead>
           <tbody className="divide-y divide-gray-100">
             {categories.map((cat) => (
-              <tr key={`${cat.categoryId}-${cat.categoryType}`} className="hover:bg-gray-50 transition-colors">
+              <tr key={`${cat.categoryId}-${cat.transactionType}`} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 text-sm font-medium text-gray-900">{cat.categoryName}</td>
                 <td className="px-6 py-4 text-sm">
                   <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${
-                    cat.categoryType === 'INCOME' 
+                    cat.transactionType === 'INCOME' 
                       ? 'bg-emerald-50 text-emerald-700' 
                       : 'bg-red-50 text-red-700'
                   }`}>
-                    {cat.categoryType === 'INCOME' ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
-                    {cat.categoryType}
+                    {cat.transactionType === 'INCOME' ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                    {cat.transactionType}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-right font-medium text-gray-900">{formatCurrency(cat.totalAmount)}</td>
-                <td className="px-6 py-4 text-sm text-right text-gray-600">{cat.transactionCount}</td>
+                <td className="px-6 py-4 text-sm text-right font-medium text-gray-900">{formatCurrency(cat.amount ?? 0)}</td>
+                <td className="px-6 py-4 text-sm text-right text-gray-600">{cat.count ?? 0}</td>
                 <td className="px-6 py-4 text-sm text-right">
                   <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded-lg text-gray-600 font-medium">
-                    {cat.percentageOfTotal.toFixed(1)}%
+                    {(cat.percentage ?? 0).toFixed(1)}%
                   </span>
                 </td>
               </tr>
