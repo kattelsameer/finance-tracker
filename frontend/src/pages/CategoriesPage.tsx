@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
 import { categoryService } from '../services/category.service';
-import type { Category, CreateCategoryRequest, UpdateCategoryRequest } from '../types/api';
+import type { Category, CreateCategoryRequest, UpdateCategoryRequest } from '../types';
+import { CategoryTree } from '../components/categories/CategoryTree';
+import { CategoryForm } from '../components/categories/CategoryForm';
 import { 
   FolderTree, 
   Plus, 
-  Edit3, 
-  Trash2, 
   AlertCircle,
-  ChevronRight,
-  ChevronDown,
   X
 } from 'lucide-react';
 
@@ -27,7 +25,6 @@ export function CategoriesPage() {
     icon: 'folder',
   });
   const [saving, setSaving] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCategories();
@@ -87,9 +84,9 @@ export function CategoriesPage() {
   };
 
   const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this category?')) return;
     try {
       await categoryService.delete(id);
-      setDeleteConfirm(null);
       fetchCategories();
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -137,13 +134,6 @@ export function CategoriesPage() {
   const getChildCategories = (parentId: number) => {
     return categories.filter(cat => cat.parentId === parentId);
   };
-
-  const colorOptions = [
-    '#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16',
-    '#22C55E', '#10B981', '#14B8A6', '#06B6D4', '#0EA5E9',
-    '#3B82F6', '#6366F1', '#8B5CF6', '#A855F7', '#D946EF',
-    '#EC4899', '#F43F5E', '#6B7280', '#374151', '#1F2937',
-  ];
 
   if (loading) {
     return (
@@ -230,232 +220,30 @@ export function CategoriesPage() {
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {filteredCategories.map(category => (
-                <div key={category.id}>
-                  {/* Parent Category */}
-                  <div className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
-                    <button
-                      onClick={() => toggleExpand(category.id)}
-                      className="p-1 hover:bg-gray-200 rounded-lg transition-colors"
-                    >
-                      {getChildCategories(category.id).length > 0 ? (
-                        expandedCategories.has(category.id) ? (
-                          <ChevronDown className="h-5 w-5 text-gray-400" />
-                        ) : (
-                          <ChevronRight className="h-5 w-5 text-gray-400" />
-                        )
-                      ) : (
-                        <div className="w-5 h-5" />
-                      )}
-                    </button>
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-lg shadow-sm"
-                      style={{ backgroundColor: category.colorCode }}
-                    >
-                      {category.categoryName.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900">{category.categoryName}</p>
-                      <p className="text-sm text-gray-500">
-                        {getChildCategories(category.id).length} subcategories
-                        {category.isSystem && <span className="ml-2 text-blue-600">• System</span>}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => openCreateModal(category.id)}
-                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Add subcategory"
-                      >
-                        <Plus className="h-5 w-5" />
-                      </button>
-                      {!category.isSystem && (
-                        <>
-                          <button
-                            onClick={() => openEditModal(category)}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          >
-                            <Edit3 className="h-5 w-5" />
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirm(category.id)}
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="h-5 w-5" />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Child Categories */}
-                  {expandedCategories.has(category.id) && getChildCategories(category.id).map(child => (
-                    <div
-                      key={child.id}
-                      className="flex items-center gap-4 px-6 py-3 pl-16 bg-gray-50 hover:bg-gray-100 transition-colors border-t border-gray-100"
-                    >
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm shadow-sm"
-                        style={{ backgroundColor: child.colorCode }}
-                      >
-                        {child.categoryName.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-800">{child.categoryName}</p>
-                      </div>
-                      {!child.isSystem && (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => openEditModal(child)}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          >
-                            <Edit3 className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirm(child.id)}
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
+            <CategoryTree
+              categories={filteredCategories}
+              expandedCategories={expandedCategories}
+              onToggleExpand={toggleExpand}
+              onEdit={openEditModal}
+              onDelete={handleDelete}
+              onAddSubcategory={openCreateModal}
+              getChildCategories={getChildCategories}
+            />
           )}
         </div>
       </div>
 
-      {/* Create/Edit Modal */}
+      {/* Create/Edit Modal - Using CategoryForm Component */}
       {showModal && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-            <div className="px-6 py-5 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900">
-                {editingCategory ? 'Edit Category' : 'New Category'}
-              </h3>
-            </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Category Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.categoryName}
-                  onChange={(e) => setFormData({ ...formData, categoryName: e.target.value })}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="Enter category name"
-                />
-              </div>
-
-              {!editingCategory && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Type
-                  </label>
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, categoryType: 'EXPENSE' })}
-                      className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all ${
-                        formData.categoryType === 'EXPENSE'
-                          ? 'bg-red-100 text-red-700 border-2 border-red-500'
-                          : 'bg-gray-50 text-gray-600 border-2 border-transparent hover:bg-gray-100'
-                      }`}
-                    >
-                      Expense
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, categoryType: 'INCOME' })}
-                      className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all ${
-                        formData.categoryType === 'INCOME'
-                          ? 'bg-emerald-100 text-emerald-700 border-2 border-emerald-500'
-                          : 'bg-gray-50 text-gray-600 border-2 border-transparent hover:bg-gray-100'
-                      }`}
-                    >
-                      Income
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Color
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {colorOptions.map(color => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, colorCode: color })}
-                      className={`w-8 h-8 rounded-lg transition-transform ${
-                        formData.colorCode === color ? 'ring-2 ring-offset-2 ring-blue-500 scale-110' : ''
-                      }`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowModal(false);
-                    setEditingCategory(null);
-                    resetForm();
-                  }}
-                  className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 px-4 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                >
-                  {saving ? 'Saving...' : editingCategory ? 'Update' : 'Create'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Trash2 className="h-8 w-8 text-red-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Category?</h3>
-            <p className="text-gray-500 mb-6">
-              This action cannot be undone. All subcategories will also be deleted.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm)}
-                className="flex-1 px-4 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+        <CategoryForm
+          formData={formData}
+          categories={categories}
+          isEditing={!!editingCategory}
+          saving={saving}
+          onSubmit={handleSubmit}
+          onChange={setFormData}
+          onClose={() => setShowModal(false)}
+        />
       )}
     </div>
   );

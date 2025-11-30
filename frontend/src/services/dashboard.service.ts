@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/api-client';
-import type { DashboardStats } from '../types/api';
+import type { DashboardStats } from '../types';
 
 export const dashboardService = {
   async getDashboardStats(startDate?: string, endDate?: string): Promise<DashboardStats> {
@@ -8,7 +8,8 @@ export const dashboardService = {
     if (endDate) params.append('endDate', endDate);
     
     const queryString = params.toString();
-    const url = `/dashboard/stats${queryString ? `?${queryString}` : ''}`;
+    const query = queryString ? `?${queryString}` : '';
+    const url = `/dashboard/stats${query}`;
     
     return apiClient.get<DashboardStats>(url);
   }

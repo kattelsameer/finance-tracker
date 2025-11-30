@@ -4,7 +4,7 @@ import type {
   Budget,
   CreateBudgetRequest,
   UpdateBudgetRequest,
-} from '../types/api';
+} from '../types';
 
 export const budgetService = {
   async getAll(): Promise<Budget[]> {

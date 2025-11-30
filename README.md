@@ -234,7 +234,7 @@ graph LR
 
 ### 4.1 Monorepo Layout
 
-```
+```text
 finance-tracker/
 ├── README.md                    # This document
 ├── docker-compose.yml           # Production compose

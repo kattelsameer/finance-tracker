@@ -4,7 +4,7 @@ import type {
   Tag,
   CreateTagRequest,
   UpdateTagRequest,
-} from '../types/api';
+} from '../types';
 
 export const tagService = {
   async getAll(): Promise<Tag[]> {

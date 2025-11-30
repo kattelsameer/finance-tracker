@@ -7,7 +7,7 @@ import type {
   UpdateProfileRequest,
   AuthResponse,
   User,
-} from '../types/api';
+} from '../types';
 
 export const authService = {
   async login(data: LoginRequest): Promise<AuthResponse> {

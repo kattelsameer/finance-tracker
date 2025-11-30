@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, X, Check, Trash2, Settings, CheckCheck, Sparkles } from 'lucide-react';
 import { notificationService } from '../services/notification.service';
-import { Notification, NotificationPriority } from '../types/api';
+import { Notification, NotificationPriority } from '../types';
 
 interface NotificationCenterProps {
   isOpen: boolean;
@@ -129,6 +129,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       <div
         className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-40 transition-opacity"
         onClick={onClose}
+        onKeyDown={(e) => e.key === 'Escape' && onClose()}
+        role="button"
+        tabIndex={-1}
+        aria-label="Close notifications"
       />
 
       {/* Notification Panel */}

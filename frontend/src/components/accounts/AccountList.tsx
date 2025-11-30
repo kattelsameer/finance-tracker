@@ -1,0 +1,72 @@
+import { Edit3, Trash2, EyeOff } from 'lucide-react';
+import type { Account } from '../../types';
+
+interface AccountListProps {
+  accounts: Account[];
+  formatCurrency: (amount: number, currency?: string) => string;
+  onEdit: (account: Account) => void;
+  onDelete: (id: number) => void;
+  showInactive: boolean;
+}
+
+export function AccountList({ accounts, formatCurrency, onEdit, onDelete, showInactive }: Readonly<AccountListProps>) {
+  const activeAccounts = showInactive ? accounts : accounts.filter(a => a.isActive);
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {activeAccounts.map((account) => (
+        <div
+          key={account.id}
+          className="bg-white rounded-xl p-6 border-2 hover:shadow-lg transition-all"
+          style={{ borderColor: account.colorCode }}
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-12 h-12 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: `${account.colorCode}20` }}
+              >
+                <span className="text-2xl">{account.icon || '💰'}</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">{account.accountName}</h3>
+                <p className="text-sm text-gray-500">{account.accountType?.typeName}</p>
+              </div>
+            </div>
+            <div className="flex gap-1">
+              <button
+                onClick={() => onEdit(account)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Edit3 className="h-4 w-4 text-gray-600" />
+              </button>
+              <button
+                onClick={() => onDelete(account.id)}
+                className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <Trash2 className="h-4 w-4 text-red-600" />
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-baseline">
+              <span className="text-sm text-gray-600">Balance</span>
+              <span className="text-xl font-bold" style={{ color: account.colorCode }}>
+                {formatCurrency(account.currentBalance, account.currency)}
+              </span>
+            </div>
+            {account.institutionName && (
+              <p className="text-xs text-gray-500">{account.institutionName}</p>
+            )}
+            {!account.isActive && (
+              <div className="flex items-center gap-2 text-xs text-gray-500 pt-2">
+                <EyeOff className="h-3 w-3" />
+                Inactive
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}

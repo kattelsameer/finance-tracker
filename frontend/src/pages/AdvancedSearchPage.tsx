@@ -2,17 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { searchService } from '../services/search.service';
 import { accountService } from '../services/account.service';
 import { categoryService } from '../services/category.service';
-import { tagService } from '../services/tag.service';
 import { useAuth } from '../contexts/AuthContext';
 import {
   TransactionSearchRequest,
   Transaction,
   Account,
   Category,
-  Tag,
   SavedSearch,
   TransactionType,
-} from '../types/api';
+} from '../types';
 import {
   Search,
   Filter,
@@ -40,6 +38,7 @@ const AdvancedSearchPage: React.FC = () => {
   
   // Search criteria state
   const [searchCriteria, setSearchCriteria] = useState<TransactionSearchRequest>({
+    query: '',
     page: 0,
     size: 20,
     sortBy: 'transactionDate',
@@ -55,7 +54,6 @@ const AdvancedSearchPage: React.FC = () => {
   // Filter options state
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [, setTags] = useState<Tag[]>([]);
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
 
   // UI state
@@ -71,15 +69,13 @@ const AdvancedSearchPage: React.FC = () => {
 
   const loadFilterOptions = async () => {
     try {
-      const [accountsData, categoriesData, tagsData, savedSearchesData] = await Promise.all([
+      const [accountsData, categoriesData, savedSearchesData] = await Promise.all([
         accountService.getAll(),
         categoryService.getAll(),
-        tagService.getAll(),
         searchService.getAllSavedSearches(),
       ]);
       setAccounts(accountsData);
       setCategories(categoriesData);
-      setTags(tagsData);
       setSavedSearches(savedSearchesData);
     } catch (error) {
       console.error('Failed to load filter options:', error);
@@ -102,6 +98,7 @@ const AdvancedSearchPage: React.FC = () => {
 
   const handleReset = () => {
     setSearchCriteria({
+      query: '',
       page: 0,
       size: 20,
       sortBy: 'transactionDate',
@@ -557,7 +554,7 @@ const AdvancedSearchPage: React.FC = () => {
           {totalPages > 1 && (
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
               <button
-                onClick={() => handlePageChange(searchCriteria.page! - 1)}
+                onClick={() => handlePageChange((searchCriteria.page || 0) - 1)}
                 disabled={searchCriteria.page === 0}
                 className="inline-flex items-center gap-1 px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium text-slate-700"
               >
@@ -568,8 +565,8 @@ const AdvancedSearchPage: React.FC = () => {
                 Page <span className="font-semibold text-slate-800">{(searchCriteria.page || 0) + 1}</span> of <span className="font-semibold text-slate-800">{totalPages}</span>
               </span>
               <button
-                onClick={() => handlePageChange(searchCriteria.page! + 1)}
-                disabled={searchCriteria.page! >= totalPages - 1}
+                onClick={() => handlePageChange((searchCriteria.page || 0) + 1)}
+                disabled={(searchCriteria.page || 0) >= totalPages - 1}
                 className="inline-flex items-center gap-1 px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium text-slate-700"
               >
                 Next

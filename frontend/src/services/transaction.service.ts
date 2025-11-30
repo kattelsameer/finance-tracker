@@ -6,7 +6,7 @@ import type {
   UpdateTransactionRequest,
   TransactionFilter,
   PageResponse,
-} from '../types/api';
+} from '../types';
 
 export const transactionService = {
   async getAll(filter?: TransactionFilter): Promise<PageResponse<Transaction>> {

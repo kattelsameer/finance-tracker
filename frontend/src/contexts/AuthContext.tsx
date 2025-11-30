@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
 import { authService } from '../services/auth.service';
-import type { User, LoginRequest, RegisterRequest } from '../types/api';
+import type { User, LoginRequest, RegisterRequest } from '../types';
 
 export interface AuthContextType {
   user: User | null;
@@ -15,11 +15,11 @@ export interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const userData = await authService.getCurrentUser();
       setUser(userData);
@@ -28,37 +28,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchUser();
-  }, []);
+  }, [fetchUser]);
 
-  const login = async (credentials: LoginRequest) => {
+  const login = useCallback(async (credentials: LoginRequest) => {
     await authService.login(credentials);
     await fetchUser();
-  };
+  }, [fetchUser]);
 
-  const register = async (data: RegisterRequest) => {
+  const register = useCallback(async (data: RegisterRequest) => {
     await authService.register(data);
     // After registration, automatically log them in
     await login({ username: data.username, password: data.password });
-  };
+  }, [login]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await authService.logout();
     setUser(null);
-  };
+  }, []);
 
-  const value: AuthContextType = {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
-    login,
-    register,
-    logout,
-    refetchUser: fetchUser,
-  };
+  const value: AuthContextType = useMemo(
+    () => ({
+      user,
+      isLoading,
+      isAuthenticated: !!user,
+      login,
+      register,
+      logout,
+      refetchUser: fetchUser,
+    }),
+    [user, isLoading, login, register, logout, fetchUser]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

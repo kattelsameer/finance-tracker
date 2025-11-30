@@ -2,9 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { MainLayout } from './components/MainLayout';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
+import { AppLayout } from './components/layout';
+import { LoginPage, RegisterPage } from './pages/auth';
 import { DashboardPage } from './pages/DashboardPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { RecurringTransactionsPage } from './pages/RecurringTransactionsPage';
@@ -39,7 +38,7 @@ function App() {
               path="/"
               element={
                 <ProtectedRoute>
-                  <MainLayout />
+                  <AppLayout />
                 </ProtectedRoute>
               }
             >

@@ -61,7 +61,15 @@ describe('accountService', () => {
 
   describe('create', () => {
     it('should create a new account', async () => {
-      const newAccount = { accountName: 'New Account', initialBalance: 0, accountTypeId: 1 };
+      const newAccount = { 
+        accountName: 'New Account', 
+        initialBalance: 0, 
+        accountTypeId: 1,
+        currency: 'USD',
+        colorCode: '#3B82F6',
+        icon: 'wallet',
+        includeInNetWorth: true
+      };
       const createdAccount = { id: 3, ...newAccount };
       (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue(createdAccount);
 

@@ -4,7 +4,7 @@ import type {
   NotificationPreference,
   UpdateNotificationPreferenceRequest,
   PaginatedResponse,
-} from '../types/api';
+} from '../types';
 
 export const notificationService = {
   /**

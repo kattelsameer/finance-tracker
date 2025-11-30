@@ -4,7 +4,7 @@ import type {
   TransactionSearchResponse,
   SavedSearch,
   CreateSavedSearchRequest,
-} from '../types/api';
+} from '../types';
 
 export const searchService = {
   /**

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { tagService } from '../services/tag.service';
-import type { Tag, CreateTagRequest, UpdateTagRequest } from '../types/api';
+import type { Tag, CreateTagRequest, UpdateTagRequest } from '../types';
 import {
   Tag as TagIcon,
   Plus,
@@ -250,7 +250,7 @@ export function TagsPage() {
               </div>
               <div className="mt-6 pt-4 border-t border-gray-100">
                 <p className="text-sm text-gray-500">
-                  {filteredTags.length} tag{filteredTags.length !== 1 ? 's' : ''} total
+                  {filteredTags.length} tag{filteredTags.length === 1 ? '' : 's'} total
                 </p>
               </div>
             </div>
@@ -288,7 +288,14 @@ export function TagsPage() {
       {showModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center p-4">
-            <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+            <div 
+              className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" 
+              onClick={() => setShowModal(false)}
+              onKeyDown={(e) => e.key === 'Escape' && setShowModal(false)}
+              role="button"
+              tabIndex={-1}
+              aria-label="Close modal"
+            />
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">

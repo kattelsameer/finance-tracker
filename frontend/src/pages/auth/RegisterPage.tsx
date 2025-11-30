@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { Mail, Lock, User, AlertCircle, Loader2, UserCircle, Wallet } from 'lucide-react';
 
 export function RegisterPage() {
@@ -65,146 +65,161 @@ export function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-md">
         {/* Logo and Brand */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl mb-5 shadow-lg">
-            <Wallet className="w-7 h-7 text-white" />
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-xl mb-5">
+            <Wallet className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Create account</h1>
-          <p className="text-gray-500 mt-2 text-sm">Start managing your finances today</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create account</h1>
+          <p className="text-gray-600">Start managing your finances today</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
+        <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
           {/* Error Alert */}
           {error && (
-            <div className="flex items-center gap-3 p-3 mb-5 bg-red-50 border border-red-100 rounded-lg text-red-700 text-sm">
-              <AlertCircle className="h-5 w-5 flex-shrink-0" />
-              <span>{error}</span>
+            <div className="flex items-start gap-3 p-4 mb-6 bg-red-50 border border-red-200 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+              <span className="text-sm text-red-700">{error}</span>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-900 mb-2">
                 Username
               </label>
               <div className="relative">
-                <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
+                  id="username"
                   type="text"
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
                   required
                   autoComplete="username"
-                  className={`w-full pl-11 pr-4 py-2.5 bg-gray-50 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all ${
-                    fieldErrors.username ? 'border-red-300' : 'border-gray-200'
+                  className={`block w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                    fieldErrors.username ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Choose a username"
                 />
               </div>
               {fieldErrors.username && (
-                <p className="mt-1.5 text-sm text-red-600">{fieldErrors.username}</p>
+                <p className="mt-2 text-sm text-red-600">{fieldErrors.username}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="displayName" className="block text-sm font-medium text-gray-900 mb-2">
                 Display Name
               </label>
               <div className="relative">
-                <UserCircle className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <UserCircle className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
+                  id="displayName"
                   type="text"
                   name="displayName"
                   value={formData.displayName}
                   onChange={handleChange}
                   autoComplete="name"
-                  className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all"
+                  className="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   placeholder="Your display name (optional)"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
+                  id="email"
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   required
                   autoComplete="email"
-                  className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all"
+                  className="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   placeholder="Enter your email"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-2">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
+                  id="password"
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   required
                   autoComplete="new-password"
-                  className={`w-full pl-11 pr-4 py-2.5 bg-gray-50 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all ${
-                    fieldErrors.password ? 'border-red-300' : 'border-gray-200'
+                  className={`block w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                    fieldErrors.password ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Create a password"
                 />
               </div>
               {fieldErrors.password && (
-                <p className="mt-1.5 text-sm text-red-600">{fieldErrors.password}</p>
+                <p className="mt-2 text-sm text-red-600">{fieldErrors.password}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-900 mb-2">
                 Confirm Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
+                  id="confirmPassword"
                   type="password"
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
                   autoComplete="new-password"
-                  className={`w-full pl-11 pr-4 py-2.5 bg-gray-50 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all ${
-                    fieldErrors.confirmPassword ? 'border-red-300' : 'border-gray-200'
+                  className={`block w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                    fieldErrors.confirmPassword ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Confirm your password"
                 />
               </div>
               {fieldErrors.confirmPassword && (
-                <p className="mt-1.5 text-sm text-red-600">{fieldErrors.confirmPassword}</p>
+                <p className="mt-2 text-sm text-red-600">{fieldErrors.confirmPassword}</p>
               )}
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-sm mt-2"
+              className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 mt-2"
             >
               {loading ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Creating account...
+                  <span>Creating account...</span>
                 </>
               ) : (
                 'Create Account'
@@ -214,9 +229,9 @@ export function RegisterPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-gray-600 mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+          <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium transition-colors">
             Sign in
           </Link>
         </p>

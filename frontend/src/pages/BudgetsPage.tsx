@@ -2,22 +2,18 @@ import { useEffect, useState } from 'react';
 import { budgetService } from '../services/budget.service';
 import { categoryService } from '../services/category.service';
 import { useAuth } from '../contexts/AuthContext';
-import type { Budget, Category, CreateBudgetRequest, UpdateBudgetRequest, PeriodType } from '../types/api';
+import type { Budget, Category, CreateBudgetRequest, UpdateBudgetRequest, PeriodType } from '../types';
+import { BudgetList } from '../components/budgets/BudgetList';
+import { BudgetForm } from '../components/budgets/BudgetForm';
 import {
   Target,
   Plus,
-  Edit3,
-  Trash2,
   AlertCircle,
   X,
   Search,
-  Calendar,
-  Bell,
-  BellOff,
   TrendingUp,
   AlertTriangle,
-  CheckCircle2,
-  MoreVertical
+  CheckCircle2
 } from 'lucide-react';
 
 const PERIOD_LABELS: Record<PeriodType, string> = {
@@ -39,7 +35,6 @@ export function BudgetsPage() {
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'over'>('all');
 
   const [formData, setFormData] = useState<CreateBudgetRequest>({
@@ -105,9 +100,9 @@ export function BudgetsPage() {
   };
 
   const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this budget?')) return;
     try {
       await budgetService.delete(id);
-      setDeleteConfirm(null);
       fetchData();
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -124,7 +119,7 @@ export function BudgetsPage() {
   const openEditModal = (budget: Budget) => {
     setEditingBudget(budget);
     setFormData({
-      categoryId: budget.categoryId,
+      categoryId: budget.category?.id,
       budgetName: budget.budgetName,
       amount: budget.amount,
       periodType: budget.periodType,
@@ -154,25 +149,13 @@ export function BudgetsPage() {
     }).format(amount);
   };
 
-  const getProgressColor = (percentUsed: number, isOverBudget: boolean) => {
-    if (isOverBudget) return 'bg-red-500';
-    if (percentUsed >= 80) return 'bg-amber-500';
-    return 'bg-emerald-500';
-  };
-
-  const getStatusIcon = (budget: Budget) => {
-    if (budget.isOverBudget) {
-      return <AlertTriangle className="h-5 w-5 text-red-500" />;
-    }
-    if (budget.percentUsed >= 80) {
-      return <AlertCircle className="h-5 w-5 text-amber-500" />;
-    }
-    return <CheckCircle2 className="h-5 w-5 text-emerald-500" />;
+  const getPeriodLabel = (period: string): string => {
+    return PERIOD_LABELS[period as PeriodType] || period;
   };
 
   const filteredBudgets = budgets.filter(budget => {
     const matchesSearch = budget.budgetName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      budget.categoryName?.toLowerCase().includes(searchTerm.toLowerCase());
+      budget.category?.categoryName?.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (filterStatus === 'active') return matchesSearch && budget.isActive;
     if (filterStatus === 'over') return matchesSearch && budget.isOverBudget;
@@ -287,258 +270,50 @@ export function BudgetsPage() {
           </button>
         </div>
 
-        {/* Budgets List */}
-        <div className="space-y-4">
-          {filteredBudgets.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl shadow-lg border border-gray-100">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-5">
-                <Target className="h-10 w-10 text-gray-400" />
-              </div>
-              <p className="text-lg font-semibold text-gray-600 mb-2">
-                {searchTerm ? 'No budgets found' : 'No budgets yet'}
-              </p>
-              <p className="text-sm text-gray-400 mb-6">
-                {searchTerm ? 'Try a different search term' : 'Create your first budget to start tracking spending'}
-              </p>
-              {!searchTerm && (
-                <button
-                  onClick={openCreateModal}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition-colors"
-                >
-                  <Plus className="h-5 w-5" />
-                  Create Budget
-                </button>
-              )}
+        {/* Budgets List - Using BudgetList Component */}
+        {filteredBudgets.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl shadow-lg border border-gray-100">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-5">
+              <Target className="h-10 w-10 text-gray-400" />
             </div>
-          ) : (
-            filteredBudgets.map(budget => (
-              <div
-                key={budget.id}
-                className={`bg-white rounded-2xl p-6 shadow-lg border transition-all hover:shadow-xl ${!budget.isActive ? 'opacity-60 border-gray-200' : 'border-gray-100'}`}
+            <p className="text-lg font-semibold text-gray-600 mb-2">
+              {searchTerm ? 'No budgets found' : 'No budgets yet'}
+            </p>
+            <p className="text-sm text-gray-400 mb-6">
+              {searchTerm ? 'Try a different search term' : 'Create your first budget to start tracking spending'}
+            </p>
+            {!searchTerm && (
+              <button
+                onClick={openCreateModal}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition-colors"
               >
-                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                  {/* Budget Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      {getStatusIcon(budget)}
-                      <h3 className="font-bold text-gray-900 text-lg">{budget.budgetName}</h3>
-                      {budget.alertEnabled && (
-                        <Bell className="h-4 w-4 text-gray-400" />
-                      )}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-                      {budget.categoryName && (
-                        <span className="px-2 py-1 bg-gray-100 rounded-lg">{budget.categoryName}</span>
-                      )}
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {PERIOD_LABELS[budget.periodType]}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Progress Section */}
-                  <div className="flex-1 lg:max-w-md">
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-600">
-                        {formatCurrency(budget.spent)} spent
-                      </span>
-                      <span className="font-semibold text-gray-900">
-                        {formatCurrency(budget.amount)} budget
-                      </span>
-                    </div>
-                    <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${getProgressColor(budget.percentUsed, budget.isOverBudget)}`}
-                        style={{ width: `${Math.min(budget.percentUsed, 100)}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-sm mt-2">
-                      <span className={`font-medium ${budget.isOverBudget ? 'text-red-600' : budget.percentUsed >= 80 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                        {budget.percentUsed.toFixed(0)}% used
-                      </span>
-                      <span className={`font-medium ${budget.remaining < 0 ? 'text-red-600' : 'text-gray-600'}`}>
-                        {budget.remaining < 0 ? `${formatCurrency(Math.abs(budget.remaining))} over` : `${formatCurrency(budget.remaining)} left`}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setDeleteConfirm(deleteConfirm === budget.id ? null : budget.id)}
-                      className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <MoreVertical className="h-5 w-5" />
-                    </button>
-                    {deleteConfirm === budget.id && (
-                      <div className="absolute right-0 top-10 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-10 min-w-40">
-                        <button
-                          onClick={() => { openEditModal(budget); setDeleteConfirm(null); }}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                          Edit Budget
-                        </button>
-                        <button
-                          onClick={() => handleDelete(budget.id)}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete Budget
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+                <Plus className="h-5 w-5" />
+                Create Budget
+              </button>
+            )}
+          </div>
+        ) : (
+          <BudgetList
+            budgets={filteredBudgets}
+            formatCurrency={formatCurrency}
+            getPeriodLabel={getPeriodLabel}
+            onEdit={openEditModal}
+            onDelete={handleDelete}
+          />
+        )}
       </div>
 
-      {/* Create/Edit Modal */}
+      {/* Create/Edit Modal - Using BudgetForm Component */}
       {showModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-screen items-center justify-center p-4">
-            <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">
-                  {editingBudget ? 'Edit Budget' : 'Create Budget'}
-                </h2>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Budget Name *</label>
-                  <input
-                    type="text"
-                    value={formData.budgetName}
-                    onChange={(e) => setFormData({ ...formData, budgetName: e.target.value })}
-                    required
-                    placeholder="e.g., Monthly Groceries"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Category (Optional)</label>
-                  <select
-                    value={formData.categoryId || ''}
-                    onChange={(e) => setFormData({ ...formData, categoryId: e.target.value ? Number(e.target.value) : undefined })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500"
-                  >
-                    <option value="">All Categories</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.categoryName}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Budget Amount *</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.amount}
-                      onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
-                      required
-                      placeholder="0.00"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Period *</label>
-                    <select
-                      value={formData.periodType}
-                      onChange={(e) => setFormData({ ...formData, periodType: e.target.value as PeriodType })}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500"
-                    >
-                      {Object.entries(PERIOD_LABELS).map(([value, label]) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date *</label>
-                  <input
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-
-                <div className="p-4 bg-gray-50 rounded-xl space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {formData.alertEnabled ? <Bell className="h-5 w-5 text-amber-500" /> : <BellOff className="h-5 w-5 text-gray-400" />}
-                      <span className="font-medium text-gray-700">Budget Alerts</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, alertEnabled: !formData.alertEnabled })}
-                      className={`w-12 h-7 rounded-full transition-colors ${formData.alertEnabled ? 'bg-amber-500' : 'bg-gray-300'}`}
-                    >
-                      <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${formData.alertEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
-                    </button>
-                  </div>
-                  
-                  {formData.alertEnabled && (
-                    <div>
-                      <label className="block text-sm text-gray-600 mb-2">
-                        Alert when spending reaches {formData.alertThreshold}%
-                      </label>
-                      <input
-                        type="range"
-                        min="50"
-                        max="100"
-                        step="5"
-                        value={formData.alertThreshold}
-                        onChange={(e) => setFormData({ ...formData, alertThreshold: Number(e.target.value) })}
-                        className="w-full accent-amber-500"
-                      />
-                      <div className="flex justify-between text-xs text-gray-400 mt-1">
-                        <span>50%</span>
-                        <span>75%</span>
-                        <span>100%</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving || !formData.budgetName.trim() || formData.amount <= 0}
-                    className="flex-1 px-4 py-3 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {saving ? 'Saving...' : editingBudget ? 'Update Budget' : 'Create Budget'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+        <BudgetForm
+          formData={formData}
+          categories={categories}
+          isEditing={!!editingBudget}
+          saving={saving}
+          onSubmit={handleSubmit}
+          onChange={setFormData}
+          onClose={() => setShowModal(false)}
+        />
       )}
     </div>
   );

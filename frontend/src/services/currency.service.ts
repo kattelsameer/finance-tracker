@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/api-client';
-import type { Currency, ConvertAmountRequest, ConvertAmountResponse } from '../types/api';
+import type { Currency, ConvertAmountRequest, ConvertAmountResponse } from '../types';
 
 export const currencyService = {
   async getAll(): Promise<Currency[]> {

@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/api-client';
-import type { TransactionReport } from '../types/api';
+import type { TransactionReport } from '../types';
 
 export const reportService = {
   async getTransactionReport(
@@ -27,13 +27,13 @@ export const reportService = {
   },
 
   downloadCSV(blob: Blob, filename: string): void {
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    link.remove();
+    globalThis.URL.revokeObjectURL(url);
   }
 };

@@ -4,7 +4,7 @@ import type {
   Category,
   CreateCategoryRequest,
   UpdateCategoryRequest,
-} from '../types/api';
+} from '../types';
 
 export const categoryService = {
   async getAll(): Promise<Category[]> {

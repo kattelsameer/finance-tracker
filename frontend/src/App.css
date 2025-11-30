@@ -3,7 +3,7 @@
 /* Card component base */
 .card {
   background-color: white;
-  border-radius: 1rem;
+  border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 }
@@ -13,9 +13,9 @@
   background-color: #2563eb;
   color: white;
   padding: 0.625rem 1.25rem;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   font-weight: 500;
-  transition: background-color 0.15s ease;
+  transition: background-color 200ms;
 }
 
 .btn-primary:hover {
@@ -26,9 +26,9 @@
   background-color: #f3f4f6;
   color: #374151;
   padding: 0.625rem 1.25rem;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   font-weight: 500;
-  transition: background-color 0.15s ease;
+  transition: background-color 200ms;
 }
 
 .btn-secondary:hover {
@@ -41,15 +41,16 @@
   padding: 0.75rem 1rem;
   background-color: #f9fafb;
   border: 1px solid #e5e7eb;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   color: #111827;
-  transition: all 0.15s ease;
+  transition: all 200ms;
 }
 
 .input-field:focus {
   background-color: white;
-  border-color: transparent;
-  box-shadow: 0 0 0 2px #2563eb;
+  border-color: #2563eb;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .input-field::placeholder {
@@ -68,7 +69,7 @@
 
 .table-row {
   border-bottom: 1px solid #f3f4f6;
-  transition: background-color 0.15s ease;
+  transition: background-color 200ms;
 }
 
 .table-row:hover {
@@ -82,12 +83,12 @@
   padding: 0.25rem 0.625rem;
   font-size: 0.75rem;
   font-weight: 600;
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
 }
 
 .badge-success {
-  background-color: #dcfce7;
-  color: #166534;
+  background-color: #d1fae5;
+  color: #065f46;
 }
 
 .badge-danger {

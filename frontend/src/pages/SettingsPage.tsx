@@ -29,7 +29,7 @@ import {
   Shield
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
-import type { NotificationPreference } from '../types/api';
+import type { NotificationPreference } from '../types';
 
 type SettingsTab = 'general' | 'notifications' | 'user';
 
@@ -827,16 +827,8 @@ export function SettingsPage() {
                 </div>
               </div>
               
-              {!showPasswordForm ? (
-                <button
-                  onClick={() => setShowPasswordForm(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-                >
-                  <Lock className="h-4 w-4" />
-                  Change Password
-                </button>
-              ) : (
-                <div className="space-y-4">
+              {showPasswordForm ? (
+                <form onSubmit={handlePasswordChange} className="space-y-4">
                   {/* Current Password */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -941,6 +933,7 @@ export function SettingsPage() {
                       )}
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         setShowPasswordForm(false);
                         setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -951,7 +944,15 @@ export function SettingsPage() {
                       Cancel
                     </button>
                   </div>
-                </div>
+                </form>
+              ) : (
+                <button
+                  onClick={() => setShowPasswordForm(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                >
+                  <Lock className="h-4 w-4" />
+                  Change Password
+                </button>
               )}
             </div>
           </div>

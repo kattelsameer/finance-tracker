@@ -5,7 +5,7 @@ import type {
   AccountType,
   CreateAccountRequest,
   UpdateAccountRequest,
-} from '../types/api';
+} from '../types';
 
 export const accountService = {
   async getAll(): Promise<Account[]> {

@@ -1,9 +1,9 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { API_URL } from '../config/api';
-import type { ErrorResponse } from '../types/api';
+import type { ErrorResponse } from '../types';
 
 class ApiClient {
-  private client: AxiosInstance;
+  private readonly client: AxiosInstance;
   private csrfToken: string | null = null;
 
   constructor() {
@@ -60,8 +60,8 @@ class ApiClient {
           if (status === 401) {
             // Clear auth state and redirect to login
             this.csrfToken = null;
-            if (window.location.pathname !== '/login') {
-              window.location.href = '/login';
+            if (globalThis.location.pathname !== '/login') {
+              globalThis.location.href = '/login';
             }
           }
 
@@ -78,16 +78,17 @@ class ApiClient {
             });
           }
 
-          return Promise.reject(data);
+          return Promise.reject(new Error(data.message || 'An error occurred'));
         }
 
         // Network error
-        return Promise.reject({
+        const networkError = new Error('Network error occurred. Please check your connection.');
+        Object.assign(networkError, {
           code: 5001,
           error: 'NETWORK_ERROR',
-          message: 'Network error occurred. Please check your connection.',
           timestamp: new Date().toISOString(),
-        } as ErrorResponse);
+        });
+        return Promise.reject(networkError);
       }
     );
   }

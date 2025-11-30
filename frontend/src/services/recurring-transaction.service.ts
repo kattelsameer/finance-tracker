@@ -3,7 +3,7 @@ import type {
   RecurringTransaction,
   CreateRecurringTransactionRequest,
   UpdateRecurringTransactionRequest
-} from '../types/api';
+} from '../types';
 
 export const recurringTransactionService = {
   async getAll(activeOnly = false): Promise<RecurringTransaction[]> {
