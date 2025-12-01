@@ -162,25 +162,78 @@ public class TransactionService {
         TransactionType oldType = transaction.getTransactionType();
         
         // Reverse the old balance effect
-        if (oldType == TransactionType.INCOME) {
-            oldAccount.adjustBalance(oldAmount.negate());
-        } else {
-            oldAccount.adjustBalance(oldAmount);
+        reverseBalanceEffect(oldAccount, oldAmount, oldType);
+        
+        // Update transaction fields
+        updateTransactionFields(transaction, request, userId);
+        
+        // Apply new balance effect
+        Account currentAccount = transaction.getAccount();
+        BigDecimal currentAmount = transaction.getAmount();
+        applyBalanceEffect(currentAccount, currentAmount, transaction.getTransactionType());
+        
+        // Save accounts
+        accountRepository.save(oldAccount);
+        if (!oldAccount.getId().equals(currentAccount.getId())) {
+            accountRepository.save(currentAccount);
         }
         
-        // Update fields
-        if (request.getAccountId() != null && !request.getAccountId().equals(oldAccount.getId())) {
+        transaction = transactionRepository.save(transaction);
+        
+        logger.info("Transaction updated: {} for user: {}", transactionId, userId);
+        
+        return mapToResponse(transaction);
+    }
+    
+    /**
+     * Reverses the balance effect of a transaction on the account.
+     */
+    private void reverseBalanceEffect(Account account, BigDecimal amount, TransactionType type) {
+        if (type == TransactionType.INCOME) {
+            account.adjustBalance(amount.negate());
+        } else {
+            account.adjustBalance(amount);
+        }
+    }
+    
+    /**
+     * Applies the balance effect of a transaction on the account.
+     */
+    private void applyBalanceEffect(Account account, BigDecimal amount, TransactionType type) {
+        if (type == TransactionType.INCOME) {
+            account.adjustBalance(amount);
+        } else {
+            account.adjustBalance(amount.negate());
+        }
+    }
+    
+    /**
+     * Updates transaction fields from the request.
+     */
+    private void updateTransactionFields(Transaction transaction, UpdateTransactionRequest request, Long userId) {
+        updateAccountIfChanged(transaction, request, userId);
+        updateCategoryIfProvided(transaction, request, userId);
+        updateBasicFields(transaction, request);
+        updateTagsIfProvided(transaction, request, userId);
+    }
+    
+    private void updateAccountIfChanged(Transaction transaction, UpdateTransactionRequest request, Long userId) {
+        if (request.getAccountId() != null && !request.getAccountId().equals(transaction.getAccount().getId())) {
             Account newAccount = accountRepository.findByIdAndUserId(request.getAccountId(), userId)
                     .orElseThrow(() -> new ApiException(ErrorCode.ACCOUNT_NOT_FOUND));
             transaction.setAccount(newAccount);
         }
-        
+    }
+    
+    private void updateCategoryIfProvided(Transaction transaction, UpdateTransactionRequest request, Long userId) {
         if (request.getCategoryId() != null) {
             Category category = categoryRepository.findByIdAndUserId(request.getCategoryId(), userId)
                     .orElseThrow(() -> new ApiException(ErrorCode.CATEGORY_NOT_FOUND));
             transaction.setCategory(category);
         }
-        
+    }
+    
+    private void updateBasicFields(Transaction transaction, UpdateTransactionRequest request) {
         if (request.getAmount() != null) {
             transaction.setAmount(request.getAmount());
         }
@@ -199,33 +252,13 @@ public class TransactionService {
         if (request.getReferenceNumber() != null) {
             transaction.setReferenceNumber(request.getReferenceNumber());
         }
-        
-        // Update tags
+    }
+    
+    private void updateTagsIfProvided(Transaction transaction, UpdateTransactionRequest request, Long userId) {
         if (request.getTagIds() != null) {
             Set<Tag> tags = new HashSet<>(tagRepository.findByIdInAndUserId(request.getTagIds(), userId));
             transaction.setTags(tags);
         }
-        
-        // Apply new balance effect
-        Account currentAccount = transaction.getAccount();
-        BigDecimal currentAmount = transaction.getAmount();
-        
-        if (transaction.getTransactionType() == TransactionType.INCOME) {
-            currentAccount.adjustBalance(currentAmount);
-        } else {
-            currentAccount.adjustBalance(currentAmount.negate());
-        }
-        
-        accountRepository.save(oldAccount);
-        if (!oldAccount.getId().equals(currentAccount.getId())) {
-            accountRepository.save(currentAccount);
-        }
-        
-        transaction = transactionRepository.save(transaction);
-        
-        logger.info("Transaction updated: {} for user: {}", transactionId, userId);
-        
-        return mapToResponse(transaction);
     }
     
     @Transactional
@@ -292,35 +325,95 @@ public class TransactionService {
             predicates.add(cb.equal(root.get("user").get("id"), userId));
             
             if (filter != null) {
-                if (filter.getAccountId() != null) {
-                    predicates.add(cb.equal(root.get("account").get("id"), filter.getAccountId()));
-                }
-                if (filter.getCategoryId() != null) {
-                    predicates.add(cb.equal(root.get("category").get("id"), filter.getCategoryId()));
-                }
-                if (filter.getTransactionType() != null) {
-                    predicates.add(cb.equal(root.get("transactionType"), filter.getTransactionType()));
-                }
-                if (filter.getStartDate() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(root.get("transactionDate"), filter.getStartDate()));
-                }
-                if (filter.getEndDate() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(root.get("transactionDate"), filter.getEndDate()));
-                }
-                if (filter.getSearchTerm() != null && !filter.getSearchTerm().isBlank()) {
-                    String searchPattern = "%" + filter.getSearchTerm().toLowerCase() + "%";
-                    predicates.add(cb.or(
-                            cb.like(cb.lower(root.get("description")), searchPattern),
-                            cb.like(cb.lower(root.get("notes")), searchPattern)
-                    ));
-                }
-                if (filter.getIsRecurring() != null) {
-                    predicates.add(cb.equal(root.get("isRecurring"), filter.getIsRecurring()));
-                }
+                addFilterPredicates(predicates, filter, root, cb);
             }
             
             return cb.and(predicates.toArray(jakarta.persistence.criteria.Predicate[]::new));
         };
+    }
+    
+    /**
+     * Adds filter predicates based on the provided filter criteria.
+     */
+    private void addFilterPredicates(
+            List<jakarta.persistence.criteria.Predicate> predicates,
+            TransactionFilter filter,
+            jakarta.persistence.criteria.Root<Transaction> root,
+            jakarta.persistence.criteria.CriteriaBuilder cb) {
+        
+        addAccountFilter(predicates, filter, root, cb);
+        addCategoryFilter(predicates, filter, root, cb);
+        addTypeFilter(predicates, filter, root, cb);
+        addDateFilters(predicates, filter, root, cb);
+        addSearchTermFilter(predicates, filter, root, cb);
+        addRecurringFilter(predicates, filter, root, cb);
+    }
+    
+    private void addAccountFilter(
+            List<jakarta.persistence.criteria.Predicate> predicates,
+            TransactionFilter filter,
+            jakarta.persistence.criteria.Root<Transaction> root,
+            jakarta.persistence.criteria.CriteriaBuilder cb) {
+        if (filter.getAccountId() != null) {
+            predicates.add(cb.equal(root.get("account").get("id"), filter.getAccountId()));
+        }
+    }
+    
+    private void addCategoryFilter(
+            List<jakarta.persistence.criteria.Predicate> predicates,
+            TransactionFilter filter,
+            jakarta.persistence.criteria.Root<Transaction> root,
+            jakarta.persistence.criteria.CriteriaBuilder cb) {
+        if (filter.getCategoryId() != null) {
+            predicates.add(cb.equal(root.get("category").get("id"), filter.getCategoryId()));
+        }
+    }
+    
+    private void addTypeFilter(
+            List<jakarta.persistence.criteria.Predicate> predicates,
+            TransactionFilter filter,
+            jakarta.persistence.criteria.Root<Transaction> root,
+            jakarta.persistence.criteria.CriteriaBuilder cb) {
+        if (filter.getTransactionType() != null) {
+            predicates.add(cb.equal(root.get("transactionType"), filter.getTransactionType()));
+        }
+    }
+    
+    private void addDateFilters(
+            List<jakarta.persistence.criteria.Predicate> predicates,
+            TransactionFilter filter,
+            jakarta.persistence.criteria.Root<Transaction> root,
+            jakarta.persistence.criteria.CriteriaBuilder cb) {
+        if (filter.getStartDate() != null) {
+            predicates.add(cb.greaterThanOrEqualTo(root.get("transactionDate"), filter.getStartDate()));
+        }
+        if (filter.getEndDate() != null) {
+            predicates.add(cb.lessThanOrEqualTo(root.get("transactionDate"), filter.getEndDate()));
+        }
+    }
+    
+    private void addSearchTermFilter(
+            List<jakarta.persistence.criteria.Predicate> predicates,
+            TransactionFilter filter,
+            jakarta.persistence.criteria.Root<Transaction> root,
+            jakarta.persistence.criteria.CriteriaBuilder cb) {
+        if (filter.getSearchTerm() != null && !filter.getSearchTerm().isBlank()) {
+            String searchPattern = "%" + filter.getSearchTerm().toLowerCase() + "%";
+            predicates.add(cb.or(
+                    cb.like(cb.lower(root.get("description")), searchPattern),
+                    cb.like(cb.lower(root.get("notes")), searchPattern)
+            ));
+        }
+    }
+    
+    private void addRecurringFilter(
+            List<jakarta.persistence.criteria.Predicate> predicates,
+            TransactionFilter filter,
+            jakarta.persistence.criteria.Root<Transaction> root,
+            jakarta.persistence.criteria.CriteriaBuilder cb) {
+        if (filter.getIsRecurring() != null) {
+            predicates.add(cb.equal(root.get("isRecurring"), filter.getIsRecurring()));
+        }
     }
     
     private TransactionResponse mapToResponse(Transaction transaction) {

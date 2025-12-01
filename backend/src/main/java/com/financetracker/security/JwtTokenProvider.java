@@ -1,6 +1,7 @@
 package com.financetracker.security;
 
 import com.financetracker.config.JwtProperties;
+import com.financetracker.exception.TokenHashingException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -85,7 +86,7 @@ public class JwtTokenProvider {
             byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(hash);
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 algorithm not available", e);
+            throw new TokenHashingException("SHA-256 algorithm not available", e);
         }
     }
     
