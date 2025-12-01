@@ -4,6 +4,8 @@ import com.financetracker.dto.recurring.CreateRecurringTransactionRequest;
 import com.financetracker.dto.recurring.RecurringTransactionResponse;
 import com.financetracker.dto.recurring.UpdateRecurringTransactionRequest;
 import com.financetracker.entity.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.financetracker.exception.ApiException;
 import com.financetracker.exception.ErrorCode;
 import com.financetracker.repository.*;
@@ -19,6 +21,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class RecurringTransactionService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(RecurringTransactionService.class);
     
     private final RecurringTransactionRepository recurringTransactionRepository;
     private final UserRepository userRepository;
@@ -232,7 +236,7 @@ public class RecurringTransactionService {
                 updateNextOccurrence(recurring);
             } catch (Exception e) {
                 // Log error but continue processing other recurring transactions
-                System.err.println("Error processing recurring transaction " + recurring.getId() + ": " + e.getMessage());
+                logger.error("Error processing recurring transaction {}: {}", recurring.getId(), e.getMessage(), e);
             }
         }
     }

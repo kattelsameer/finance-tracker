@@ -18,6 +18,7 @@ export function RecurringTransactionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeOnly, setActiveOnly] = useState(true);
+  const [editingTransaction, setEditingTransaction] = useState<RecurringTransaction | null>(null);
 
   const fetchRecurringTransactions = useCallback(async () => {
     try {
@@ -57,6 +58,12 @@ export function RecurringTransactionsPage() {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || 'Failed to delete recurring transaction');
     }
+  };
+
+  const handleEdit = (transaction: RecurringTransaction) => {
+    setEditingTransaction(transaction);
+    // TODO: Open edit modal when implemented
+    console.log('Edit transaction:', transaction.id);
   };
 
   const formatCurrency = (amount: number) => {
@@ -153,6 +160,27 @@ export function RecurringTransactionsPage() {
         </div>
       )}
 
+      {/* Edit Modal Placeholder - TODO: Implement RecurringTransactionForm modal */}
+      {editingTransaction && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Edit Recurring Transaction</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Editing: <strong>{editingTransaction.description}</strong>
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              Full edit form coming soon. For now, you can toggle active status or delete from the list.
+            </p>
+            <button
+              onClick={() => setEditingTransaction(null)}
+              className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Recurring Transactions List - Using RecurringList Component */}
       {recurringTransactions.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
@@ -177,7 +205,7 @@ export function RecurringTransactionsPage() {
           formatCurrency={formatCurrency}
           formatDate={formatDate}
           getFrequencyLabel={getFrequencyLabel}
-          onEdit={(transaction: RecurringTransaction) => {/* TODO: Open edit modal */}}
+          onEdit={handleEdit}
           onDelete={handleDelete}
           onToggleActive={handleToggleActive}
         />

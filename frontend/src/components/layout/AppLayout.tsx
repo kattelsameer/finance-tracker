@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -14,21 +14,42 @@ export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const isMounted = useRef(true);
 
-  const loadUnreadCount = useCallback(async () => {
+  useEffect(() => {
+    isMounted.current = true;
+    
+    const fetchUnreadCount = async () => {
+      try {
+        const count = await notificationService.getUnreadCount();
+        if (isMounted.current) {
+          setUnreadCount(count);
+        }
+      } catch {
+        // Silently handle error for notification count
+      }
+    };
+
+    // Initial fetch
+    fetchUnreadCount();
+    
+    // Set up polling interval
+    const interval = setInterval(fetchUnreadCount, 60000); // Poll every minute
+    
+    return () => {
+      isMounted.current = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const refreshUnreadCount = async () => {
     try {
       const count = await notificationService.getUnreadCount();
       setUnreadCount(count);
     } catch {
-      console.error('Failed to load unread count');
+      // Silently handle error
     }
-  }, []);
-
-  useEffect(() => {
-    loadUnreadCount();
-    const interval = setInterval(loadUnreadCount, 60000); // Poll every minute
-    return () => clearInterval(interval);
-  }, [loadUnreadCount]);
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -87,7 +108,7 @@ export function AppLayout() {
         isOpen={notificationCenterOpen}
         onClose={() => {
           setNotificationCenterOpen(false);
-          loadUnreadCount();
+          void refreshUnreadCount();
         }}
         onOpenSettings={handleOpenNotificationSettings}
       />

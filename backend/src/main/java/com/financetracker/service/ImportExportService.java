@@ -3,6 +3,8 @@ package com.financetracker.service;
 import com.financetracker.dto.importexport.ImportResult;
 import com.financetracker.dto.importexport.TransactionImportRecord;
 import com.financetracker.entity.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.financetracker.exception.ApiException;
 import com.financetracker.exception.ErrorCode;
 import com.financetracker.repository.*;
@@ -27,6 +29,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class ImportExportService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(ImportExportService.class);
     
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
@@ -83,7 +87,7 @@ public class ImportExportService {
                 
             } catch (Exception e) {
                 errors++;
-                System.err.println("Error importing record: " + e.getMessage());
+                logger.error("Error importing record: {}", e.getMessage(), e);
             }
         }
         
