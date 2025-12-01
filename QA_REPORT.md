@@ -3,72 +3,79 @@
 **Generated**: December 1, 2025  
 **Last Updated**: December 1, 2025  
 **Run Type**: COMPLETE  
-**Overall Status**: ✅ PASS (with recommendations)  
-**Total Issues Found**: 18 (6 Fixed, 12 Open)
+**Overall Status**: ✅ PASS  
+**Total Issues Found**: 21 (11 Fixed, 10 Open)
 
 ---
 
 ## Executive Summary
 
-The Finance Tracker application is a well-structured full-stack personal finance application with React/TypeScript frontend and Spring Boot 3.2/Java 21 backend. The codebase demonstrates good security practices including JWT authentication with HttpOnly cookies, CSRF protection, and proper user data isolation.
+The Finance Tracker application is a well-structured full-stack personal finance application with React/TypeScript frontend and Spring Boot 3.2/Java 21 backend. The codebase demonstrates excellent security practices including JWT authentication with HttpOnly cookies, CSRF protection, proper user data isolation, and production-ready JWT secret validation.
+
+**This Sprint**: Fixed 11 issues including critical security hardening (H4 - JWT secret validation) and all HIGH/MEDIUM priority code quality issues.
 
 ### Test Results (Latest Run)
+
 | Component | Status | Tests | Result |
 |-----------|--------|-------|--------|
 | Frontend Lint | ✅ PASS | ESLint | No errors |
-| Frontend Build | ✅ PASS | TypeScript + Vite | Successful |
+| Frontend Build | ✅ PASS | TypeScript + Vite | Built in 4.94s |
 | Frontend Tests | ✅ PASS | 18 tests | All passing |
 | Backend Compile | ✅ PASS | Gradle | Successful |
 | Backend Tests | ✅ PASS | 93 tests | All passing |
 | npm audit | ✅ PASS | Dependencies | 0 vulnerabilities |
 
 ### Issues Summary
-- **Fixed in this sprint**: 6 issues (H3, M1, M2, M3, L1, L4)
-- **Remaining**: 12 issues (4 high/medium priority, 8 low/deferred)
+
+- **Fixed this sprint**: 11 issues (H3, H4, M1-M7, L1, L4)
+- **Remaining**: 10 issues (1 medium deferred, 9 low/deferred)
 
 ---
 
 ## Issues by Severity
 
 ### 🔴 CRITICAL (0)
+
 *No critical security vulnerabilities found*
 
 The application implements proper:
+
 - JWT in HttpOnly cookies with CSRF token protection
 - User data isolation via \`findByIdAndUserId()\` patterns
 - BCrypt password hashing with cost factor 12
 - Account lockout after failed login attempts
 - Input validation with Bean Validation annotations
+- **Production JWT secret validation** (newly added)
 
 ---
 
-### 🟠 HIGH (2 remaining)
+### 🟠 HIGH (0 remaining)
 
 | ID | Category | Component | Issue | Status | Notes |
 |----|----------|-----------|-------|--------|-------|
 | H1 | Syntax | \`TransactionService.java:272-281\` | Missing methods in \`TransactionSearchRequest\` DTO | ✅ RESOLVED | IDE sync issue - Gradle build compiles successfully, Lombok generates methods correctly |
 | H2 | Syntax | \`ImportExportService.java:106\` | \`TransactionImportRecord.builder()\` method not found | ✅ RESOLVED | IDE sync issue - Gradle build compiles successfully |
 | H3 | Logic | \`AppLayout.tsx:28\` | setState called synchronously within useEffect | ✅ **FIXED** | Refactored to use self-contained effect with \`isMounted\` ref |
-| H4 | Security | \`application.yml:55\` | Default JWT secret in dev profile | ⚠️ OPEN | Add startup validation to reject default secret in production |
+| H4 | Security | \`JwtProperties.java\` | Default JWT secret in dev profile | ✅ **FIXED** | Added \`@PostConstruct validateSecret()\` - rejects default secret in production, validates 32+ char length |
 
 ---
 
-### 🟡 MEDIUM (6 remaining)
+### 🟡 MEDIUM (1 remaining)
 
 | ID | Category | Component | Issue | Status | Notes |
 |----|----------|-----------|-------|--------|-------|
 | M1 | Syntax | \`RecurringTransactionsPage.tsx:180\` | Unused variable 'transaction' in onEdit handler | ✅ **FIXED** | Implemented proper \`handleEdit\` function with state management |
 | M2 | Logic | \`ImportExportService.java:86\` | Using \`System.err.println()\` instead of logger | ✅ **FIXED** | Replaced with SLF4J \`logger.error()\` |
 | M3 | Logic | \`RecurringTransactionService.java:235\` | Using \`System.err.println()\` instead of logger | ✅ **FIXED** | Replaced with SLF4J \`logger.error()\` |
-| M4 | Security | \`SecurityConfig.java:99\` | CORS hardcoded to localhost origins only | ⚠️ OPEN | Make configurable via properties for production |
-| M5 | Logic | \`TransactionService.java:152\` | High cognitive complexity (16, limit is 15) | ⚠️ DEFERRED | Minor threshold violation, refactor in future sprint |
-| M6 | Logic | \`TransactionService.java:289\` | High cognitive complexity (24, limit is 15) | ⚠️ DEFERRED | Refactor specification building in future sprint |
-| M7 | Logic | \`JwtTokenProvider.java:88\` | Generic \`RuntimeException\` thrown | ⚠️ OPEN | Create custom \`SecurityException\` class |
-| M8 | Test | Multiple files | Low test coverage - only 3 frontend test files | ⚠️ OPEN | Backend has 93 tests, frontend needs more |
+| M4 | Security | \`SecurityConfig.java\` | CORS hardcoded to localhost origins only | ✅ **FIXED** | Created \`CorsProperties.java\` - CORS now configurable via \`application.yml\` |
+| M5 | Logic | \`TransactionService.java:152\` | High cognitive complexity in updateTransaction | ✅ **FIXED** | Extracted \`reverseBalanceEffect()\`, \`applyBalanceEffect()\`, \`updateTransactionFields()\` |
+| M6 | Logic | \`TransactionService.java:289\` | High cognitive complexity in buildSpecification | ✅ **FIXED** | Extracted \`addFilterPredicates()\` and individual filter helper methods |
+| M7 | Logic | \`JwtTokenProvider.java:88\` | Generic \`RuntimeException\` thrown | ✅ **FIXED** | Created \`TokenHashingException.java\` custom exception class |
+| M8 | Test | Multiple files | Low test coverage - only 3 frontend test files | ⚠️ DEFERRED | Ongoing effort - Backend has 93 tests, frontend needs more |
 
 ---
 
-### 🟢 LOW (4 remaining)
+### 🟢 LOW (6 remaining)
 
 | ID | Category | Component | Issue | Status | Notes |
 |----|----------|-----------|-------|--------|-------|
@@ -85,7 +92,7 @@ The application implements proper:
 
 | ID | Category | Severity | Component | Issue | Proposed Solution |
 |----|----------|----------|-----------|-------|-------------------|
-| N1 | Logic | LOW | \`RecurringTransactionsPage.tsx:65\` | Debug console.log statement | Remove before production |
+| N1 | Logic | LOW | \`RecurringTransactionsPage.tsx:66\` | Debug console.log statement | Remove before production |
 | N2 | Feature | LOW | \`RecurringTransactionsPage.tsx\` | Create modal not implemented (TODO) | Implement RecurringTransactionForm modal |
 | N3 | Style | LOW | Multiple frontend files | 15 console.log/error statements in production code | Consider using a logging service or removing |
 
@@ -96,6 +103,7 @@ The application implements proper:
 ### Fixed Issues Details
 
 #### H3: AppLayout.tsx - setState in useEffect ✅ FIXED
+
 **Before:**
 \`\`\`typescript
 const loadUnreadCount = useCallback(async () => {
@@ -133,24 +141,65 @@ useEffect(() => {
 \`\`\`
 
 #### M1: RecurringTransactionsPage.tsx - Unused variable ✅ FIXED
+
 - Added \`editingTransaction\` state
 - Implemented \`handleEdit\` function
 - Added placeholder edit modal UI
 
 #### M2 & M3: System.err.println replaced ✅ FIXED
+
 - Added SLF4J Logger to \`ImportExportService.java\`
 - Added SLF4J Logger to \`RecurringTransactionService.java\`
 - Replaced \`System.err.println()\` with \`logger.error()\`
 
 #### L1 & L4: TransactionService.java cleanup ✅ FIXED
+
 - Removed unused \`java.time.LocalDate\` import
 - Changed \`predicates.toArray(new Predicate[0])\` to \`predicates.toArray(Predicate[]::new)\`
+
+#### H4: JWT Secret Validation ✅ FIXED
+
+**File**: \`JwtProperties.java\`
+
+Added \`@PostConstruct validateSecret()\` method that:
+- Rejects null/blank secrets with clear error message
+- Rejects default secret prefix in production profiles (\`prod\`, \`production\`)
+- Logs warning in dev when using default secret
+- Validates minimum 32 character length for security
+
+#### M4: CORS Configuration ✅ FIXED
+
+**Files**: \`CorsProperties.java\`, \`SecurityConfig.java\`
+
+Created new \`CorsProperties.java\` with configurable properties:
+- \`allowedOrigins\` - List of allowed origins
+- \`allowedMethods\` - HTTP methods
+- \`allowedHeaders\` - Request headers
+- \`allowCredentials\` - Cookie support
+
+\`SecurityConfig.java\` now injects \`CorsProperties\` instead of hardcoded values.
+
+#### M5 & M6: TransactionService Refactoring ✅ FIXED
+
+Reduced cognitive complexity by extracting helper methods:
+- \`reverseBalanceEffect()\` - Reverses transaction balance effect
+- \`applyBalanceEffect()\` - Applies transaction balance effect  
+- \`updateTransactionFields()\` - Orchestrates field updates
+- \`addFilterPredicates()\` - Builds filter predicates
+- Individual filter methods: \`addAccountFilter()\`, \`addCategoryFilter()\`, \`addTypeFilter()\`, \`addDateFilters()\`, etc.
+
+#### M7: TokenHashingException ✅ FIXED
+
+**File**: \`TokenHashingException.java\`
+
+Created custom exception class for token hashing operations instead of generic \`RuntimeException\`.
 
 ---
 
 ### Console Logging in Frontend Code (N3)
 
 Found 15 console statements in frontend code:
+
 | File | Count | Type |
 |------|-------|------|
 | \`RecurringTransactionsPage.tsx\` | 1 | \`console.log\` (debug) |
@@ -168,6 +217,7 @@ Found 15 console statements in frontend code:
 ### Security Vulnerability Analysis
 
 #### ✅ Implemented Correctly
+
 | Security Control | Status | Implementation |
 |-----------------|--------|----------------|
 | Authentication | ✅ | JWT with HttpOnly cookies |
@@ -179,12 +229,13 @@ Found 15 console statements in frontend code:
 | SQL Injection | ✅ | JPA/Hibernate parameterized queries |
 | XSS Prevention | ✅ | React's default escaping, no dangerouslySetInnerHTML |
 | Password Policy | ✅ | 12 chars min (updated from 8) |
+| JWT Secret Validation | ✅ | Rejects default secret in production |
+| CORS Configuration | ✅ | Configurable via properties |
 
 #### ⚠️ Areas for Improvement
+
 | Check | Status | Notes |
 |-------|--------|-------|
-| JWT Secret Validation | ⚠️ | Default secret in dev profile - add production validation |
-| CORS Configuration | ⚠️ | Hardcoded localhost - make configurable |
 | Rate Limiting | ❌ | No rate limiting on API endpoints |
 | Content Security Policy | ❌ | CSP headers not configured |
 
@@ -202,12 +253,14 @@ Found 15 console statements in frontend code:
 ### Test Files Present
 
 **Backend (16 test files, 93 @Test methods):**
+
 - \`ApiTestSuite.java\` - Test suite runner
 - 11 Controller Integration Tests (Account, Auth, Budget, Category, Dashboard, ImportExport, Notification, RecurringTransaction, Search, Tag, Transaction)
 - 3 Service Unit Tests (Account, Budget, Transaction)
 - \`BaseIntegrationTest.java\` - Test base class
 
 **Frontend (3 test files, 18 tests):**
+
 - \`auth.service.test.ts\` - 6 tests ✅ All passing
 - \`account.service.test.ts\` - 7 tests ✅ All passing
 - \`CurrencyConverter.test.tsx\` - 5 tests ✅ All passing
@@ -246,7 +299,7 @@ Found 15 console statements in frontend code:
 | Output Encoding | ✅ | React escaping + JSON serialization |
 | CSRF Protection | ✅ | Cookie + header token |
 | Data Isolation | ✅ | All queries filter by userId |
-| Secrets Management | ⚠️ | Default secrets in config files |
+| Secrets Management | ✅ | Production validation added |
 | Dependency Security | ✅ | npm audit: 0 vulnerabilities |
 | Rate Limiting | ❌ | Not implemented |
 | Security Headers | ❌ | CSP not configured |
@@ -256,44 +309,57 @@ Found 15 console statements in frontend code:
 ## Recommendations
 
 ### Completed This Sprint ✅
+
 1. ~~Fix ESLint errors in \`AppLayout.tsx\` and \`RecurringTransactionsPage.tsx\`~~ ✅
 2. ~~Replace System.err.println with proper logger calls~~ ✅
 3. ~~Clean up unused imports and improve array creation~~ ✅
+4. ~~Add JWT secret validation for production~~ ✅
+5. ~~Make CORS configurable via properties~~ ✅
+6. ~~Refactor high-complexity methods in TransactionService~~ ✅
+7. ~~Create custom TokenHashingException~~ ✅
 
 ### Immediate Actions (Next Sprint)
+
 1. **Implement RecurringTransactionForm modal** - Complete the edit/create functionality
-2. **Add startup validation** to reject default JWT secret in production profile
-3. **Remove debug console.log** from \`RecurringTransactionsPage.tsx\`
-4. **Make CORS configurable** via application properties
+2. **Remove debug console.log** from \`RecurringTransactionsPage.tsx:66\`
+3. **Expand frontend test coverage** - Add tests for remaining services
 
 ### Short-term (Next 2 Sprints)
-1. **Expand frontend test coverage** - Add tests for remaining services and key components
-2. **Add Playwright E2E tests** for critical user flows (auth, transaction CRUD)
-3. **Implement rate limiting** on authentication endpoints
-4. **Configure CSP headers** in nginx
+
+1. **Add Playwright E2E tests** for critical user flows (auth, transaction CRUD)
+2. **Implement rate limiting** on authentication endpoints
+3. **Configure CSP headers** in nginx
 
 ### Long-term (Roadmap)
-1. **Refactor high-complexity methods** in TransactionService (M5, M6)
-2. **Add Docker resource limits** for production deployment
-3. **Implement audit logging** for sensitive operations
-4. **Replace console.error with logging service** in frontend
+
+1. **Add Docker resource limits** for production deployment
+2. **Implement audit logging** for sensitive operations
+3. **Replace console.error with logging service** in frontend
 
 ---
 
 ## Appendix
 
 ### Tools Used
+
 - **Static Analysis**: ESLint, TypeScript compiler, Java compiler
 - **Test Frameworks**: Vitest (frontend), JUnit 5 (backend)
 - **Dependency Audit**: npm audit
 
 ### Files Analyzed
+
 - Backend Java files: 107
 - Frontend TypeScript files: 107
 - Test files: 19 total (16 backend, 3 frontend)
 - Configuration files: Reviewed docker-compose.yml, Dockerfiles, application.yml
 
+### Files Created This Sprint
+
+- \`CorsProperties.java\` - CORS configuration properties
+- \`TokenHashingException.java\` - Custom exception for token hashing
+
 ### Stack Detected
+
 | Layer | Technology | Version |
 |-------|------------|---------|
 | Frontend | React | 19.2.0 |
