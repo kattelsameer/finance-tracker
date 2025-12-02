@@ -1,8 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { recurringTransactionService } from '../services/recurring-transaction.service';
+import { accountService } from '../services/account.service';
+import { categoryService } from '../services/category.service';
 import { useAuth } from '../contexts/AuthContext';
-import type { RecurringTransaction, Frequency } from '../types';
-import { RecurringList } from '../components/recurring';
+import type { RecurringTransaction, Frequency, CreateRecurringTransactionRequest, Account, Category } from '../types';
+import { RecurringList, RecurringTransactionForm } from '../components/recurring';
+import { logger } from '../utils/logger';
 import {
   Plus,
   Repeat,
@@ -15,20 +18,39 @@ export function RecurringTransactionsPage() {
   const defaultCurrency = user?.defaultCurrency || 'NPR';
   
   const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeOnly, setActiveOnly] = useState(true);
+  const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<RecurringTransaction | null>(null);
+  const [formData, setFormData] = useState<CreateRecurringTransactionRequest>({
+    accountId: 0,
+    transactionType: 'EXPENSE',
+    amount: 0,
+    description: '',
+    frequency: 'MONTHLY',
+    startDate: new Date().toISOString().split('T')[0],
+    autoPost: false,
+  });
 
   const fetchRecurringTransactions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await recurringTransactionService.getAll(activeOnly);
-      setRecurringTransactions(data);
+      const [transactionsData, accountsData, categoriesData] = await Promise.all([
+        recurringTransactionService.getAll(activeOnly),
+        accountService.getAll(),
+        categoryService.getAll(),
+      ]);
+      setRecurringTransactions(transactionsData);
+      setAccounts(accountsData);
+      setCategories(categoriesData);
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || 'Failed to fetch recurring transactions');
+      logger.error('Failed to fetch recurring transactions:', err);
     } finally {
       setLoading(false);
     }
@@ -62,7 +84,57 @@ export function RecurringTransactionsPage() {
 
   const handleEdit = (transaction: RecurringTransaction) => {
     setEditingTransaction(transaction);
-    // TODO: Open edit modal when implemented
+    setFormData({
+      accountId: transaction.accountId,
+      categoryId: transaction.categoryId,
+      transactionType: transaction.transactionType,
+      amount: transaction.amount,
+      description: transaction.description,
+      frequency: transaction.frequency.frequencyType,
+      startDate: transaction.startDate.split('T')[0],
+      endDate: transaction.endDate?.split('T')[0],
+      dayOfMonth: transaction.dayOfMonth,
+      dayOfWeek: transaction.dayOfWeek,
+      transferToAccountId: transaction.transferToAccountId,
+      autoPost: transaction.autoPost,
+    });
+    setShowForm(true);
+  };
+
+  const handleCreate = () => {
+    setEditingTransaction(null);
+    setFormData({
+      accountId: accounts[0]?.id || 0,
+      transactionType: 'EXPENSE',
+      amount: 0,
+      description: '',
+      frequency: 'MONTHLY',
+      startDate: new Date().toISOString().split('T')[0],
+      autoPost: false,
+    });
+    setShowForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setEditingTransaction(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingTransaction) {
+        await recurringTransactionService.update(editingTransaction.id, formData);
+      } else {
+        await recurringTransactionService.create(formData);
+      }
+      handleCloseForm();
+      fetchRecurringTransactions();
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to save recurring transaction');
+      logger.error('Failed to save recurring transaction:', err);
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -113,7 +185,7 @@ export function RecurringTransactionsPage() {
           <p className="text-sm text-gray-500 mt-1">Manage your scheduled transactions</p>
         </div>
         <button
-          onClick={() => {/* TODO: Open create modal */}}
+          onClick={handleCreate}
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm flex-shrink-0"
         >
           <Plus className="h-4 w-4" />
@@ -159,25 +231,17 @@ export function RecurringTransactionsPage() {
         </div>
       )}
 
-      {/* Edit Modal Placeholder - TODO: Implement RecurringTransactionForm modal */}
-      {editingTransaction && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Edit Recurring Transaction</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Editing: <strong>{editingTransaction.description}</strong>
-            </p>
-            <p className="text-sm text-gray-500 mb-6">
-              Full edit form coming soon. For now, you can toggle active status or delete from the list.
-            </p>
-            <button
-              onClick={() => setEditingTransaction(null)}
-              className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
+      {/* Recurring Transaction Form Modal */}
+      {showForm && (
+        <RecurringTransactionForm
+          formData={formData}
+          accounts={accounts}
+          categories={categories}
+          isEditing={!!editingTransaction}
+          onSubmit={handleSubmit}
+          onChange={setFormData}
+          onClose={handleCloseForm}
+        />
       )}
 
       {/* Recurring Transactions List - Using RecurringList Component */}
@@ -191,7 +255,7 @@ export function RecurringTransactionsPage() {
             Set up recurring transactions for regular expenses and income like rent, subscriptions, or paychecks.
           </p>
           <button
-            onClick={() => {/* TODO: Open create modal */}}
+            onClick={handleCreate}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
           >
             <Plus className="h-4 w-4" />
