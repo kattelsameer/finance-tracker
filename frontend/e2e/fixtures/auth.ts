@@ -39,11 +39,11 @@ export async function registerUser(page: Page, user: TestUser) {
 /**
  * Login with credentials
  */
-export async function login(page: Page, email: string, password: string) {
+export async function login(page: Page, usernameOrEmail: string, password: string) {
   await page.goto('/login');
   
-  await page.fill('input[name="email"]', email);
-  await page.fill('input[name="password"]', password);
+  await page.fill('input#username', usernameOrEmail);
+  await page.fill('input#password', password);
   
   await page.click('button[type="submit"]');
   
@@ -81,8 +81,8 @@ export async function logout(page: Page) {
 export async function setupAuthenticatedPage(page: Page, user: TestUser = testUsers.regular) {
   // Try to login, if it fails, register first
   await page.goto('/login');
-  await page.fill('input[name="email"]', user.email);
-  await page.fill('input[name="password"]', user.password);
+  await page.fill('input#username', user.username);
+  await page.fill('input#password', user.password);
   await page.click('button[type="submit"]');
   
   // Check if login succeeded or if we need to register

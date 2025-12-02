@@ -23,7 +23,7 @@ test.describe('Authentication Flow', () => {
     
     // If redirected to login, should be able to login
     if (page.url().includes('/login')) {
-      await login(page, newUser.email, newUser.password);
+      await login(page, newUser.username, newUser.password);
       expect(page.url()).toContain('/dashboard');
     }
   });
@@ -32,8 +32,8 @@ test.describe('Authentication Flow', () => {
     await page.goto('/login');
     
     // Fill in login form
-    await page.fill('input[name="email"]', testUsers.regular.email);
-    await page.fill('input[name="password"]', testUsers.regular.password);
+    await page.fill('input#username', testUsers.regular.username);
+    await page.fill('input#password', testUsers.regular.password);
     
     // Submit form
     await page.click('button[type="submit"]');
@@ -51,8 +51,8 @@ test.describe('Authentication Flow', () => {
   test('should show error with invalid credentials', async ({ page }) => {
     await page.goto('/login');
     
-    await page.fill('input[name="email"]', 'wrong@example.com');
-    await page.fill('input[name="password"]', 'WrongPassword123');
+    await page.fill('input#username', 'wronguser');
+    await page.fill('input#password', 'WrongPassword123');
     
     await page.click('button[type="submit"]');
     
@@ -73,8 +73,8 @@ test.describe('Authentication Flow', () => {
     expect(csrfToken).toBeDefined();
     
     // Login should work with CSRF token
-    await page.fill('input[name="email"]', testUsers.regular.email);
-    await page.fill('input[name="password"]', testUsers.regular.password);
+    await page.fill('input#username', testUsers.regular.username);
+    await page.fill('input#password', testUsers.regular.password);
     await page.click('button[type="submit"]');
     
     await page.waitForURL('/dashboard', { timeout: 10000 });
@@ -82,7 +82,7 @@ test.describe('Authentication Flow', () => {
 
   test('should logout successfully', async ({ page }) => {
     // First login
-    await login(page, testUsers.regular.email, testUsers.regular.password);
+    await login(page, testUsers.regular.username, testUsers.regular.password);
     
     // Verify we're on dashboard
     expect(page.url()).toContain('/dashboard');
@@ -109,7 +109,7 @@ test.describe('Authentication Flow', () => {
 
   test('should persist session across page reloads', async ({ page }) => {
     // Login
-    await login(page, testUsers.regular.email, testUsers.regular.password);
+    await login(page, testUsers.regular.username, testUsers.regular.password);
     
     // Reload page
     await page.reload();
@@ -138,7 +138,7 @@ test.describe('Authentication Flow', () => {
     expect(page.url()).toContain('/register');
     
     // Should show validation error
-    const errorMessage = page.locator('text=/password.*12.*characters/i');
+    const errorMessage = page.locator('text=/password.*8.*characters/i');
     await expect(errorMessage).toBeVisible({ timeout: 3000 });
   });
 
@@ -168,15 +168,15 @@ test.describe('Authentication Flow', () => {
     
     // Attempt 5 failed logins
     for (let i = 0; i < 5; i++) {
-      await page.fill('input[name="email"]', testUsers.regular.email);
-      await page.fill('input[name="password"]', wrongPassword);
+      await page.fill('input#username', testUsers.regular.username);
+      await page.fill('input#password', wrongPassword);
       await page.click('button[type="submit"]');
       await page.waitForTimeout(500);
     }
     
     // 6th attempt should show account locked message
-    await page.fill('input[name="email"]', testUsers.regular.email);
-    await page.fill('input[name="password"]', wrongPassword);
+    await page.fill('input#username', testUsers.regular.username);
+    await page.fill('input#password', wrongPassword);
     await page.click('button[type="submit"]');
     
     // Should show account locked message
