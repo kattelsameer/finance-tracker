@@ -195,6 +195,105 @@ Reduced cognitive complexity by extracting helper methods:
 
 Created custom exception class for token hashing operations instead of generic \`RuntimeException\`.
 
+#### M8: Low Frontend Test Coverage ✅ FIXED
+
+**Files**: Playwright E2E test suite (6 spec files, 50+ tests)
+
+Implemented comprehensive end-to-end testing infrastructure with Playwright:
+
+**Infrastructure Setup**:
+- Installed \`@playwright/test\` v1.57.0
+- Created \`playwright.config.ts\` with Chromium browser configuration
+- Setup webServer to auto-start frontend dev server
+- Configured test artifacts: screenshots on failure, video on retry, trace collection
+
+**Test Suite Created** (6 spec files):
+1. **\`smoke.spec.ts\`** (3 tests) - Basic page load verification
+   - Homepage load and redirect
+   - Login page elements visibility
+   - Register page elements visibility
+
+2. **\`auth.spec.ts\`** (11 tests) - Complete authentication flow
+   - User registration with validation
+   - Login with valid/invalid credentials
+   - JWT cookie handling and HttpOnly verification
+   - CSRF token validation
+   - Logout functionality
+   - Session persistence across reloads
+   - Password validation (min 8 characters)
+   - Password confirmation matching
+   - Account lockout after 5 failed attempts
+
+3. **\`transactions.spec.ts\`** (9 tests) - Transaction CRUD operations
+   - Create EXPENSE/INCOME/TRANSFER transactions
+   - Edit existing transactions
+   - Delete transactions with confirmation
+   - Filter by transaction type
+   - Pagination controls
+   - Required field validation
+
+4. **\`accounts.spec.ts\`** (8 tests) - Account management
+   - Create new accounts
+   - View account details
+   - Edit account information
+   - Delete accounts
+   - Balance display verification
+   - Balance updates after transactions
+   - Filter accounts by type
+   - Required field validation
+
+5. **\`recurring-transactions.spec.ts\`** (9 tests) - Recurring transactions
+   - Create monthly/weekly/quarterly recurring transactions
+   - Create recurring transfers
+   - Edit recurring transactions
+   - Toggle active/inactive status
+   - Delete recurring transactions
+   - Filter active vs all
+   - Frequency-specific field validation (dayOfWeek, dayOfMonth)
+   - Optional end date handling
+
+6. **\`additional-features.spec.ts\`** (6 tests) - Notifications, Search, Dashboard
+   - Notification center open/close
+   - Mark notification as read
+   - Mark all notifications as read
+   - Advanced search with criteria
+   - Save searches
+   - User preferences update
+   - Dashboard widgets display
+
+**Test Fixtures** (\`e2e/fixtures/auth.ts\`):
+- \`registerUser()\` - User registration helper
+- \`login()\` - Login with JWT cookie verification
+- \`logout()\` - Logout with cookie cleanup
+- \`setupAuthenticatedPage()\` - Reusable authenticated session
+- \`getCsrfToken()\` - CSRF token extraction
+- Test user credentials (regular & admin)
+
+**Key Testing Features**:
+- Automatic retry on failure (1 retry locally, 2 on CI)
+- Screenshot capture on failures
+- Video recording on retry failures
+- Trace collection for debugging
+- Network activity monitoring
+- Cookie and session validation
+- Form validation testing
+- Error message verification
+
+**Test Coverage Metrics**:
+- **Total E2E Tests**: 46 tests
+- **Test Files**: 6 spec files
+- **Critical Paths Covered**: Auth, Transactions, Accounts, Recurring, Notifications, Search
+- **Browser**: Chromium (with support for Firefox/Webkit)
+
+**Scripts Added** (\`package.json\`):
+```json
+"test:e2e": "playwright test"
+"test:e2e:ui": "playwright test --ui"
+"test:e2e:debug": "playwright test --debug"
+"test:e2e:headed": "playwright test --headed"
+"test:e2e:report": "playwright show-report"
+```
+
 #### L3: Duplicate String Literal ✅ FIXED
 
 **File**: \`TransactionService.java\`
@@ -382,7 +481,7 @@ Found 15 console statements in frontend code:
 |-----------|-----------|-----------|------------|----------|
 | Backend | Integration | 16 files | 93 tests | ~45% (estimated) |
 | Frontend | Unit (Vitest) | 3 files | 18 tests | ~5% (estimated) |
-| Frontend | E2E (Playwright) | 6 files | 50+ tests | ✅ All major features |
+| Frontend | E2E (Playwright) | 6 files | 46 tests | ✅ All major features |
 
 ### Test Files Present
 
@@ -399,13 +498,14 @@ Found 15 console statements in frontend code:
 - \`account.service.test.ts\` - 7 tests ✅ All passing
 - \`CurrencyConverter.test.tsx\` - 5 tests ✅ All passing
 
-**Frontend E2E Tests (6 spec files, 50+ tests):**
+**Frontend E2E Tests (6 spec files, 46 tests):**
 
-- \`auth.spec.ts\` - 10 tests (registration, login, logout, JWT, CSRF, lockout)
-- \`transactions.spec.ts\` - 9 tests (CRUD operations, filtering, pagination)
-- \`accounts.spec.ts\` - 8 tests (CRUD, balance updates, filtering)
-- \`recurring-transactions.spec.ts\` - 10 tests (all frequencies, CRUD, toggle, validation)
-- \`additional-features.spec.ts\` - 13 tests (notifications, search, settings, dashboard)
+- \`smoke.spec.ts\` - 3 tests (basic page loads and redirects)
+- \`auth.spec.ts\` - 11 tests (registration, login, logout, JWT, CSRF, validation, lockout)
+- \`transactions.spec.ts\` - 9 tests (CRUD operations, filtering, pagination, validation)
+- \`accounts.spec.ts\` - 8 tests (CRUD, balance updates, filtering, validation)
+- \`recurring-transactions.spec.ts\` - 9 tests (all frequencies, CRUD, toggle active, field validation)
+- \`additional-features.spec.ts\` - 6 tests (notifications, advanced search, settings, dashboard)
 - \`fixtures/auth.ts\` - Reusable authentication helpers
 
 ### E2E Test Coverage by Feature
@@ -513,6 +613,16 @@ Found 15 console statements in frontend code:
 **Frontend:**
 - \`logger.ts\` - Environment-aware logging utility for frontend
 - \`RecurringTransactionForm.tsx\` - Full-featured modal form for recurring transactions
+
+**E2E Tests:**
+- \`playwright.config.ts\` - Playwright test configuration
+- \`e2e/smoke.spec.ts\` - Basic smoke tests (3 tests)
+- \`e2e/auth.spec.ts\` - Authentication flow tests (11 tests)
+- \`e2e/transactions.spec.ts\` - Transaction management tests (9 tests)
+- \`e2e/accounts.spec.ts\` - Account management tests (8 tests)
+- \`e2e/recurring-transactions.spec.ts\` - Recurring transactions tests (9 tests)
+- \`e2e/additional-features.spec.ts\` - Additional features tests (6 tests)
+- \`e2e/fixtures/auth.ts\` - Reusable authentication helpers
 - \`playwright.config.ts\` - Playwright E2E test configuration
 - \`e2e/fixtures/auth.ts\` - Authentication test helpers
 - \`e2e/auth.spec.ts\` - Authentication flow tests (10 tests)
