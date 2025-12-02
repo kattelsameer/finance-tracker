@@ -4,6 +4,7 @@ import { accountService } from '../services/account.service';
 import { categoryService } from '../services/category.service';
 import { useAuth } from '../contexts/AuthContext';
 import type { Transaction, Account, Category, TransactionFilter, CreateTransactionRequest, PageResponse } from '../types';
+import { logger } from '../utils/logger';
 import {
   ArrowLeftRight,
   Plus,
@@ -85,7 +86,7 @@ export function TransactionsPage() {
       setAccounts(accountsData);
       setCategories(categoriesData);
     } catch (err) {
-      console.error('Failed to fetch data:', err);
+      logger.error('Failed to fetch data:', err);
     }
   };
 

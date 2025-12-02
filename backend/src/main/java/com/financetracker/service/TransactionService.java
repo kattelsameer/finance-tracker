@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 public class TransactionService {
     
     private static final Logger logger = LoggerFactory.getLogger(TransactionService.class);
+    private static final String TRANSACTION_DATE_FIELD = "transactionDate";
     
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
@@ -305,7 +306,7 @@ public class TransactionService {
             searchRequest.getSortDirection().equalsIgnoreCase("ASC") 
                 ? Sort.Direction.ASC 
                 : Sort.Direction.DESC,
-            searchRequest.getSortBy() != null ? searchRequest.getSortBy() : "transactionDate"
+            searchRequest.getSortBy() != null ? searchRequest.getSortBy() : TRANSACTION_DATE_FIELD
         );
         
         Pageable pageable = PageRequest.of(
@@ -385,10 +386,10 @@ public class TransactionService {
             jakarta.persistence.criteria.Root<Transaction> root,
             jakarta.persistence.criteria.CriteriaBuilder cb) {
         if (filter.getStartDate() != null) {
-            predicates.add(cb.greaterThanOrEqualTo(root.get("transactionDate"), filter.getStartDate()));
+            predicates.add(cb.greaterThanOrEqualTo(root.get(TRANSACTION_DATE_FIELD), filter.getStartDate()));
         }
         if (filter.getEndDate() != null) {
-            predicates.add(cb.lessThanOrEqualTo(root.get("transactionDate"), filter.getEndDate()));
+            predicates.add(cb.lessThanOrEqualTo(root.get(TRANSACTION_DATE_FIELD), filter.getEndDate()));
         }
     }
     

@@ -63,7 +63,6 @@ export function RecurringTransactionsPage() {
   const handleEdit = (transaction: RecurringTransaction) => {
     setEditingTransaction(transaction);
     // TODO: Open edit modal when implemented
-    console.log('Edit transaction:', transaction.id);
   };
 
   const formatCurrency = (amount: number) => {

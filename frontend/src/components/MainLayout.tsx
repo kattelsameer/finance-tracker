@@ -20,6 +20,7 @@ import {
 import { useState, useEffect, useCallback } from 'react';
 import { NotificationCenter } from './NotificationCenter';
 import { notificationService } from '../services/notification.service';
+import { logger } from '../utils/logger';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -48,7 +49,7 @@ export function MainLayout() {
       const count = await notificationService.getUnreadCount();
       setUnreadCount(count);
     } catch {
-      console.error('Failed to load unread count');
+      logger.error('Failed to load unread count');
     }
   }, []);
 
@@ -84,6 +85,7 @@ export function MainLayout() {
         <button
           type="button"
           aria-label="Close sidebar"
+          data-testid="sidebar-overlay"
           className="fixed inset-0 z-40 lg:hidden bg-black/50 cursor-default border-none"
           onClick={() => setSidebarOpen(false)}
         />
@@ -102,6 +104,7 @@ export function MainLayout() {
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
+              data-testid="mobile-sidebar-close"
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <X className="h-5 w-5 text-gray-500" />
@@ -237,6 +240,7 @@ export function MainLayout() {
               </Link>
               <button
                 onClick={handleLogout}
+                data-testid="mobile-logout-button"
                 className="p-2 rounded-lg hover:bg-red-50 transition-colors text-gray-400 hover:text-red-600"
                 title="Logout"
               >
@@ -374,6 +378,7 @@ export function MainLayout() {
               </Link>
               <button
                 onClick={handleLogout}
+                data-testid="desktop-logout-button"
                 className="p-2 rounded-lg hover:bg-red-50 transition-colors text-gray-400 hover:text-red-600"
                 title="Logout"
               >
@@ -393,6 +398,7 @@ export function MainLayout() {
             <div className="flex items-center gap-3 min-w-0">
               <button
                 type="button"
+                data-testid="mobile-menu-button"
                 className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
                 onClick={() => setSidebarOpen(true)}
               >
@@ -405,6 +411,7 @@ export function MainLayout() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setNotificationCenterOpen(true)}
+                data-testid="notification-button"
                 className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
                 title="Notifications"
               >

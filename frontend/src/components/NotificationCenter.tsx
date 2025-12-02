@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, X, Check, Trash2, Settings, CheckCheck, Sparkles } from 'lucide-react';
 import { notificationService } from '../services/notification.service';
+import { logger } from '../utils/logger';
 import { Notification, NotificationPriority } from '../types';
 
 interface NotificationCenterProps {
@@ -29,7 +30,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       const unread = await notificationService.getUnreadNotifications();
       setNotifications(unread);
     } catch (error) {
-      console.error('Failed to load notifications:', error);
+      logger.error('Failed to load notifications:', error);
     } finally {
       setLoading(false);
     }
@@ -40,7 +41,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       await notificationService.markAsRead(id);
       setNotifications(notifications.filter(n => n.id !== id));
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      logger.error('Failed to mark notification as read:', error);
     }
   };
 
@@ -49,7 +50,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       await notificationService.markAllAsRead();
       setNotifications([]);
     } catch (error) {
-      console.error('Failed to mark all as read:', error);
+      logger.error('Failed to mark all as read:', error);
     }
   };
 
@@ -58,7 +59,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       await notificationService.deleteNotification(id);
       setNotifications(notifications.filter(n => n.id !== id));
     } catch (error) {
-      console.error('Failed to delete notification:', error);
+      logger.error('Failed to delete notification:', error);
     }
   };
 

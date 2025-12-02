@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/auth.service';
 import { notificationService } from '../services/notification.service';
+import { logger } from '../utils/logger';
 import { 
   DollarSign, 
   Globe, 

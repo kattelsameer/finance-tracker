@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { API_URL } from '../config/api';
 import type { ErrorResponse } from '../types';
+import { logger } from '../utils/logger';
 
 class ApiClient {
   private readonly client: AxiosInstance;
@@ -100,7 +101,7 @@ class ApiClient {
       });
       this.csrfToken = response.data.token;
     } catch (error) {
-      console.error('Failed to fetch CSRF token:', error);
+      logger.error('Failed to fetch CSRF token:', error);
     }
   }
 

@@ -3,6 +3,7 @@ import { searchService } from '../services/search.service';
 import { accountService } from '../services/account.service';
 import { categoryService } from '../services/category.service';
 import { useAuth } from '../contexts/AuthContext';
+import { logger } from '../utils/logger';
 import {
   TransactionSearchRequest,
   Transaction,
@@ -78,7 +79,7 @@ const AdvancedSearchPage: React.FC = () => {
       setCategories(categoriesData);
       setSavedSearches(savedSearchesData);
     } catch (error) {
-      console.error('Failed to load filter options:', error);
+      logger.error('Failed to load filter options:', error);
     }
   };
 
@@ -90,7 +91,7 @@ const AdvancedSearchPage: React.FC = () => {
       setTotalPages(response.totalPages);
       setTotalElements(response.totalElements);
     } catch (error) {
-      console.error('Search failed:', error);
+      logger.error('Search failed:', error);
     } finally {
       setLoading(false);
     }
@@ -121,7 +122,7 @@ const AdvancedSearchPage: React.FC = () => {
       setSaveSearchName('');
       setSaveAsDefault(false);
     } catch (error) {
-      console.error('Failed to save search:', error);
+      logger.error('Failed to save search:', error);
     }
   };
 
@@ -131,7 +132,7 @@ const AdvancedSearchPage: React.FC = () => {
       setSearchCriteria(criteria);
       // Don't auto-search, let user review criteria first
     } catch (error) {
-      console.error('Failed to load saved search:', error);
+      logger.error('Failed to load saved search:', error);
     }
   };
 
@@ -140,7 +141,7 @@ const AdvancedSearchPage: React.FC = () => {
       await searchService.deleteSavedSearch(id);
       setSavedSearches(savedSearches.filter(s => s.id !== id));
     } catch (error) {
-      console.error('Failed to delete saved search:', error);
+      logger.error('Failed to delete saved search:', error);
     }
   };
 
