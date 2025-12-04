@@ -74,3 +74,10 @@ package-lock.json
 cookies.txt
 /tmp/
 bin/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

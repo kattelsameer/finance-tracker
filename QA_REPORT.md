@@ -163,6 +163,7 @@ useEffect(() => {
 **File**: \`JwtProperties.java\`
 
 Added \`@PostConstruct validateSecret()\` method that:
+
 - Rejects null/blank secrets with clear error message
 - Rejects default secret prefix in production profiles (\`prod\`, \`production\`)
 - Logs warning in dev when using default secret
@@ -173,6 +174,7 @@ Added \`@PostConstruct validateSecret()\` method that:
 **Files**: \`CorsProperties.java\`, \`SecurityConfig.java\`
 
 Created new \`CorsProperties.java\` with configurable properties:
+
 - \`allowedOrigins\` - List of allowed origins
 - \`allowedMethods\` - HTTP methods
 - \`allowedHeaders\` - Request headers
@@ -183,6 +185,7 @@ Created new \`CorsProperties.java\` with configurable properties:
 #### M5 & M6: TransactionService Refactoring ✅ FIXED
 
 Reduced cognitive complexity by extracting helper methods:
+
 - \`reverseBalanceEffect()\` - Reverses transaction balance effect
 - \`applyBalanceEffect()\` - Applies transaction balance effect  
 - \`updateTransactionFields()\` - Orchestrates field updates
@@ -202,12 +205,14 @@ Created custom exception class for token hashing operations instead of generic \
 Implemented comprehensive end-to-end testing infrastructure with Playwright:
 
 **Infrastructure Setup**:
+
 - Installed \`@playwright/test\` v1.57.0
 - Created \`playwright.config.ts\` with Chromium browser configuration
 - Setup webServer to auto-start frontend dev server
 - Configured test artifacts: screenshots on failure, video on retry, trace collection
 
 **Test Suite Created** (6 spec files):
+
 1. **\`smoke.spec.ts\`** (3 tests) - Basic page load verification
    - Homepage load and redirect
    - Login page elements visibility
@@ -262,6 +267,7 @@ Implemented comprehensive end-to-end testing infrastructure with Playwright:
    - Dashboard widgets display
 
 **Test Fixtures** (\`e2e/fixtures/auth.ts\`):
+
 - \`registerUser()\` - User registration helper
 - \`login()\` - Login with JWT cookie verification
 - \`logout()\` - Logout with cookie cleanup
@@ -270,6 +276,7 @@ Implemented comprehensive end-to-end testing infrastructure with Playwright:
 - Test user credentials (regular & admin)
 
 **Key Testing Features**:
+
 - Automatic retry on failure (1 retry locally, 2 on CI)
 - Screenshot capture on failures
 - Video recording on retry failures
@@ -280,12 +287,14 @@ Implemented comprehensive end-to-end testing infrastructure with Playwright:
 - Error message verification
 
 **Test Coverage Metrics**:
+
 - **Total E2E Tests**: 46 tests
 - **Test Files**: 6 spec files
 - **Critical Paths Covered**: Auth, Transactions, Accounts, Recurring, Notifications, Search
 - **Browser**: Chromium (with support for Firefox/Webkit)
 
 **Scripts Added** (\`package.json\`):
+
 ```json
 "test:e2e": "playwright test"
 "test:e2e:ui": "playwright test --ui"
@@ -299,6 +308,7 @@ Implemented comprehensive end-to-end testing infrastructure with Playwright:
 **File**: \`TransactionService.java\`
 
 Extracted \`"transactionDate"\` string literal to constant:
+
 - Added \`private static final String TRANSACTION_DATE_FIELD = "transactionDate";`
 - Replaced 3 occurrences in \`advancedSearch()\` and \`addDateFilters()\` methods
 
@@ -307,6 +317,7 @@ Extracted \`"transactionDate"\` string literal to constant:
 **File**: \`MainLayout.tsx\`
 
 Added 6 data-testid attributes to key interactive elements:
+
 - \`sidebar-overlay\` - Mobile sidebar overlay
 - \`mobile-sidebar-close\` - Mobile sidebar close button
 - \`mobile-logout-button\` - Mobile logout button
@@ -325,6 +336,7 @@ Removed debug \`console.log('Edit transaction:', transaction.id);\` from \`handl
 **Files**: \`RecurringTransactionForm.tsx\`, \`RecurringTransactionsPage.tsx\`
 
 Created full-featured modal form for recurring transactions:
+
 - **Form Component** (\`RecurringTransactionForm.tsx\`):
   - Transaction type selector (INCOME/EXPENSE/TRANSFER)
   - Account and category selection
@@ -350,6 +362,7 @@ Created full-featured modal form for recurring transactions:
 **Files**: \`logger.ts\`, 6 component files
 
 Created environment-aware logging utility:
+
 - **\`logger.ts\`**: Exports logger object with \`error/warn/info/debug\` methods that respect \`import.meta.env.DEV\` flag
 - Replaced all \`console.error\` statements in:
   - \`api-client.ts\` (1 occurrence)
@@ -366,6 +379,7 @@ Created environment-aware logging utility:
 Added 6 spec files with 50+ end-to-end tests covering all major features:
 
 **1. auth.spec.ts (10 tests)**:
+
 - User registration with password validation
 - Login with valid/invalid credentials  
 - Logout functionality
@@ -376,6 +390,7 @@ Added 6 spec files with 50+ end-to-end tests covering all major features:
 - Account lockout after 5 failed login attempts
 
 **2. transactions.spec.ts (9 tests)**:
+
 - Create INCOME transactions
 - Create EXPENSE transactions
 - Create TRANSFER transactions
@@ -386,6 +401,7 @@ Added 6 spec files with 50+ end-to-end tests covering all major features:
 - Transaction list pagination
 
 **3. accounts.spec.ts (8 tests)**:
+
 - Create new account with balance
 - View account details
 - Edit account information
@@ -396,6 +412,7 @@ Added 6 spec files with 50+ end-to-end tests covering all major features:
 - Validate required fields
 
 **4. recurring-transactions.spec.ts (10 tests)**:
+
 - Create monthly recurring transaction
 - Create weekly recurring transaction
 - Create recurring transfer
@@ -408,18 +425,21 @@ Added 6 spec files with 50+ end-to-end tests covering all major features:
 - Auto-post toggle functionality
 
 **5. additional-features.spec.ts (13 tests)**:
+
 - Notifications: open center, mark as read, mark all as read
 - Advanced search: search with criteria, save searches
 - Settings: update user preferences (currency, etc.)
 - Dashboard: display widgets, show recent transactions
 
 **6. fixtures/auth.ts**:
+
 - Reusable authentication helper functions
 - Test user management with pre-configured credentials
 - CSRF token extraction and handling
 - Protected route navigation helpers
 
 **Infrastructure**:
+
 - Playwright config with multi-browser support (Chromium, Firefox, WebKit)
 - Mobile viewport testing (Pixel 5, iPhone 12)
 - Local dev server integration
@@ -607,14 +627,17 @@ Found 15 console statements in frontend code:
 ### Files Created This Sprint
 
 **Backend:**
+
 - \`CorsProperties.java\` - CORS configuration properties
 - \`TokenHashingException.java\` - Custom exception for token hashing
 
 **Frontend:**
+
 - \`logger.ts\` - Environment-aware logging utility for frontend
 - \`RecurringTransactionForm.tsx\` - Full-featured modal form for recurring transactions
 
 **E2E Tests:**
+
 - \`playwright.config.ts\` - Playwright test configuration
 - \`e2e/smoke.spec.ts\` - Basic smoke tests (3 tests)
 - \`e2e/auth.spec.ts\` - Authentication flow tests (11 tests)
