@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { DemoBanner } from './DemoBanner';
 import { NotificationCenter } from '../NotificationCenter';
 import { notificationService } from '../../services/notification.service';
 import { navigationItems } from './navigation-config';
@@ -70,6 +71,9 @@ export function AppLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Demo Mode Banner */}
+      <DemoBanner />
+      
       {/* Mobile Sidebar */}
       <Sidebar
         isMobile

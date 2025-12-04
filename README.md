@@ -68,6 +68,45 @@ Build a personal finance management application that enables a single user to:
 - Bill payment integration
 - Receipt OCR scanning
 
+### 1.5 Quick Start
+
+#### 🎭 Try Demo Mode (Fastest)
+Experience the full application with pre-populated realistic data:
+
+```bash
+# 1. Clone repository
+git clone <repository-url>
+cd finance-tracker
+
+# 2. Create .env file
+cp .env.demo.example .env
+# Edit .env and set JWT_SECRET
+
+# 3. Start demo environment
+docker compose -f docker-compose.demo.yml up -d
+
+# 4. Access application
+# Frontend: http://localhost:81
+# Login: demo@example.com / Demo123!
+```
+
+**Demo Features:**
+- ✅ 180+ realistic transactions over 6 months
+- ✅ 6 diverse account types (checking, savings, credit, investment, loan, cash)
+- ✅ Budgets, recurring transactions, and notifications
+- ✅ Auto-resets daily at 2 AM UTC
+
+#### 🔧 Development Mode
+For feature development with empty database:
+
+```bash
+docker compose up -d
+# Frontend: http://localhost
+# Register new account
+```
+
+**See [DEVELOPMENT_GUIDE.md](docs/development/DEVELOPMENT_GUIDE.md) for detailed setup instructions.**
+
 ---
 
 ## 2. Technology Stack

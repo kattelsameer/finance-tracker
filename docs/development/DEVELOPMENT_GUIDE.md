@@ -194,6 +194,7 @@ The application supports multiple environment profiles with different configurat
 |---------|----------|---------|----------|------------|
 | **dev** | `localhost:3306` | `localhost:8080` | Local backend development | Default profile |
 | **docker** | `mysql:3306` (container) | nginx proxy | Docker Compose environment | Set in docker-compose.yml |
+| **demo** | `mysql:3306` (demo container) | nginx proxy (port 81) | Demo mode with auto-reset data | Set in docker-compose.demo.yml |
 | **prod** | Remote MySQL | Production domain | Production deployment | Manual configuration |
 | **test** | H2 in-memory | - | Integration tests | Activated by test runner |
 
@@ -204,6 +205,7 @@ backend/src/main/resources/
 ├── application.yml                 # Base configuration
 ├── application-dev.yml             # Local development
 ├── application-docker.yml          # Docker Compose
+├── application-demo.yml            # Demo mode
 ├── application-prod.yml            # Production
 └── application-test.yml            # Testing
 ```
@@ -523,16 +525,32 @@ Create `.env.local` in `frontend/` directory:
 
 ### 7.1 Services Overview
 
-The Docker Compose configuration runs three services:
+The application supports three Docker Compose configurations:
 
+#### Development Mode (`docker-compose.yml`)
 | Service | Container Name | Port | Dependencies |
 |---------|---------------|------|--------------|
 | **mysql** | finance-tracker-mysql | 3306 | - |
 | **backend** | finance-tracker-backend | 8080 | mysql (healthy) |
 | **frontend** | finance-tracker-frontend | 80 | backend (healthy) |
 
+#### Demo Mode (`docker-compose.demo.yml`)
+| Service | Container Name | Port | Dependencies |
+|---------|---------------|------|--------------|
+| **mysql** | finance-tracker-mysql-demo | 3307 | - |
+| **backend** | finance-tracker-backend-demo | 8081 | mysql (healthy) |
+| **frontend** | finance-tracker-frontend-demo | 81 | backend (healthy) |
+
+**Demo Mode Features:**
+- ✅ Pre-seeded with 180+ realistic transactions over 6 months
+- ✅ Demo user: `demo@example.com` / `Demo123!`
+- ✅ Automatic data reset daily at 2:00 AM UTC
+- ✅ Demo banner displayed in UI
+- ✅ Separate database and ports (no conflict with dev mode)
+
 ### 7.2 Starting Services
 
+#### Development Mode
 ```bash
 # Start all services in detached mode
 docker compose up -d
@@ -540,18 +558,34 @@ docker compose up -d
 # Start with rebuild (after code changes)
 docker compose up -d --build
 
-# Start specific service
-docker compose up -d mysql backend
-
 # View logs
 docker compose logs -f
+```
 
-# View logs for specific service
-docker compose logs -f backend
+#### Demo Mode
+```bash
+# Start demo environment
+docker compose -f docker-compose.demo.yml up -d
+
+# Start with rebuild
+docker compose -f docker-compose.demo.yml up -d --build
+
+# View logs
+docker compose -f docker-compose.demo.yml logs -f
+```
+
+#### Run Both Simultaneously
+```bash
+# Development on ports 80/8080/3306
+docker compose up -d
+
+# Demo on ports 81/8081/3307
+docker compose -f docker-compose.demo.yml up -d
 ```
 
 ### 7.3 Stopping Services
 
+#### Development Mode
 ```bash
 # Stop all services (keeps containers)
 docker compose stop
@@ -561,53 +595,69 @@ docker compose down
 
 # Stop and remove containers + volumes (⚠️ deletes data)
 docker compose down -v
+```
 
-# Stop and remove containers + images
-docker compose down --rmi all
+#### Demo Mode
+```bash
+# Stop demo services
+docker compose -f docker-compose.demo.yml stop
+
+# Stop and remove demo containers
+docker compose -f docker-compose.demo.yml down
+
+# Reset demo data (remove volumes)
+docker compose -f docker-compose.demo.yml down -v
 ```
 
 ### 7.4 Service Status
 
 ```bash
-# Check running containers
+# Check running containers (development)
 docker compose ps
 
-# Check service health
-docker compose ps --format json | jq '.[] | {name: .Name, status: .Status, health: .Health}'
+# Check demo containers
+docker compose -f docker-compose.demo.yml ps
 
-# Expected output:
-# mysql: healthy
-# backend: healthy
-# frontend: healthy
+# Check all finance-tracker containers
+docker ps --filter "name=finance-tracker"
 ```
 
 ### 7.5 Accessing Services
 
+#### Development Mode
 **Frontend:**
-
 - URL: <http://localhost> (port 80)
 - Nginx serves React app and proxies `/api/*` to backend
 
 **Backend API:**
-
 - URL: <http://localhost:8080>
 - Health: <http://localhost:8080/actuator/health>
-- API Docs: <http://localhost:8080/api/swagger-ui.html>
 
 **MySQL Database:**
-
-- Host: localhost
-- Port: 3306
+- Host: localhost, Port: 3306
 - Database: `finance_tracker`
-- Username: `financeuser`
-- Password: `financepass`
+- Username: `financeuser`, Password: `financepass`
+
+#### Demo Mode
+**Frontend:**
+- URL: <http://localhost:81>
+- Demo credentials displayed in banner: `demo@example.com` / `Demo123!`
+
+**Backend API:**
+- URL: <http://localhost:8081>
+- Health: <http://localhost:8081/actuator/health>
+
+**MySQL Database:**
+- Host: localhost, Port: 3307
+- Database: `finance_tracker_demo`
+- Username: `financeuser`, Password: `financepass`
 
 ```bash
-# Connect to MySQL
-mysql -h 127.0.0.1 -P 3306 -u financeuser -p finance_tracker
+# Connect to demo database
+mysql -h 127.0.0.1 -P 3307 -u financeuser -p finance_tracker_demo
 
 # Or using Docker exec
-docker exec -it finance-tracker-mysql mysql -u financeuser -p finance_tracker
+docker exec -it finance-tracker-mysql-demo mysql -u financeuser -p finance_tracker_demo
 ```
 
 ### 7.6 Rebuilding Containers
@@ -1236,7 +1286,146 @@ curl -X GET http://localhost:8080/api/v1/accounts \
 
 ---
 
-## 12. Troubleshooting
+## 12. Demo Mode Guide
+
+### 12.1 What is Demo Mode?
+
+Demo mode is a fully functional environment pre-populated with realistic data to showcase all features of Finance Tracker. It's perfect for:
+- **Product demonstrations** to potential users
+- **Feature exploration** without setting up test data
+- **Screenshots and marketing** materials
+- **Testing workflows** with realistic scenarios
+
+### 12.2 Demo Data Overview
+
+The demo environment includes:
+- **1 Demo User**: `demo@example.com` / `Demo123!`
+- **6 Diverse Accounts**: Checking, Savings, Cash, Credit Card, Investment, Car Loan
+- **180+ Transactions** over 6 months including:
+  - 15 income transactions (bi-weekly salary + bonuses)
+  - 100+ expense transactions across 15 categories
+  - 20 transfer transactions (savings, investments, loan payments)
+  - 45 recurring bills and subscriptions
+- **10 Budgets**: Monthly, quarterly, and annual budgets
+- **7 Recurring Transactions**: Rent, utilities, subscriptions
+- **7 Notifications**: Budget alerts and payment reminders
+- **5 Saved Searches**: Common search patterns
+- **7 Custom Tags**: Work-related, tax-deductible, vacation, etc.
+- **15 Custom Categories**: Coffee shops, gas stations, streaming services, etc.
+
+### 12.3 Starting Demo Mode
+
+```bash
+# Start demo environment
+docker compose -f docker-compose.demo.yml up -d
+
+# View logs
+docker compose -f docker-compose.demo.yml logs -f
+
+# Check status
+docker compose -f docker-compose.demo.yml ps
+```
+
+**Access:**
+- Frontend: <http://localhost:81>
+- Backend: <http://localhost:8081>
+- Database: `localhost:3307`
+
+### 12.4 Demo Mode Features
+
+#### Automatic Data Reset
+- **Schedule**: Every day at 2:00 AM UTC
+- **Process**: Deletes all demo user data and re-seeds from migrations
+- **Purpose**: Keeps demo environment fresh and consistent
+
+#### Demo Banner
+- Displayed at top of application when `VITE_DEMO_MODE=true`
+- Shows demo credentials prominently
+- Includes link to create real account
+- Dismissible (reappears on refresh)
+
+#### Isolated Environment
+- Separate database: `finance_tracker_demo`
+- Separate ports: 81 (frontend), 8081 (backend), 3307 (MySQL)
+- Can run alongside development environment
+
+### 12.5 Demo Mode Configuration
+
+**Backend (`application-demo.yml`):**
+```yaml
+app:
+  demo:
+    enabled: true
+    username: demo@example.com
+    password: Demo123!
+    reset-schedule: "0 0 2 * * *"  # Daily at 2 AM UTC
+    show-banner: true
+```
+
+**Frontend Environment:**
+```bash
+VITE_DEMO_MODE=true  # Enables demo banner
+```
+
+### 12.6 Manually Resetting Demo Data
+
+```bash
+# Stop demo services
+docker compose -f docker-compose.demo.yml down
+
+# Remove demo database volume
+docker volume rm finance-tracker-mysql-demo
+
+# Restart (will recreate database and seed data)
+docker compose -f docker-compose.demo.yml up -d
+```
+
+### 12.7 Customizing Demo Data
+
+Demo data is stored in SQL migration files:
+
+```
+backend/src/main/resources/db/demo/
+├── V100__seed_demo_user_and_accounts.sql       # User & 6 accounts
+├── V101__seed_demo_categories_and_tags.sql     # Categories & tags
+├── V102__seed_demo_income_transactions.sql     # 15 income transactions
+├── V103__seed_demo_expenses_part1.sql          # 60 expense transactions
+├── V104__seed_demo_expenses_part2.sql          # 40 expense transactions
+├── V105__seed_demo_transfers_and_investments.sql  # 20 transfers
+└── V106__seed_demo_budgets_and_recurring.sql   # Budgets, recurring, notifications
+```
+
+**To modify demo data:**
+1. Edit the appropriate SQL file
+2. Rebuild backend: `docker compose -f docker-compose.demo.yml build --no-cache backend`
+3. Reset demo: `docker compose -f docker-compose.demo.yml down -v && docker compose -f docker-compose.demo.yml up -d`
+
+### 12.8 Demo Mode vs Development Mode
+
+| Feature | Development Mode | Demo Mode |
+|---------|-----------------|-----------|
+| **Port (Frontend)** | 80 | 81 |
+| **Port (Backend)** | 8080 | 8081 |
+| **Port (MySQL)** | 3306 | 3307 |
+| **Database** | `finance_tracker` | `finance_tracker_demo` |
+| **Initial Data** | Empty | 180+ transactions |
+| **Auto-Reset** | No | Yes (daily at 2 AM) |
+| **Demo Banner** | No | Yes |
+| **User Credentials** | Register manually | `demo@example.com` / `Demo123!` |
+| **Purpose** | Feature development | Product demonstration |
+
+### 12.9 Production Deployment Note
+
+⚠️ **Never deploy demo mode to production**. Demo mode includes:
+- Hardcoded demo credentials
+- Automatic data deletion (reset schedule)
+- Public demo user information
+
+To disable demo mode, ensure `app.demo.enabled=false` or omit the property entirely.
+
+---
+
+## 13. Troubleshooting
 
 ### 12.1 Java/Backend Issues
 
