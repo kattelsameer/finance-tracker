@@ -61,7 +61,7 @@ app:
   security:
     max-failed-attempts: 5
     lockout-duration-minutes: 15
-    password-min-length: 12
+    password-min-length: 12  # NOTE: Not enforced - actual validation is @Size(min=8) in DTOs
 
 # Logging
 logging:
