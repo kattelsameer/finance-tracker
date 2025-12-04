@@ -2,7 +2,7 @@
 name: QA
 description: Full-stack Quality Assurance Agent for comprehensive testing
 argument-hint: "Specify: 'all' for complete run with report, or specific component (ui, backend, api, docker, security, logic)"
-tools: ['search', 'runCommands', 'runTasks', 'Copilot Container Tools/*', 'microsoft/markitdown/*', 'microsoft/playwright-mcp/*', 'postmanlabs/postman-mcp-server/*', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'github.vscode-pull-request-github/copilotCodingAgent', 'github.vscode-pull-request-github/issue_fetch', 'github.vscode-pull-request-github/suggest-fix', 'github.vscode-pull-request-github/searchSyntax', 'github.vscode-pull-request-github/doSearch', 'github.vscode-pull-request-github/renderIssues', 'github.vscode-pull-request-github/activePullRequest', 'github.vscode-pull-request-github/openPullRequest', 'ms-python.python/getPythonEnvironmentInfo', 'ms-python.python/getPythonExecutableCommand', 'ms-python.python/installPythonPackage', 'ms-python.python/configurePythonEnvironment', 'ms-vscode.vscode-websearchforcopilot/websearch', 'sonarsource.sonarlint-vscode/sonarqube_getPotentialSecurityIssues', 'sonarsource.sonarlint-vscode/sonarqube_excludeFiles', 'sonarsource.sonarlint-vscode/sonarqube_setUpConnectedMode', 'sonarsource.sonarlint-vscode/sonarqube_analyzeFile', 'todos', 'runSubagent', 'runTests']
+tools: ['search', 'Copilot Container Tools/*', 'microsoft/markitdown/*', 'microsoft/playwright-mcp/*', 'postmanlabs/postman-mcp-server/*', 'runCommands', 'runTasks', 'extensions', 'vscode.mermaid-chat-features/renderMermaidDiagram', 'usages', 'vscodeAPI', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'github.vscode-pull-request-github/copilotCodingAgent', 'github.vscode-pull-request-github/issue_fetch', 'github.vscode-pull-request-github/suggest-fix', 'github.vscode-pull-request-github/searchSyntax', 'github.vscode-pull-request-github/doSearch', 'github.vscode-pull-request-github/renderIssues', 'github.vscode-pull-request-github/activePullRequest', 'github.vscode-pull-request-github/openPullRequest', 'ms-python.python/getPythonEnvironmentInfo', 'ms-python.python/getPythonExecutableCommand', 'ms-python.python/installPythonPackage', 'ms-python.python/configurePythonEnvironment', 'ms-vscode.vscode-websearchforcopilot/websearch', 'sonarsource.sonarlint-vscode/sonarqube_getPotentialSecurityIssues', 'sonarsource.sonarlint-vscode/sonarqube_excludeFiles', 'sonarsource.sonarlint-vscode/sonarqube_setUpConnectedMode', 'sonarsource.sonarlint-vscode/sonarqube_analyzeFile', 'todos', 'runSubagent', 'runTests']
 handoffs:
   - label: Generate Test Report
     agent: agent
@@ -636,6 +636,26 @@ npm test && npm run lint
 npm run test:coverage
 npx playwright test
 npm audit
+```
+
+```
+npx playwright test
+    Runs the end-to-end tests.
+
+  npx playwright test --ui
+    Starts the interactive UI mode.
+
+  npx playwright test --project=chromium
+    Runs the tests only on Desktop Chrome.
+
+  npx playwright test example
+    Runs the tests in a specific file.
+
+  npx playwright test --debug
+    Runs the tests in debug mode.
+
+  npx playwright codegen
+    Auto generate tests with Codegen.
 ```
 
 ### Java/Gradle
