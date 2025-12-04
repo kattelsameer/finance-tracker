@@ -1,9 +1,9 @@
 # Finance Tracker User Guide
 
 > **Version**: 1.0.0  
-> **Last Updated**: November 28, 2025
+> **Last Updated**: December 4, 2025
 
-Welcome to Finance Tracker! This guide will help you get started and make the most of all features.
+Welcome to Finance Tracker! This guide documents implemented features and how to navigate them.
 
 ---
 
@@ -13,16 +13,15 @@ Welcome to Finance Tracker! This guide will help you get started and make the mo
 2. [Dashboard](#dashboard)
 3. [Accounts Management](#accounts-management)
 4. [Transactions](#transactions)
-5. [Categories & Tags](#categories--tags)
+5. [Categories](#categories)
 6. [Budgets](#budgets)
 7. [Recurring Transactions](#recurring-transactions)
-8. [Reports & Analytics](#reports--analytics)
-9. [Advanced Search](#advanced-search)
-10. [Import & Export](#import--export)
-11. [Currency Converter](#currency-converter)
-12. [Notifications](#notifications)
-13. [Tips & Best Practices](#tips--best-practices)
-14. [FAQ](#faq)
+8. [Reports](#reports)
+9. [Tags](#tags)
+10. [Notifications](#notifications)
+11. [Advanced Search](#advanced-search)
+12. [Import & Export](#import--export)
+13. [Settings & Profile](#settings--profile)
 
 ---
 
@@ -31,7 +30,7 @@ Welcome to Finance Tracker! This guide will help you get started and make the mo
 ### Create Your Account
 
 1. Navigate to the Finance Tracker application
-2. Click **"Register"** on the login page
+2. Click **"Register"** on the login page (`/register`)
 3. Fill in your details:
    - **Username**: Your unique username (3-20 characters)
    - **Email**: Your email address
@@ -42,16 +41,15 @@ Welcome to Finance Tracker! This guide will help you get started and make the mo
 
 ### First Login
 
-1. Enter your **username** and **password**
+1. Enter your **username** and **password** on `/login`
 2. Click **"Sign In"**
-3. Your session will last 1 hour by default
-4. You'll see the Dashboard upon successful login
+3. On success, you are redirected to the **Dashboard** (`/`)
 
 ---
 
 ## Dashboard
 
-The Dashboard is your financial command center, showing:
+The Dashboard (`/`) shows summary cards and trends.
 
 ### Overview Cards
 
@@ -60,22 +58,22 @@ The Dashboard is your financial command center, showing:
 - **Monthly Expenses**: Expenses for the current month
 - **Net Savings**: Income minus expenses
 
-### Quick Stats
+### Trends & Recent Activity
 
 - **Top Spending Categories**: Pie chart showing where your money goes
 - **Income vs Expenses**: Line chart showing trends over time
 - **Recent Transactions**: Last 10 transactions
 - **Budget Progress**: Visual indicators for budget goals
 
-### Currency Converter
+### Dashboard Screenshot
 
-Convert between currencies with real-time exchange rates (updated every 6 hours).
+![Dashboard Overview Placeholder](./images/dashboard-overview.png)
 
 ---
 
 ## Accounts Management
 
-Manage all your financial accounts in one place.
+Manage accounts at `/accounts`.
 
 ### Account Types
 
@@ -90,7 +88,7 @@ Manage all your financial accounts in one place.
 
 ### Create an Account
 
-1. Navigate to **"Accounts"** in the sidebar
+1. Navigate to **Accounts** (`/accounts`)
 2. Click **"+ New Account"**
 3. Fill in the details:
    - **Account Name**: e.g., "Chase Checking"
@@ -112,15 +110,19 @@ Manage all your financial accounts in one place.
 
 Archiving removes an account from active view without deleting history:
 
-1. Click on the account
-2. Click **"Archive"**
+1. Click the account
+2. Click **Archive**
 3. Confirm the action
+
+### Accounts Screenshot
+
+![Accounts Page Placeholder](./images/accounts.png)
 
 ---
 
 ## Transactions
 
-Track every penny in and out.
+Manage transactions at `/transactions`.
 
 ### Transaction Types
 
@@ -130,7 +132,7 @@ Track every penny in and out.
 
 ### Add a Transaction
 
-1. Navigate to **"Transactions"**
+1. Navigate to **Transactions** (`/transactions`)
 2. Click **"+ New Transaction"**
 3. Fill in the details:
    - **Type**: Income, Expense, or Transfer
@@ -162,7 +164,15 @@ Track every penny in and out.
 3. Confirm the action
 4. Account balance updates automatically
 
-### Bulk Operations
+### Filtering & Pagination
+
+- Filter by date, account, category, type
+- Full-text search in description and notes
+- Paginated list for large datasets
+
+### Transactions Screenshot
+
+![Transactions Page Placeholder](./images/transactions.png)
 
 - **Filter**: By date, account, category, type
 - **Sort**: By date, amount, description
@@ -170,9 +180,9 @@ Track every penny in and out.
 
 ---
 
-## Categories & Tags
+## Categories
 
-Organize transactions for better insights.
+Manage hierarchical categories at `/categories`.
 
 ### Built-in Categories
 
@@ -200,9 +210,9 @@ The system comes with default categories:
 - Personal Care
 - Other
 
-### Create Custom Categories
+### Create or Edit Categories
 
-1. Navigate to **"Categories"**
+1. Navigate to **Categories** (`/categories`)
 2. Click **"+ New Category"**
 3. Enter:
    - **Name**: Category name
@@ -210,34 +220,29 @@ The system comes with default categories:
    - **Parent**: Optional (for subcategories)
    - **Color**: Visual identifier
    - **Icon**: Choose an icon
-4. Click **"Create"**
+4. Click **"Create"
 
-### Using Tags
+### Categories Screenshot
 
-Tags provide additional classification:
+![Categories Page Placeholder](./images/categories.png)
 
-1. When creating/editing a transaction
-2. Click **"Add Tags"**
-3. Select existing tags or create new ones
-4. Tags help with advanced filtering
+## Tags
 
-**Example Tags**:
+Manage tags at `/tags`. Tags can be added on transaction create/edit and used in search filters.
 
-- `work`
-- `vacation`
-- `tax-deductible`
-- `urgent`
-- `subscription`
+### Tags Screenshot
+
+![Tags Page Placeholder](./images/tags.png)
 
 ---
 
 ## Budgets
 
-Set spending limits and track progress.
+Manage budgets with alerts at `/budgets`.
 
 ### Create a Budget
 
-1. Navigate to **"Budgets"**
+1. Navigate to **Budgets** (`/budgets`)
 2. Click **"+ New Budget"**
 3. Set parameters:
    - **Name**: e.g., "Groceries Budget"
@@ -262,13 +267,17 @@ Get notified when:
 - Reaching 95% of budget
 - Exceeding budget
 
-Configure in **Notification Settings**.
+Configure thresholds in **Settings → Notifications** (`/settings?tab=notifications`).
+
+### Budgets Screenshot
+
+![Budgets Page Placeholder](./images/budgets.png)
 
 ---
 
 ## Recurring Transactions
 
-Automate regular income and expenses.
+Manage recurring items at `/recurring-transactions`.
 
 ### Supported Frequencies
 
@@ -281,7 +290,7 @@ Automate regular income and expenses.
 
 ### Create Recurring Transaction
 
-1. Navigate to **"Recurring"**
+1. Navigate to **Recurring Transactions** (`/recurring-transactions`)
 2. Click **"+ New Recurring Transaction"**
 3. Fill in details:
    - **Type**: Income, Expense, or Transfer
@@ -307,11 +316,15 @@ If auto-post is disabled:
 2. Click **"Post Now"** to create the transaction
 3. Useful for verifying before posting
 
+### Recurring Transactions Screenshot
+
+![Recurring Transactions Placeholder](./images/recurring.png)
+
 ---
 
-## Reports & Analytics
+## Reports
 
-Gain insights into your finances.
+View reports at `/reports`.
 
 ### Available Reports
 
@@ -345,18 +358,22 @@ Gain insights into your finances.
 - Compare to budgets
 - Identify anomalies
 
-### Customizing Reports
+### Filters & Export
 
-- **Date Range**: Custom, Last 7 days, Last 30 days, Last 3/6/12 months
+- **Date Range**: Custom, common presets
 - **Accounts**: Filter by specific accounts
 - **Categories**: Include/exclude categories
-- **Export**: Download as CSV or PDF
+- **Export**: Download CSV
+
+### Reports Screenshot
+
+![Reports Page Placeholder](./images/reports.png)
 
 ---
 
 ## Advanced Search
 
-Find any transaction quickly.
+Search across transactions at `/search`.
 
 ### Search Filters
 
@@ -366,19 +383,11 @@ Find any transaction quickly.
 - **Categories**: Filter by category
 - **Type**: Income, Expense, Transfer
 - **Amount Range**: Min and max amounts
-- **Currency**: Filter by currency
-- **Tags**: Must have ALL selected tags
-- **Recurring**: Only recurring or non-recurring
+- **Tags**: Match all selected tags
 
-### Saved Searches
+### Advanced Search Screenshot
 
-Save frequently used searches:
-
-1. Configure your search filters
-2. Click **"Save Search"**
-3. Name your search
-4. Optionally set as default
-5. Quick access from saved searches bar
+![Advanced Search Placeholder](./images/search.png)
 
 ### Tips for Effective Searching
 
@@ -391,13 +400,13 @@ Save frequently used searches:
 
 ## Import & Export
 
-Manage data portability.
+Import/export CSV at `/import-export`.
 
 ### Import Transactions
 
 #### CSV Import
 
-1. Navigate to **"Import/Export"**
+1. Navigate to **"Import/Export"** (`/import-export`)
 2. Click **"Import"** tab
 3. Select **"CSV"** format
 4. Choose your CSV file
@@ -418,13 +427,9 @@ Date,Description,Amount,Type,Category
 2025-01-16,Salary,3000.00,income,Salary
 ```
 
-#### OFX Import (Banking Files)
+### Import/Export Screenshot
 
-1. Download OFX file from your bank
-2. Select **"OFX"** format
-3. Upload file
-4. Select target account
-5. Review and import
+![Import Export Placeholder](./images/import-export.png)
 
 ### Export Data
 
@@ -476,33 +481,22 @@ USD, EUR, GBP, JPY, AUD, CAD, CHF, CNY, INR, and more.
 
 ## Notifications
 
-Stay informed about your finances.
+Notifications are shown in-app and configurable in **Settings → Notifications** (`/settings?tab=notifications`).
 
 ### Notification Types
 
 - **Budget Alerts**: Approaching or exceeded budgets
-- **Low Balance Warnings**: Account below threshold
 - **Recurring Reminders**: Upcoming recurring transactions
-- **Large Transactions**: Unusually large amounts
-- **Monthly Summary**: End-of-month financial summary
 
 ### Configuring Notifications
 
-1. Click the **bell icon** in header
-2. Click **settings icon**
-3. Or navigate to **Notification Settings**
-4. Toggle alert types:
-   - Enable/disable each type
-   - Set thresholds
-   - Choose delivery method
-5. Click **"Save Preferences"**
+1. Open **Settings → Notifications** (`/settings?tab=notifications`)
+2. Toggle alert types and set thresholds
+3. Save preferences
 
-### Notification Preferences
+### Notifications Screenshot
 
-- **In-App**: Show notifications in notification center
-- **Email**: Send to your registered email (if enabled)
-- **Low Balance Threshold**: Default $100
-- **Large Transaction Threshold**: Default $1000
+![Notifications Settings Placeholder](./images/notifications.png)
 
 ### Managing Notifications
 
@@ -513,38 +507,17 @@ Stay informed about your finances.
 
 ---
 
-## Tips & Best Practices
+## Settings & Profile
 
-### Getting Started
+Manage account settings and profile at `/settings`.
 
-1. **Set Up Accounts First**: Add all your financial accounts
-2. **Import Historical Data**: Get 3-6 months of transactions
-3. **Categorize Everything**: Accurate categories = better insights
-4. **Create Budgets**: Set realistic spending limits
-5. **Schedule Recurring**: Automate regular transactions
+- General app preferences
+- Notification thresholds and preferences (`/settings?tab=notifications`)
+- Profile details
 
-### Daily Usage
+### Settings Screenshot
 
-- **Record Immediately**: Log transactions as they happen
-- **Check Balance Daily**: Quick glance at financial health
-- **Review Notifications**: Address alerts promptly
-- **Use Tags**: Additional context helps later
-
-### Monthly Routine
-
-- **Review Reports**: Analyze spending patterns
-- **Adjust Budgets**: Based on actual spending
-- **Reconcile Accounts**: Match with bank statements
-- **Update Recurring**: Adjust for changed bills
-- **Export Backup**: Monthly data export
-
-### Security Best Practices
-
-- **Strong Password**: Use unique, complex password
-- **Regular Logouts**: Especially on shared computers
-- **Monitor Activity**: Check for unauthorized transactions
-- **Backup Data**: Regular exports to safe location
-- **Update Software**: Keep application updated
+![Settings Page Placeholder](./images/settings.png)
 
 ---
 
@@ -553,16 +526,16 @@ Stay informed about your finances.
 ### General
 
 **Q: Is my financial data secure?**  
-A: Yes. Data is encrypted, stored securely, and never shared. Use HTTPS in production.
+A: Use HTTPS in production and strong credentials. See Deployment Guide.
 
 **Q: Can I use this with multiple bank accounts?**  
 A: Yes! Add unlimited accounts from different institutions.
 
 **Q: Does it support multiple currencies?**  
-A: Yes, with automatic currency conversion using real-time rates.
+A: Transactions support a currency field; reporting is normalized to your selected currency.
 
 **Q: Can multiple people use one account?**  
-A: Currently designed for single-user. Multi-user support planned for future releases.
+A: The app is designed for single-user sessions.
 
 ### Accounts
 
@@ -628,7 +601,7 @@ A: Chrome, Firefox, Safari, Edge (latest versions).
 A: Not yet, but the web interface is mobile-responsive.
 
 **Q: Can I access this offline?**  
-A: No, internet connection required.
+A: No, an internet connection is required.
 
 **Q: Where is my data stored?**  
 A: In a MySQL database. For self-hosted, on your server.
@@ -646,5 +619,5 @@ Need assistance?
 
 ---
 
-**Last Updated**: November 28, 2025  
+**Last Updated**: December 4, 2025  
 **Document Version**: 1.0.0
