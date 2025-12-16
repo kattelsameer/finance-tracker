@@ -81,7 +81,7 @@ public class AuthService {
     
     @Transactional
     public AuthResponse login(LoginRequest request, HttpServletResponse response) {
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByUsernameOrEmail(request.getUsername(), request.getUsername())
                 .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CREDENTIALS));
         
         // Check if account is locked
@@ -239,22 +239,24 @@ public class AuthService {
         cookie.setMaxAge((int) (tokenProvider.getExpirationMs() / 1000));
         
         // Add SameSite attribute via response header (Cookie API doesn't support SameSite directly)
+        String secureAttribute = tokenProvider.isCookieSecure() ? "Secure; " : "";
         String cookieHeader = String.format(
-                "%s=%s; Path=/; Max-Age=%d; HttpOnly; %s; SameSite=%s",
+            "%s=%s; Path=/; Max-Age=%d; HttpOnly; %sSameSite=%s",
                 tokenProvider.getCookieName(),
                 token,
                 (int) (tokenProvider.getExpirationMs() / 1000),
-                tokenProvider.isCookieSecure() ? "Secure" : "",
+            secureAttribute,
                 tokenProvider.getCookieSameSite()
         );
         response.addHeader("Set-Cookie", cookieHeader);
     }
     
     private void clearAuthCookie(HttpServletResponse response) {
+        String secureAttribute = tokenProvider.isCookieSecure() ? "Secure; " : "";
         String cookieHeader = String.format(
-                "%s=; Path=/; Max-Age=0; HttpOnly; %s; SameSite=%s",
+            "%s=; Path=/; Max-Age=0; HttpOnly; %sSameSite=%s",
                 tokenProvider.getCookieName(),
-                tokenProvider.isCookieSecure() ? "Secure" : "",
+            secureAttribute,
                 tokenProvider.getCookieSameSite()
         );
         response.addHeader("Set-Cookie", cookieHeader);

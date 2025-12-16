@@ -9,22 +9,22 @@ export const API_URL = `${API_BASE_URL}${API_VERSION}`;
 export const ENDPOINTS = {
   // Auth
   AUTH: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    LOGOUT: '/auth/logout',
-    ME: '/auth/me',
-    CHANGE_PASSWORD: '/auth/change-password',
-    CSRF_TOKEN: '/auth/csrf-token',
+    LOGIN: 'auth/login',
+    REGISTER: 'auth/register',
+    LOGOUT: 'auth/logout',
+    ME: 'auth/me',
+    CHANGE_PASSWORD: 'auth/change-password',
+    CSRF_TOKEN: 'auth/csrf-token',
   },
   // Accounts
-  ACCOUNTS: '/accounts',
-  ACCOUNT_TYPES: '/accounts/types',
+  ACCOUNTS: 'accounts',
+  ACCOUNT_TYPES: 'accounts/types',
   // Categories
-  CATEGORIES: '/categories',
+  CATEGORIES: 'categories',
   // Transactions
-  TRANSACTIONS: '/transactions',
+  TRANSACTIONS: 'transactions',
   // Tags
-  TAGS: '/tags',
+  TAGS: 'tags',
   // Budgets
-  BUDGETS: '/budgets',
+  BUDGETS: 'budgets',
 } as const;

@@ -13,7 +13,7 @@ export const importExportService = {
     const formData = new FormData();
     formData.append('file', file);
     
-    return apiClient.post<ImportResult>('/api/v1/import-export/import/csv', formData, {
+    return apiClient.post<ImportResult>('import-export/import/csv', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -22,7 +22,7 @@ export const importExportService = {
 
   async exportCSV(startDate: string, endDate: string): Promise<Blob> {
     const params = new URLSearchParams({ startDate, endDate });
-    return apiClient.get<Blob>(`/api/v1/import-export/export/csv?${params.toString()}`, {
+    return apiClient.get<Blob>(`import-export/export/csv?${params.toString()}`, {
       responseType: 'blob'
     });
   },

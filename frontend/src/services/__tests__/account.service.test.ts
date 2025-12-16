@@ -27,7 +27,7 @@ describe('accountService', () => {
 
       const result = await accountService.getAll();
 
-      expect(apiClient.get).toHaveBeenCalledWith('/accounts');
+      expect(apiClient.get).toHaveBeenCalledWith('accounts');
       expect(result).toEqual(mockAccounts);
     });
 
@@ -47,7 +47,7 @@ describe('accountService', () => {
 
       const result = await accountService.getById(1);
 
-      expect(apiClient.get).toHaveBeenCalledWith('/accounts/1');
+      expect(apiClient.get).toHaveBeenCalledWith('accounts/1');
       expect(result).toEqual(mockAccount);
     });
 
@@ -75,7 +75,7 @@ describe('accountService', () => {
 
       const result = await accountService.create(newAccount);
 
-      expect(apiClient.post).toHaveBeenCalledWith('/accounts', newAccount);
+      expect(apiClient.post).toHaveBeenCalledWith('accounts', newAccount);
       expect(result).toEqual(createdAccount);
     });
   });
@@ -88,7 +88,7 @@ describe('accountService', () => {
 
       const result = await accountService.update(1, updateData);
 
-      expect(apiClient.put).toHaveBeenCalledWith('/accounts/1', updateData);
+      expect(apiClient.put).toHaveBeenCalledWith('accounts/1', updateData);
       expect(result).toEqual(updatedAccount);
     });
   });
@@ -99,7 +99,7 @@ describe('accountService', () => {
 
       await accountService.delete(1);
 
-      expect(apiClient.delete).toHaveBeenCalledWith('/accounts/1');
+      expect(apiClient.delete).toHaveBeenCalledWith('accounts/1');
     });
   });
 });

@@ -19,11 +19,14 @@ export const testUsers = {
   },
 } as const;
 
+const API_V1_BASE_URL = process.env.PLAYWRIGHT_API_V1_BASE_URL || 'http://localhost:8080/api/v1';
+const AUTH_COOKIE_NAME = process.env.PLAYWRIGHT_AUTH_COOKIE_NAME || 'auth_token';
+
 /**
  * Register a new user via API
  */
 export async function registerUser(page: Page, user: TestUser) {
-  const response = await page.request.post('http://localhost:8080/api/v1/auth/register', {
+  const response = await page.request.post(`${API_V1_BASE_URL}/auth/register`, {
     data: {
       username: user.username,
       email: user.email,
@@ -47,11 +50,9 @@ export async function login(page: Page, usernameOrEmail: string, password: strin
   await page.fill('input#username', usernameOrEmail);
   await page.fill('input#password', password);
   
-  // Click the submit button and wait for navigation
-  await Promise.all([
-    page.waitForNavigation({ timeout: 15000 }),
-    page.click('button[type="submit"]')
-  ]);
+  // SPA navigation: wait for URL change instead of full navigation
+  await page.click('button[type="submit"]');
+  await page.waitForURL(/\/(dashboard)?$/, { timeout: 15000 });
   
   // Check if we're on an authenticated page
   const currentUrl = page.url();
@@ -77,8 +78,8 @@ export async function logout(page: Page) {
   
   // Verify JWT cookie is removed
   const cookies = await page.context().cookies();
-  const jwtCookie = cookies.find(c => c.name === 'jwt');
-  expect(jwtCookie).toBeUndefined();
+  const authCookie = cookies.find(c => c.name === AUTH_COOKIE_NAME);
+  expect(authCookie).toBeUndefined();
 }
 
 /**

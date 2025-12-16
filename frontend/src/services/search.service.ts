@@ -14,7 +14,7 @@ export const searchService = {
     searchRequest: TransactionSearchRequest
   ): Promise<TransactionSearchResponse> {
     return apiClient.post<TransactionSearchResponse>(
-      '/api/search/transactions',
+      'search/transactions',
       searchRequest
     );
   },
@@ -23,14 +23,14 @@ export const searchService = {
    * Get all saved searches for the current user
    */
   async getAllSavedSearches(): Promise<SavedSearch[]> {
-    return apiClient.get<SavedSearch[]>('/api/search/saved');
+    return apiClient.get<SavedSearch[]>('search/saved');
   },
 
   /**
    * Get a specific saved search
    */
   async getSavedSearch(id: number): Promise<SavedSearch> {
-    return apiClient.get<SavedSearch>(`/api/search/saved/${id}`);
+    return apiClient.get<SavedSearch>(`search/saved/${id}`);
   },
 
   /**
@@ -40,7 +40,7 @@ export const searchService = {
     request: CreateSavedSearchRequest
   ): Promise<SavedSearch> {
     return apiClient.post<SavedSearch>(
-      '/api/search/saved',
+      'search/saved',
       request
     );
   },
@@ -53,7 +53,7 @@ export const searchService = {
     request: CreateSavedSearchRequest
   ): Promise<SavedSearch> {
     return apiClient.put<SavedSearch>(
-      `/api/search/saved/${id}`,
+      `search/saved/${id}`,
       request
     );
   },
@@ -62,7 +62,7 @@ export const searchService = {
    * Delete a saved search
    */
   async deleteSavedSearch(id: number): Promise<void> {
-    await apiClient.delete(`/api/search/saved/${id}`);
+    await apiClient.delete(`search/saved/${id}`);
   },
 
   /**
@@ -70,7 +70,7 @@ export const searchService = {
    */
   async setDefaultSearch(id: number): Promise<SavedSearch> {
     return apiClient.patch<SavedSearch>(
-      `/api/search/saved/${id}/set-default`
+      `search/saved/${id}/set-default`
     );
   },
 };

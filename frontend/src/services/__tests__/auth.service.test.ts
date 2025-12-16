@@ -31,7 +31,7 @@ describe('authService', () => {
 
       const result = await authService.login(credentials);
 
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/login', credentials);
+      expect(apiClient.post).toHaveBeenCalledWith('auth/login', credentials);
       expect(result).toEqual(mockResponse);
     });
 
@@ -65,7 +65,7 @@ describe('authService', () => {
 
       const result = await authService.register(userData);
 
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/register', userData);
+      expect(apiClient.post).toHaveBeenCalledWith('auth/register', userData);
       expect(result).toEqual(mockResponse);
     });
   });
@@ -77,7 +77,7 @@ describe('authService', () => {
 
       const result = await authService.logout();
 
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/logout');
+      expect(apiClient.post).toHaveBeenCalledWith('auth/logout');
       expect(apiClient.resetCsrfToken).toHaveBeenCalled();
       expect(result).toEqual(mockResponse);
     });
@@ -94,7 +94,7 @@ describe('authService', () => {
 
       const result = await authService.getCurrentUser();
 
-      expect(apiClient.get).toHaveBeenCalledWith('/auth/me');
+      expect(apiClient.get).toHaveBeenCalledWith('auth/me');
       expect(result).toEqual(mockUser);
     });
   });
@@ -111,7 +111,7 @@ describe('authService', () => {
 
       const result = await authService.changePassword(passwordData);
 
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/change-password', passwordData);
+      expect(apiClient.post).toHaveBeenCalledWith('auth/change-password', passwordData);
       expect(result).toEqual(mockResponse);
     });
   });

@@ -9,7 +9,7 @@ export const dashboardService = {
     
     const queryString = params.toString();
     const query = queryString ? `?${queryString}` : '';
-    const url = `/dashboard/stats${query}`;
+    const url = `dashboard/stats${query}`;
     
     return apiClient.get<DashboardStats>(url);
   }

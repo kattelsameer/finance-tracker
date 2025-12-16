@@ -12,8 +12,12 @@ RUN rm -rf node_modules package-lock.json && npm install
 # Copy source code
 COPY . .
 
-# Set API URL to empty for Docker (nginx will proxy /api requests to backend)
-ENV VITE_API_BASE_URL=""
+# Allow Vite envs to be configured at build time
+ARG VITE_API_BASE_URL=""
+ARG VITE_DEMO_MODE="false"
+
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_DEMO_MODE=$VITE_DEMO_MODE
 
 # Build the application
 RUN npm run build
@@ -27,18 +31,13 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built files from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Install curl for healthcheck and create directories for non-root nginx user
+# Install curl for healthcheck and set proper permissions
 RUN apk add --no-cache curl && \
     chown -R nginx:nginx /usr/share/nginx/html && \
-    chown -R nginx:nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/log/nginx && \
-    chmod -R 755 /usr/share/nginx/html && \
-    chown -R nginx:nginx /etc/nginx/conf.d && \
-    touch /run/nginx.pid && \
-    chown nginx:nginx /run/nginx.pid
+    chmod -R 755 /usr/share/nginx/html
 
-# Switch to non-root user
-USER nginx
+# Don't switch to non-root user - nginx needs root to bind to port 80
+# USER nginx
 
 # Expose port
 EXPOSE 80

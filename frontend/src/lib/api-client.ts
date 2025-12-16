@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { API_URL } from '../config/api';
+import { ENDPOINTS } from '../config/api';
 import type { ErrorResponse } from '../types';
 import { logger } from '../utils/logger';
 
@@ -23,10 +24,13 @@ class ApiClient {
     // Request interceptor
     this.client.interceptors.request.use(
       async (config: InternalAxiosRequestConfig) => {
-        // Add CSRF token for state-changing requests
+        // Add CSRF token for state-changing requests (except login/register which are CSRF-exempt)
+        const requestUrl = config.url ?? '';
+        const isLoginOrRegister = requestUrl.includes('auth/login') || requestUrl.includes('auth/register');
         if (
           config.method &&
-          ['post', 'put', 'patch', 'delete'].includes(config.method.toLowerCase())
+          ['post', 'put', 'patch', 'delete'].includes(config.method.toLowerCase()) &&
+          !isLoginOrRegister
         ) {
           if (!this.csrfToken) {
             await this.fetchCsrfToken();
@@ -96,9 +100,7 @@ class ApiClient {
 
   private async fetchCsrfToken(): Promise<void> {
     try {
-      const response = await axios.get(`${API_URL}/auth/csrf-token`, {
-        withCredentials: true,
-      });
+      const response = await this.client.get(ENDPOINTS.AUTH.CSRF_TOKEN);
       this.csrfToken = response.data.token;
     } catch (error) {
       logger.error('Failed to fetch CSRF token:', error);

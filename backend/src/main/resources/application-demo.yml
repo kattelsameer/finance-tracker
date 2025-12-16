@@ -12,8 +12,8 @@ spring:
   jpa:
     show-sql: false
     hibernate:
-      # Use validate in demo to preserve seeded data across restarts
-      ddl-auto: validate
+      # Use none since Flyway manages schema
+      ddl-auto: none
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
@@ -54,10 +54,13 @@ app:
     # Display demo banner in UI
     show-banner: true
 
-# JWT Configuration (same as production for consistency)
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: 86400000 # 24 hours
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-ms: 86400000 # 24 hours
+    cookie-name: auth_token
+    # Demo runs on http://localhost, so Secure cookies would be dropped by browsers
+    cookie-secure: false
+    cookie-same-site: Lax
 
 # CORS Configuration
 cors:

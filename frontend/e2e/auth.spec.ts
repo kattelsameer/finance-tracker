@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { registerUser, login, logout, testUsers, getCsrfToken } from './fixtures/auth';
 
+const AUTH_COOKIE_NAME = process.env.PLAYWRIGHT_AUTH_COOKIE_NAME || 'auth_token';
+
 test.describe('Authentication Flow', () => {
   test.beforeEach(async ({ page }) => {
     // Clear cookies and storage before each test
@@ -92,8 +94,8 @@ test.describe('Authentication Flow', () => {
     
     // JWT cookie should be removed
     const cookies = await page.context().cookies();
-    const jwtCookie = cookies.find(c => c.name === 'jwt');
-    expect(jwtCookie).toBeUndefined();
+    const authCookie = cookies.find(c => c.name === AUTH_COOKIE_NAME);
+    expect(authCookie).toBeUndefined();
   });
 
   test('should redirect unauthenticated users to login', async ({ page }) => {
@@ -116,8 +118,8 @@ test.describe('Authentication Flow', () => {
     
     // JWT cookie should still exist
     const cookies = await page.context().cookies();
-    const jwtCookie = cookies.find(c => c.name === 'jwt');
-    expect(jwtCookie).toBeDefined();
+    const authCookie = cookies.find(c => c.name === AUTH_COOKIE_NAME);
+    expect(authCookie).toBeDefined();
   });
 
   test('should validate password requirements on registration', async ({ page }) => {

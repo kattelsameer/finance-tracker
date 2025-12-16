@@ -4,9 +4,9 @@
 -- =====================================================
 
 -- Demo User (password: Demo123!)
--- Password hash generated with BCrypt strength 10
+-- Password hash generated with BCrypt strength 12
 INSERT INTO users (username, email, password_hash, display_name, created_at, updated_at) VALUES
-('demo', 'demo@example.com', '$2a$10$rO0qHqvVZHLreZLLrx0wnOfHKwF8ZKYvVLvQq5Z9YvGHXK5jHJ9eC', 'Demo User', DATE_SUB(NOW(), INTERVAL 6 MONTH), NOW());
+('demo', 'demo@example.com', '$2a$12$EusAAfsVCvPAzmgRMIymWOamYXL6cLtEVr7O55n.CM7lNH2MzEWnO', 'Demo User', DATE_SUB(NOW(), INTERVAL 6 MONTH), NOW());
 
 -- Get demo user ID for foreign key references
 SET @demo_user_id = LAST_INSERT_ID();
