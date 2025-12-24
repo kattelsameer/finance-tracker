@@ -169,17 +169,25 @@ export function AccountsPage() {
 
   const displayAccounts = showInactive ? filteredAccounts : filteredAccounts.filter(a => a.isActive);
 
-  const totalBalance = accounts
-    .filter(a => a.includeInNetWorth && a.isActive)
-    .reduce((sum, a) => sum + (a.accountType.isLiability ? -a.currentBalance : a.currentBalance), 0);
-
+  // Calculate totals - liabilities may already be stored as negative values
   const totalAssets = accounts
     .filter(a => !a.accountType.isLiability && a.isActive)
     .reduce((sum, a) => sum + a.currentBalance, 0);
 
   const totalLiabilities = accounts
     .filter(a => a.accountType.isLiability && a.isActive)
-    .reduce((sum, a) => sum + a.currentBalance, 0);
+    .reduce((sum, a) => sum + Math.abs(a.currentBalance), 0);
+
+  // Net Worth = Assets - Liabilities (using absolute value of liabilities)
+  const totalBalance = accounts
+    .filter(a => a.includeInNetWorth && a.isActive)
+    .reduce((sum, a) => {
+      if (a.accountType.isLiability) {
+        // Subtract the absolute value of liability balance
+        return sum - Math.abs(a.currentBalance);
+      }
+      return sum + a.currentBalance;
+    }, 0);
 
   if (loading) {
     return (
@@ -222,7 +230,7 @@ export function AccountsPage() {
               </div>
               <span className="text-sm font-medium text-gray-500">Total Liabilities</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalLiabilities)}</p>
+            <p className="text-2xl font-bold text-red-600">-{formatCurrency(totalLiabilities)}</p>
           </div>
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-lg">
             <div className="flex items-center gap-3 mb-2">

@@ -28,6 +28,7 @@ public class AuthService {
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
     private static final int MAX_LOGIN_ATTEMPTS = 5;
     private static final int LOCKOUT_DURATION_MINUTES = 15;
+    private static final long REMEMBER_ME_DURATION_MS = 30L * 24 * 60 * 60 * 1000; // 30 days
     
     private final UserRepository userRepository;
     private final RevokedTokenRepository revokedTokenRepository;
@@ -118,14 +119,16 @@ public class AuthService {
         user.setLastLoginAt(Instant.now());
         userRepository.save(user);
         
-        // Generate JWT token
-        String token = tokenProvider.generateToken(user.getId(), user.getUsername());
+        // Generate JWT token with appropriate expiration
+        long tokenExpiration = request.isRememberMe() ? REMEMBER_ME_DURATION_MS : tokenProvider.getExpirationMs();
+        String token = tokenProvider.generateToken(user.getId(), user.getUsername(), tokenExpiration);
         Date expirationDate = tokenProvider.getExpirationFromToken(token);
         LocalDateTime expiresAt = LocalDateTime.ofInstant(
                 expirationDate.toInstant(), ZoneId.systemDefault());
         
-        // Set token in HttpOnly cookie
-        setAuthCookie(response, token);
+        // Set token in HttpOnly cookie with appropriate max age
+        int cookieMaxAge = (int) (tokenExpiration / 1000);
+        setAuthCookie(response, token, cookieMaxAge);
         
         logger.info("User logged in successfully: {}", user.getUsername());
         
@@ -231,12 +234,12 @@ public class AuthService {
         return getCurrentUser(userId);
     }
     
-    private void setAuthCookie(HttpServletResponse response, String token) {
+    private void setAuthCookie(HttpServletResponse response, String token, int maxAge) {
         Cookie cookie = new Cookie(tokenProvider.getCookieName(), token);
         cookie.setHttpOnly(true);
         cookie.setSecure(tokenProvider.isCookieSecure());
         cookie.setPath("/");
-        cookie.setMaxAge((int) (tokenProvider.getExpirationMs() / 1000));
+        cookie.setMaxAge(maxAge);
         
         // Add SameSite attribute via response header (Cookie API doesn't support SameSite directly)
         String secureAttribute = tokenProvider.isCookieSecure() ? "Secure; " : "";
@@ -244,7 +247,7 @@ public class AuthService {
             "%s=%s; Path=/; Max-Age=%d; HttpOnly; %sSameSite=%s",
                 tokenProvider.getCookieName(),
                 token,
-                (int) (tokenProvider.getExpirationMs() / 1000),
+                maxAge,
             secureAttribute,
                 tokenProvider.getCookieSameSite()
         );
