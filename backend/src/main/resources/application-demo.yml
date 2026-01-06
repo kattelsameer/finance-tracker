@@ -24,9 +24,9 @@ spring:
     enabled: true
     baseline-on-migrate: true
     validate-on-migrate: true
-    # Include both standard migrations and demo data
-    locations: classpath:db/migration,classpath:db/demo
-    out-of-order: true  # Allow demo migrations to run out of order
+    # Only include standard migrations, demo data is managed by DemoDataService
+    locations: classpath:db/migration
+    out-of-order: false
 
 logging:
   level:
