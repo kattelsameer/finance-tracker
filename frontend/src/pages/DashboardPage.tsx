@@ -1,25 +1,42 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, type ReactElement } from 'react';
 import { dashboardService } from '../services/dashboard.service';
 import { DashboardStats } from '../types';
-import { CurrencyConverter } from '../components/CurrencyConverter';
+import { CurrencyConverterCompact } from '../components/CurrencyConverterCompact';
 import { useAuth } from '../contexts/AuthContext';
+import { useFeatureFlags, type DashboardCardId } from '../contexts/FeatureFlagsContext';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import {
   SummaryCards,
-  MonthlyTrendsChart,
-  TopSpendingCategories,
+  MonthlyTrendsChartNew,
+  TopSpendingCategoriesNew,
   BudgetStatusList,
-  DateRangeFilter
+  RecentTransactions,
+  AccountBalances,
+  DraggableCard
 } from '../components/dashboard';
 
 export function DashboardPage() {
   const { user } = useAuth();
+  const { dashboardFeatures, cardOrder, reorderCards, cardWidths } = useFeatureFlags();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0]
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  
+  // Date range: read from localStorage or default to last 6 months
+  const [dateRange] = useState(() => {
+    const saved = localStorage.getItem('dashboardDateRange');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    // Default to last 6 months to show demo data
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 6);
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    };
   });
 
   const fetchDashboardStats = useCallback(async () => {
@@ -80,46 +97,87 @@ export function DashboardPage() {
 
   if (!stats) return null;
 
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (index: number) => {
+    if (draggedIndex === null || draggedIndex === index) return;
+    reorderCards(draggedIndex, index);
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  const renderCard = (cardId: DashboardCardId) => {
+    const cardWidth = cardWidths[cardId];
+    const cardMap: Record<DashboardCardId, { component: ReactElement; enabled: boolean }> = {
+      monthlyTrends: {
+        component: <MonthlyTrendsChartNew trends={stats.monthlyTrends} />,
+        enabled: dashboardFeatures.monthlyTrends,
+      },
+      topSpendingCategories: {
+        component: <TopSpendingCategoriesNew categories={stats.topSpendingCategories} width={cardWidth} />,
+        enabled: dashboardFeatures.topSpendingCategories,
+      },
+      currencyConverter: {
+        component: <CurrencyConverterCompact />,
+        enabled: dashboardFeatures.currencyConverter,
+      },
+      recentTransactions: {
+        component: <RecentTransactions formatCurrency={formatCurrency} />,
+        enabled: dashboardFeatures.recentTransactions,
+      },
+      accountBalances: {
+        component: <AccountBalances formatCurrency={formatCurrency} />,
+        enabled: dashboardFeatures.accountBalances,
+      },
+      budgetStatus: {
+        component: <BudgetStatusList budgets={stats.budgetStatuses} formatCurrency={formatCurrency} />,
+        enabled: dashboardFeatures.budgetStatus,
+      },
+    };
+
+    const card = cardMap[cardId];
+    if (!card || !card.enabled) return null;
+
+    return card.component;
+  };
+
   return (
-    <div className="space-y-8">
-      {/* Header Section */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Financial Overview</h1>
-        <p className="text-gray-600">Track your income, expenses, and savings</p>
-      </div>
-
-      {/* Date Range Filter */}
-      <DateRangeFilter
-        startDate={dateRange.startDate}
-        endDate={dateRange.endDate}
-        onStartDateChange={(date) => setDateRange({ ...dateRange, startDate: date })}
-        onEndDateChange={(date) => setDateRange({ ...dateRange, endDate: date })}
-      />
-
+    <div className="space-y-6">
       {/* Summary Cards */}
-      <SummaryCards stats={stats} formatCurrency={formatCurrency} />
+      {dashboardFeatures.summaryCards && (
+        <SummaryCards stats={stats} formatCurrency={formatCurrency} />
+      )}
 
-      {/* Monthly Trends */}
-      <MonthlyTrendsChart trends={stats.monthlyTrends} formatCurrency={formatCurrency} />
+      {/* Draggable Dashboard Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {cardOrder.map((cardId, index) => {
+          const cardComponent = renderCard(cardId);
+          if (!cardComponent) return null;
 
-      {/* Bottom Section: Top Spending & Currency Converter */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Top Spending Categories */}
-        <div className="lg:col-span-2">
-          <TopSpendingCategories 
-            categories={stats.topSpendingCategories} 
-            formatCurrency={formatCurrency} 
-          />
-        </div>
+          const cardWidth = cardWidths[cardId];
+          const gridClass = cardWidth === 'full' ? 'lg:col-span-2' : 'lg:col-span-1';
 
-        {/* Currency Converter */}
-        <div className="lg:col-span-1">
-          <CurrencyConverter />
-        </div>
+          return (
+            <div key={cardId} className={gridClass}>
+              <DraggableCard
+                id={cardId}
+                index={index}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+                isDragging={draggedIndex === index}
+              >
+                {cardComponent}
+              </DraggableCard>
+            </div>
+          );
+        })}
       </div>
-
-      {/* Budget Status */}
-      <BudgetStatusList budgets={stats.budgetStatuses} formatCurrency={formatCurrency} />
     </div>
   );
 }

@@ -1,5 +1,10 @@
 export { SummaryCards } from './SummaryCards';
 export { MonthlyTrendsChart } from './MonthlyTrendsChart';
+export { MonthlyTrendsChartNew } from './MonthlyTrendsChartNew';
 export { TopSpendingCategories } from './TopSpendingCategories';
+export { TopSpendingCategories as TopSpendingCategoriesNew } from './TopSpendingCategoriesNew';
 export { BudgetStatusList } from './BudgetStatusList';
 export { DateRangeFilter } from './DateRangeFilter';
+export { RecentTransactions } from './RecentTransactions';
+export { AccountBalances } from './AccountBalances';
+export { DraggableCard } from './DraggableCard';
