@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Transactional
 @DisplayName("Auth Controller Integration Tests")
+@SuppressWarnings("null")
 class AuthControllerIntegrationTest {
 
     @Autowired
@@ -164,7 +165,11 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String authCookie = loginResult.getResponse().getCookie("auth_token").getValue();
+        jakarta.servlet.http.Cookie cookie = loginResult.getResponse().getCookie("auth_token");
+        if (cookie == null) {
+            throw new IllegalStateException("auth_token cookie not found after login");
+        }
+        String authCookie = cookie.getValue();
 
         // Logout - need CSRF token for POST
         mockMvc.perform(post("/api/v1/auth/logout")
@@ -189,7 +194,11 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String authCookie = loginResult.getResponse().getCookie("auth_token").getValue();
+        jakarta.servlet.http.Cookie cookie = loginResult.getResponse().getCookie("auth_token");
+        if (cookie == null) {
+            throw new IllegalStateException("auth_token cookie not found after login");
+        }
+        String authCookie = cookie.getValue();
 
         // Check auth
         mockMvc.perform(get("/api/v1/auth/me")

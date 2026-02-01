@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Transactional
 @DisplayName("Tag Controller Integration Tests")
+@SuppressWarnings("null")
 class TagControllerIntegrationTest {
 
     @Autowired

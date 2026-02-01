@@ -17,7 +17,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -27,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Transactional
 @DisplayName("Notification Controller Integration Tests")
+@SuppressWarnings("null")
 class NotificationControllerIntegrationTest {
 
     @Autowired
@@ -56,13 +56,17 @@ class NotificationControllerIntegrationTest {
         loginRequest.setPassword("SecureP@ssw0rd!");
 
         MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isOk())
-                .andReturn();
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest)))
+            .andExpect(status().isOk())
+            .andReturn();
 
-        authCookie = new Cookie("auth_token", loginResult.getResponse().getCookie("auth_token").getValue());
+        Cookie cookie = loginResult.getResponse().getCookie("auth_token");
+        if (cookie == null) {
+            throw new IllegalStateException("auth_token cookie not found after login");
+        }
+        authCookie = new Cookie("auth_token", cookie.getValue());
     }
 
     @Test

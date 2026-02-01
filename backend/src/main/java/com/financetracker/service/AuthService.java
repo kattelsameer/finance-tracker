@@ -1,4 +1,8 @@
+
 package com.financetracker.service;
+
+import org.springframework.lang.NonNull;
+import java.util.Objects;
 
 import com.financetracker.dto.auth.*;
 import com.financetracker.entity.RevokedToken;
@@ -23,6 +27,7 @@ import java.time.ZoneId;
 import java.util.Date;
 
 @Service
+@SuppressWarnings("null")
 public class AuthService {
     
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
@@ -163,8 +168,8 @@ public class AuthService {
     }
     
     @Transactional
-    public void changePassword(Long userId, ChangePasswordRequest request) {
-        User user = userRepository.findById(userId)
+    public void changePassword(@NonNull Long userId, @NonNull ChangePasswordRequest request) {
+        User user = userRepository.findById(Objects.requireNonNull(userId))
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         
         // Verify current password
@@ -174,14 +179,14 @@ public class AuthService {
         
         // Update password
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
+        userRepository.save(Objects.requireNonNull(user));
         
         logger.info("Password changed for user: {}", user.getUsername());
     }
     
     @Transactional(readOnly = true)
-    public UserResponse getCurrentUser(Long userId) {
-        User user = userRepository.findById(userId)
+    public UserResponse getCurrentUser(@NonNull Long userId) {
+        User user = userRepository.findById(Objects.requireNonNull(userId))
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         
         LocalDateTime createdAtLocal = user.getCreatedAt() != null 
@@ -200,13 +205,13 @@ public class AuthService {
     }
     
     @Transactional
-    public UserResponse updateProfile(Long userId, UpdateProfileRequest request) {
-        User user = userRepository.findById(userId)
+    public UserResponse updateProfile(@NonNull Long userId, @NonNull UpdateProfileRequest request) {
+        User user = userRepository.findById(Objects.requireNonNull(userId))
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         
         // Update email if provided and different
         if (request.getEmail() != null && !request.getEmail().equalsIgnoreCase(user.getEmail())) {
-            if (userRepository.existsByEmail(request.getEmail())) {
+            if (userRepository.existsByEmail(Objects.requireNonNull(request.getEmail()))) {
                 throw new ApiException(ErrorCode.EMAIL_ALREADY_EXISTS);
             }
             user.setEmail(request.getEmail().toLowerCase());
@@ -227,7 +232,7 @@ public class AuthService {
             user.setTimezone(request.getTimezone());
         }
         
-        userRepository.save(user);
+        userRepository.save(Objects.requireNonNull(user));
         
         logger.info("Profile updated for user: {}", user.getUsername());
         

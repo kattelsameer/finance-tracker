@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
+@SuppressWarnings({"null", "unchecked"})
 public class CurrencyService {
     private final CurrencyRepository currencyRepository;
     private final RestTemplate restTemplate = new RestTemplate();
@@ -149,7 +149,6 @@ public class CurrencyService {
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
             
             if (response != null && response.containsKey("rates")) {
-                @SuppressWarnings("unchecked")
                 Map<String, Double> rates = (Map<String, Double>) response.get("rates");
                 
                 // Update all currencies in database

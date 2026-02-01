@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Transactional
 @DisplayName("Category Controller Integration Tests")
+@SuppressWarnings("null")
 class CategoryControllerIntegrationTest {
 
     @Autowired
@@ -68,7 +69,11 @@ class CategoryControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        authCookie = new Cookie("auth_token", loginResult.getResponse().getCookie("auth_token").getValue());
+        Cookie cookie = loginResult.getResponse().getCookie("auth_token");
+        if (cookie == null) {
+            throw new IllegalStateException("auth_token cookie not found after login");
+        }
+        authCookie = new Cookie("auth_token", cookie.getValue());
 
         // Create system categories
         createSystemCategory("Salary", CategoryType.INCOME, "#22c55e", "briefcase");

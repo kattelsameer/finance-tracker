@@ -17,6 +17,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth")
+@SuppressWarnings("null")
 public class AuthController {
     
     private final AuthService authService;

@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@SuppressWarnings("null")
 public class TransactionService {
     
     private static final Logger logger = LoggerFactory.getLogger(TransactionService.class);

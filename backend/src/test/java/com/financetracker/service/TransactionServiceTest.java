@@ -4,7 +4,6 @@ import com.financetracker.dto.transaction.*;
 import com.financetracker.entity.*;
 import com.financetracker.exception.ApiException;
 import com.financetracker.repository.*;
-import com.financetracker.specification.TransactionSpecification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +22,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null")
 class TransactionServiceTest {
 
     @Mock
@@ -156,6 +156,7 @@ class TransactionServiceTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void getTransactions_WithPagination() {
         List<Transaction> transactions = Arrays.asList(testTransaction);
         Page<Transaction> page = new PageImpl<>(transactions);

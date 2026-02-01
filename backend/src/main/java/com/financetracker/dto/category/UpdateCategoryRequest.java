@@ -1,6 +1,6 @@
 package com.financetracker.dto.category;
 
-import com.financetracker.entity.Category.CategoryType;
+
 import jakarta.validation.constraints.*;
 
 public class UpdateCategoryRequest {

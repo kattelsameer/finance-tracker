@@ -16,6 +16,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/accounts")
+@SuppressWarnings("null")
 public class AccountController {
     
     private final AccountService accountService;

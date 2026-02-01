@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@SuppressWarnings({"null", "deprecation"})
 public class ImportExportService {
     
     private static final Logger logger = LoggerFactory.getLogger(ImportExportService.class);

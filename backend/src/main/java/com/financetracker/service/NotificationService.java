@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class NotificationService {
     
     private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);

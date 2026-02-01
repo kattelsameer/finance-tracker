@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 
 /**
@@ -156,18 +155,21 @@ public class DemoDataService {
      * Execute a single SQL file.
      * Removes comment lines, then splits on semicolon and executes each statement.
      */
+    @SuppressWarnings("null")
     private void executeSqlFile(String filePath) throws Exception {
         log.info("Executing SQL file: {}", filePath);
         
         Resource resource = resourceLoader.getResource(filePath);
         
-        String sql = new BufferedReader(
-            new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)
-        ).lines()
-            // Remove comment lines and empty lines BEFORE joining
-            .filter(line -> !line.trim().startsWith("--"))
-            .filter(line -> !line.trim().isEmpty())
-            .collect(Collectors.joining("\n"));
+        String sql;
+        try (BufferedReader reader = new BufferedReader(
+            new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
+            sql = reader.lines()
+                // Remove comment lines and empty lines BEFORE joining
+                .filter(line -> !line.trim().startsWith("--"))
+                .filter(line -> !line.trim().isEmpty())
+                .collect(Collectors.joining("\n"));
+        }
         
         // Split by semicolon and execute each statement
         int statementCount = 0;

@@ -1,7 +1,5 @@
 package com.financetracker.dto.recurring;
 
-import com.financetracker.dto.account.AccountResponse;
-import com.financetracker.dto.category.CategoryResponse;
 import com.financetracker.entity.RecurringTransaction.Frequency;
 import com.financetracker.entity.Transaction.TransactionType;
 import lombok.AllArgsConstructor;
