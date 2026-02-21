@@ -18,7 +18,7 @@ export function Sidebar({ isMobile = false, isOpen = true, onClose, user, onLogo
   const location = useLocation();
   const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
 
-  const renderNavGroup = (items: typeof mainNavItems, label?: string) => (
+  const renderNavGroup = (items: typeof mainNavItems) => (
     <>
       <div className="space-y-1">
         {items.map((item) => {

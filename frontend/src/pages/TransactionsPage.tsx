@@ -6,7 +6,6 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Transaction, Account, Category, TransactionFilter, CreateTransactionRequest, PageResponse } from '../types';
 import { logger } from '../utils/logger';
 import {
-  ArrowLeftRight,
   Plus,
   Search,
   Filter,
