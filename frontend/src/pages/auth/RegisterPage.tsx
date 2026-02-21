@@ -104,8 +104,9 @@ export default function RegisterPage() {
         displayName: formData.displayName || undefined
       });
       navigate('/');
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Registration failed. Please try again.');
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      setError(axiosError?.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }

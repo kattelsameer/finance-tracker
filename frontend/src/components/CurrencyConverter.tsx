@@ -26,7 +26,7 @@ export function CurrencyConverter() {
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+
 
   useEffect(() => {
     fetchCurrencies();
@@ -76,7 +76,6 @@ export function CurrencyConverter() {
   };
 
   const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
     setError(null);
     handleConvert();
   };

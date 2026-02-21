@@ -12,8 +12,8 @@ export function BudgetStatusList({ budgets, formatCurrency }: Readonly<BudgetSta
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      <div className="px-6 py-4 bg-purple-600 flex items-center gap-3">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-[420px] transition-all duration-300 hover:shadow-md">
+      <div className="px-6 py-4 bg-purple-600 flex items-center gap-3 shrink-0 z-10">
         <div className="p-2 bg-purple-500 rounded-md">
           <Target className="h-5 w-5 text-white" />
         </div>
@@ -22,7 +22,7 @@ export function BudgetStatusList({ budgets, formatCurrency }: Readonly<BudgetSta
           <p className="text-sm text-purple-100">Track your spending limits</p>
         </div>
       </div>
-      <div className="p-6">
+      <div className="p-6 overflow-y-auto scrollbar-hide flex-1 relative">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {budgets.map((budget) => {
             let statusClass = 'bg-emerald-100 text-emerald-700';

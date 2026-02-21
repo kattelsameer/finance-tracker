@@ -34,8 +34,8 @@ export function RecentTransactions({ formatCurrency }: Readonly<RecentTransactio
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      <div className="px-6 py-4 bg-purple-600 flex items-center justify-between">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-[420px] transition-all duration-300 hover:shadow-md">
+      <div className="px-6 py-4 bg-purple-600 flex items-center justify-between shrink-0 z-10">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-purple-500 rounded-md">
             <Receipt className="h-5 w-5 text-white" />
@@ -53,7 +53,7 @@ export function RecentTransactions({ formatCurrency }: Readonly<RecentTransactio
           <ExternalLink className="h-5 w-5" />
         </Link>
       </div>
-      <div className="p-6">
+      <div className="p-6 overflow-y-auto scrollbar-hide flex-1 relative">
         {loading ? (
           <div className="text-center py-8">
             <div className="w-8 h-8 border-4 border-gray-200 rounded-full animate-spin border-t-purple-600 mx-auto"></div>

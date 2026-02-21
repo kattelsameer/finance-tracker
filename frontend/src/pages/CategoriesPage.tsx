@@ -146,18 +146,7 @@ export function CategoriesPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="space-y-8 pb-12">
-        {/* Header */}
-        <div className="text-center pt-8 pb-4">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-400 to-purple-600 rounded-3xl mb-5 shadow-lg">
-            <FolderTree className="h-10 w-10 text-white" />
-          </div>
-          <h1 className="text-4xl font-black text-gray-900 mb-3">Categories</h1>
-          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-            Organize your transactions with custom categories
-          </p>
-        </div>
-
+      <div className="space-y-6 pt-6 pb-12">
         {/* Error Alert */}
         {error && (
           <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
@@ -171,7 +160,7 @@ export function CategoriesPage() {
 
         {/* Tabs & Add Button */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex bg-gray-100 rounded-xl p-1">
+          <div className="flex bg-gray-100/80 p-1.5 rounded-xl w-full sm:w-auto">
             <button
               onClick={() => setActiveTab('EXPENSE')}
               className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
@@ -180,22 +169,22 @@ export function CategoriesPage() {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Expense Categories
+              Expense
             </button>
             <button
               onClick={() => setActiveTab('INCOME')}
-              className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                 activeTab === 'INCOME'
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Income Categories
+              Income
             </button>
           </div>
           <button
             onClick={() => openCreateModal()}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-md"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 w-full sm:w-auto"
           >
             <Plus className="h-5 w-5" />
             Add Category

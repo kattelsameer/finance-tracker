@@ -90,7 +90,7 @@ export async function setupAuthenticatedPage(page: Page, user: TestUser = testUs
   // Register user via API (ignore if already exists)
   try {
     await registerUser(page, user);
-  } catch (error) {
+  } catch {
     // User may already exist, continue to login
     console.log('Registration skipped, user may already exist');
   }

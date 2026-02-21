@@ -80,8 +80,8 @@ export function CurrencyConverterCompact() {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden h-full flex flex-col">
-      <div className="px-4 py-3 bg-blue-600 flex items-center gap-2">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-[420px] transition-all duration-300 hover:shadow-md">
+      <div className="px-4 py-3 bg-blue-600 flex items-center gap-2 shrink-0 z-10">
         <div className="p-1.5 bg-blue-500 rounded-md">
           <DollarSign className="h-4 w-4 text-white" />
         </div>
@@ -90,7 +90,7 @@ export function CurrencyConverterCompact() {
         </div>
       </div>
       
-      <div className="p-4 space-y-3 flex-1">
+      <div className="p-4 space-y-3 flex-1 overflow-y-auto scrollbar-hide relative">
         {error && (
           <div className="flex items-center gap-2 p-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg text-xs">
             <AlertCircle className="h-4 w-4 flex-shrink-0" />

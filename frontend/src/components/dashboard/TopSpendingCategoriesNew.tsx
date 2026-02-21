@@ -100,8 +100,8 @@ export function TopSpendingCategories({ categories, width }: Readonly<TopSpendin
   const isFullWidth = width === 'full';
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      <div className="px-6 py-4 bg-red-600 flex items-center gap-3">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-[420px] transition-all duration-300 hover:shadow-md">
+      <div className="px-6 py-4 bg-red-600 flex items-center gap-3 shrink-0 z-10">
         <div className="p-2 bg-red-500 rounded-md">
           <TrendingDown className="h-5 w-5 text-white" />
         </div>
@@ -110,7 +110,7 @@ export function TopSpendingCategories({ categories, width }: Readonly<TopSpendin
           <p className="text-sm text-red-100">Where your money goes</p>
         </div>
       </div>
-      <div className="p-6">
+      <div className="p-6 overflow-y-auto scrollbar-hide flex-1 relative">
         {categories.length === 0 ? (
           <div className="text-center py-12">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">

@@ -124,18 +124,7 @@ export function TagsPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="space-y-8 pb-12">
-        {/* Header */}
-        <div className="text-center pt-8 pb-4">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-teal-400 to-teal-600 rounded-3xl mb-5 shadow-lg">
-            <TagIcon className="h-10 w-10 text-white" />
-          </div>
-          <h1 className="text-4xl font-black text-gray-900 mb-3">Tags</h1>
-          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-            Create flexible tags for additional organization and reporting
-          </p>
-        </div>
-
+      <div className="space-y-6 pt-6 pb-12">
         {/* Error Alert */}
         {error && (
           <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
@@ -149,19 +138,19 @@ export function TagsPage() {
 
         {/* Search & Add Button */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 w-full sm:max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search tags..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all shadow-sm hover:border-gray-300"
             />
           </div>
           <button
             onClick={openCreateModal}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-colors shadow-md"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 w-full sm:w-auto"
           >
             <Plus className="h-5 w-5" />
             Create Tag

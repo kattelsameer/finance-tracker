@@ -201,17 +201,6 @@ export function AccountsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="space-y-8 pb-12">
-        {/* Header */}
-        <div className="text-center pt-8 pb-4">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-3xl mb-5 shadow-lg">
-            <Wallet className="h-10 w-10 text-white" />
-          </div>
-          <h1 className="text-4xl font-black text-gray-900 mb-3">Accounts</h1>
-          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-            Manage all your financial accounts in one place
-          </p>
-        </div>
-
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">

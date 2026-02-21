@@ -50,17 +50,17 @@ export function MonthlyTrendsChartNew({ trends }: Readonly<MonthlyTrendsChartPro
   }));
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      <div className="px-6 py-4 bg-blue-600 flex items-center gap-3">
-        <div className="p-2 bg-blue-500 rounded-md">
-          <BarChart3 className="h-5 w-5 text-white" />
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-[420px] transition-all duration-300 hover:shadow-md">
+      <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-3 shrink-0 z-10">
+        <div className="p-2.5 bg-blue-50 rounded-full">
+          <BarChart3 className="h-5 w-5 text-blue-600" />
         </div>
         <div>
-          <h3 className="text-base font-semibold text-white">Monthly Trends</h3>
-          <p className="text-sm text-blue-100">Income vs Expenses over time</p>
+          <h3 className="text-base font-semibold text-gray-900">Monthly Trends</h3>
+          <p className="text-sm text-gray-500">Income vs Expenses over time</p>
         </div>
       </div>
-      <div className="p-6">
+      <div className="p-6 overflow-y-auto scrollbar-hide flex-1 relative">
         {trends.length === 0 ? (
           <div className="text-center py-12">
             <BarChart3 className="h-12 w-12 text-gray-300 mx-auto mb-3" />

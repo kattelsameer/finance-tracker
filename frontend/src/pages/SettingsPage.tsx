@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFeatureFlags } from '../contexts/FeatureFlagsContext';
 import { authService } from '../services/auth.service';
 import { notificationService } from '../services/notification.service';
-import { logger } from '../utils/logger';
+
 import { DateRangeFilter } from '../components/dashboard/DateRangeFilter';
 import { 
   DollarSign, 

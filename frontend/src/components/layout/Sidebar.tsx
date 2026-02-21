@@ -16,14 +16,10 @@ interface SidebarProps {
 
 export function Sidebar({ isMobile = false, isOpen = true, onClose, user, onLogout }: Readonly<SidebarProps>) {
   const location = useLocation();
+  const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
 
   const renderNavGroup = (items: typeof mainNavItems, label?: string) => (
     <>
-      {label && (
-        <div className="mb-3 px-4">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
-        </div>
-      )}
       <div className="space-y-1">
         {items.map((item) => {
           const isActive = location.pathname === item.href;
@@ -50,14 +46,21 @@ export function Sidebar({ isMobile = false, isOpen = true, onClose, user, onLogo
   );
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-5 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-blue-600 rounded-lg">
             <Wallet className="h-6 w-6 text-white" />
           </div>
-          <span className="text-xl font-bold text-gray-900">Finance Tracker</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-bold text-gray-900">Finance Tracker</span>
+            {isDemoMode && (
+              <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm border border-amber-200 leading-none">
+                Demo
+              </span>
+            )}
+          </div>
         </div>
         {isMobile && (
           <button
@@ -70,16 +73,16 @@ export function Sidebar({ isMobile = false, isOpen = true, onClose, user, onLogo
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-3">
+      <nav className="flex-1 overflow-y-auto px-3 py-4 min-h-0 scrollbar-hide">
         {renderNavGroup(mainNavItems)}
         
-        <div className="my-5 mx-2 border-t border-gray-200"></div>
-        {renderNavGroup(toolsNavItems, 'Tools')}
+        <div className="my-3 mx-2 border-t border-gray-100"></div>
+        {renderNavGroup(toolsNavItems)}
         
-        <div className="my-5 mx-2 border-t border-gray-200"></div>
-        {renderNavGroup(manageNavItems, 'Manage')}
+        <div className="my-3 mx-2 border-t border-gray-100"></div>
+        {renderNavGroup(manageNavItems)}
         
-        <div className="my-5 mx-2 border-t border-gray-200"></div>
+        <div className="my-3 mx-2 border-t border-gray-100"></div>
         {renderNavGroup(settingsNavItems)}
       </nav>
 
@@ -137,10 +140,8 @@ export function Sidebar({ isMobile = false, isOpen = true, onClose, user, onLogo
   }
 
   return (
-    <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-64 lg:flex-col">
-      <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
-        {sidebarContent}
-      </div>
+    <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-64 lg:flex-col bg-white border-r border-gray-200">
+      {sidebarContent}
     </div>
   );
 }

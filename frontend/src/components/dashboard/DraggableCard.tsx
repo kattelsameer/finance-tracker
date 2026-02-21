@@ -37,12 +37,12 @@ export function DraggableCard({
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={onDragEnd}
-      className={`relative transition-all duration-200 h-[400px] sm:h-[450px] lg:h-[500px] ${
+      className={`relative transition-all duration-200 h-full ${
         isDragging ? 'opacity-50 scale-95' : 'opacity-100 scale-100'
       }`}
       data-card-id={id}
     >
-      <div className="h-full overflow-auto">
+      <div className="h-full">
         {children}
       </div>
     </div>
