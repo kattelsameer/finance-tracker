@@ -64,11 +64,9 @@ services:
     depends_on:
       - backend
     ports:
-      - "81:80"  # Different port to avoid conflict
+      - "81:8080"  # Different port to avoid conflict
     networks:
       - finance-tracker-demo
-    environment:
-      - NGINX_PORT=80
 
 networks:
   finance-tracker-demo:

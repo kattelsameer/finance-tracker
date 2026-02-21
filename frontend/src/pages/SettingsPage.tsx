@@ -72,7 +72,7 @@ export function SettingsPage() {
 
   // Dashboard date range filter state
   const [dashboardDateRange, setDashboardDateRange] = useState(() => {
-    const saved = localStorage.getItem('dashboardDateRange');
+    const saved = sessionStorage.getItem('dashboardDateRange');
     if (saved) {
       return JSON.parse(saved);
     }
@@ -184,7 +184,7 @@ export function SettingsPage() {
       await refetchUser();
       
       // Save dashboard date range to localStorage
-      localStorage.setItem('dashboardDateRange', JSON.stringify(dashboardDateRange));
+      sessionStorage.setItem('dashboardDateRange', JSON.stringify(dashboardDateRange));
       
       setSuccess('Settings saved successfully!');
       setTimeout(() => setSuccess(''), 3000);

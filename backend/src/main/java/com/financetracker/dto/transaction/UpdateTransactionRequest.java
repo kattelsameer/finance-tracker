@@ -1,10 +1,12 @@
 package com.financetracker.dto.transaction;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UpdateTransactionRequest {
     
     private Long accountId;

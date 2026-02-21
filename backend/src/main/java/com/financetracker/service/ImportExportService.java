@@ -38,6 +38,8 @@ public class ImportExportService {
     private final AccountRepository accountRepository;
     private final CategoryRepository categoryRepository;
     
+    private static final Set<String> REQUIRED_CSV_HEADERS = Set.of("amount", "date", "type");
+
     private static final DateTimeFormatter[] DATE_FORMATTERS = {
             DateTimeFormatter.ISO_LOCAL_DATE,           // 2024-01-15
             DateTimeFormatter.ofPattern("MM/dd/yyyy"),  // 01/15/2024
@@ -61,7 +63,9 @@ public class ImportExportService {
     public ImportResult importTransactionsFromCSV(Long userId, MultipartFile file) throws IOException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
-        
+
+        validateImportFile(file);
+
         List<TransactionImportRecord> records = parseCSV(file);
         
         int totalRecords = records.size();
@@ -107,6 +111,9 @@ public class ImportExportService {
                      .withIgnoreHeaderCase()
                      .withTrim())) {
             
+            // Validate required headers are present
+            validateCsvHeaders(csvParser);
+
             for (CSVRecord csvRecord : csvParser) {
                 TransactionImportRecord record = TransactionImportRecord.builder()
                         .date(parseDate(getColumnValue(csvRecord, "Date", "date", "Transaction Date")))
@@ -126,6 +133,32 @@ public class ImportExportService {
         return records;
     }
     
+    private void validateImportFile(MultipartFile file) {
+        if (file.getSize() > 10 * 1024 * 1024) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "File exceeds maximum allowed size of 10MB");
+        }
+        String contentType = file.getContentType();
+        if (contentType != null && !contentType.equals("text/csv")
+                && !contentType.equals("application/vnd.ms-excel")
+                && !contentType.equals("application/octet-stream")) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "Only CSV files are accepted");
+        }
+    }
+
+    private void validateCsvHeaders(CSVParser csvParser) {
+        Set<String> presentHeaders = csvParser.getHeaderMap().keySet().stream()
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+
+        Set<String> missing = REQUIRED_CSV_HEADERS.stream()
+                .filter(h -> !presentHeaders.contains(h))
+                .collect(Collectors.toSet());
+
+        if (!missing.isEmpty()) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "CSV is missing required columns: " + missing);
+        }
+    }
+
     private String getColumnValue(CSVRecord record, String... possibleNames) {
         for (String name : possibleNames) {
             try {

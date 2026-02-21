@@ -25,7 +25,7 @@ export function DashboardPage() {
   
   // Date range: read from localStorage or default to last 6 months
   const [dateRange] = useState(() => {
-    const saved = localStorage.getItem('dashboardDateRange');
+    const saved = sessionStorage.getItem('dashboardDateRange');
     if (saved) {
       return JSON.parse(saved);
     }
