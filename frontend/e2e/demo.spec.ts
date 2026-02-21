@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Demo Mode Smoke', () => {
   test('shows demo banner, can login, and seeded transactions render', async ({ page }) => {
+    // This test requires a running demo environment; skip it when DEMO_BASE_URL is not set
+    test.skip(!process.env.DEMO_BASE_URL, 'Skipping demo test: DEMO_BASE_URL is not set');
+
     const baseURL =
       process.env.PLAYWRIGHT_BASE_URL || process.env.DEMO_BASE_URL || 'http://localhost:81';
     const username = process.env.DEMO_USERNAME || 'demo@example.com';

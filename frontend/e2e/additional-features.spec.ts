@@ -17,7 +17,7 @@ test.describe('Notifications', () => {
   });
 
   test('should mark notification as read', async ({ page }) => {
-    const notificationButton = page.locator('button[data-testid="notification-button"]');
+    const notificationButton = page.locator('button[data-testid="notification-button"], button[aria-label="Notifications"]');
     await notificationButton.click();
     
     // Find first unread notification if any

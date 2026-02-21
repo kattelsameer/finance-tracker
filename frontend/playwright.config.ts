@@ -11,8 +11,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 1,
-  /* Use multiple workers for parallel execution */
-  workers: process.env.CI ? 2 : 4, // 4 workers locally, 2 on CI
+  /* Use a single worker in CI for sequential execution to avoid data race conditions */
+  workers: process.env.CI ? 1 : 4,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Timeout for each test */
