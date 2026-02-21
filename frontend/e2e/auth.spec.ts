@@ -15,7 +15,8 @@ test.describe('Authentication Flow', () => {
     const newUser = {
       username: `user${timestamp}`,
       email: `user${timestamp}@example.com`,
-      password: 'Test123456789',
+      // Must satisfy backend: min 12 chars, uppercase, lowercase, digit, special (@$!%*?&)
+      password: 'Test@12345678',
     };
 
     await registerUser(page, newUser);
@@ -161,23 +162,32 @@ test.describe('Authentication Flow', () => {
   });
 
   test('should handle account lockout after failed attempts', async ({ page }) => {
+    // Use a dedicated user so the shared admin account is not locked
+    const timestamp = Date.now();
+    const lockoutUser = {
+      username: `lockout${timestamp}`,
+      email: `lockout${timestamp}@example.com`,
+      password: 'Lockout@12345678',
+    };
+    await registerUser(page, lockoutUser);
+
     await page.goto('/login');
-    
-    const wrongPassword = 'WrongPassword123';
-    
+
+    const wrongPassword = 'WrongPass@12345678';
+
     // Attempt 5 failed logins
     for (let i = 0; i < 5; i++) {
-      await page.fill('input#username', testUsers.regular.username);
+      await page.fill('input#username', lockoutUser.username);
       await page.fill('input#password', wrongPassword);
       await page.click('button[type="submit"]');
       await page.waitForTimeout(500);
     }
-    
+
     // 6th attempt should show account locked message
-    await page.fill('input#username', testUsers.regular.username);
+    await page.fill('input#username', lockoutUser.username);
     await page.fill('input#password', wrongPassword);
     await page.click('button[type="submit"]');
-    
+
     // Should show account locked message
     const lockoutMessage = page.locator('text=/account.*locked/i');
     await expect(lockoutMessage).toBeVisible({ timeout: 3000 });

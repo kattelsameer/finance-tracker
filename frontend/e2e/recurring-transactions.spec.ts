@@ -1,7 +1,23 @@
 import { test, expect } from '@playwright/test';
-import { setupAuthenticatedPage, testUsers } from './fixtures/auth';
+import { setupAuthenticatedPage, testUsers, createTestAccount } from './fixtures/auth';
+
+// Run tests serially to avoid data-race issues between create/read/delete tests
+test.describe.configure({ mode: 'serial' });
 
 test.describe('Recurring Transactions', () => {
+  test.beforeAll(async ({ browser }) => {
+    // Ensure the test user exists and has at least one account
+    const page = await browser.newPage();
+    try {
+      await setupAuthenticatedPage(page, testUsers.regular);
+      await createTestAccount(page, 'Recurring E2E Account');
+    } catch {
+      // Account may already exist; continue
+    } finally {
+      await page.close();
+    }
+  });
+
   test.beforeEach(async ({ page }) => {
     await setupAuthenticatedPage(page, testUsers.regular);
     await page.goto('/recurring-transactions');

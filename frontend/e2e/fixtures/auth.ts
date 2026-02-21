@@ -10,12 +10,13 @@ export const testUsers = {
   regular: {
     username: 'admin',
     email: 'admin@example.com',
-    password: 'Admin@123',
+    // Must satisfy backend: min 12 chars, uppercase, lowercase, digit, special (@$!%*?&)
+    password: 'Admin@12345678',
   },
   admin: {
     username: 'admin',
     email: 'admin@example.com',
-    password: 'Admin@123',
+    password: 'Admin@12345678',
   },
 } as const;
 
@@ -118,4 +119,34 @@ export async function navigateToProtectedRoute(page: Page, route: string) {
   
   // Should not redirect to login if authenticated
   await expect(page).not.toHaveURL('/login');
+}
+
+/**
+ * Create a test account via the API for use in tests that require an existing account.
+ * The page must be logged in before calling this function.
+ */
+export async function createTestAccount(page: Page, accountName?: string) {
+  const name = accountName ?? `E2E Account ${Date.now()}`;
+  const cookies = await page.context().cookies();
+  const csrfToken = cookies.find(c => c.name === 'XSRF-TOKEN')?.value || '';
+
+  // Fetch available account types first
+  const typesResponse = await page.request.get(`${API_V1_BASE_URL}/accounts/types`);
+  const types = typesResponse.ok() ? await typesResponse.json() : [];
+  const typeId: number = types[0]?.id ?? 1;
+
+  const response = await page.request.post(`${API_V1_BASE_URL}/accounts`, {
+    headers: { 'X-XSRF-TOKEN': csrfToken },
+    data: {
+      accountName: name,
+      accountTypeId: typeId,
+      currency: 'USD',
+      initialBalance: 1000,
+    },
+  });
+
+  if (!response.ok()) {
+    throw new Error(`Failed to create test account: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
 }

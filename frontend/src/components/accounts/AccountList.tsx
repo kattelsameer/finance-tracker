@@ -57,6 +57,7 @@ export function AccountList({ accounts, formatCurrency, onEdit, onDelete, showIn
       {activeAccounts.map((account) => (
         <div
           key={account.id}
+          data-testid="account-item"
           className="bg-white rounded-xl p-6 border-2 hover:shadow-lg transition-all"
           style={{ borderColor: account.colorCode }}
         >
@@ -76,12 +77,14 @@ export function AccountList({ accounts, formatCurrency, onEdit, onDelete, showIn
             <div className="flex gap-1">
               <button
                 onClick={() => onEdit(account)}
+                aria-label="Edit"
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Edit3 className="h-4 w-4 text-gray-600" />
               </button>
               <button
                 onClick={() => onDelete(account.id)}
+                aria-label="Delete"
                 className="p-2 hover:bg-red-50 rounded-lg transition-colors"
               >
                 <Trash2 className="h-4 w-4 text-red-600" />
