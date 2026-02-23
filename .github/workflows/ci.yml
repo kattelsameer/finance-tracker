@@ -47,16 +47,28 @@ jobs:
             type=sha,prefix=
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      - name: Build and push backend image
+      - name: Build backend image
         uses: docker/build-push-action@v6
         with:
           context: ./backend
           file: ./backend/Dockerfile
-          push: ${{ github.event_name == 'push' }}
-          tags: ${{ steps.backend-meta.outputs.tags }}
-          labels: ${{ steps.backend-meta.outputs.labels }}
+          load: true
+          push: false
+          tags: finance-tracker-backend:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Push backend to registry
+        if: github.event_name == 'push'
+        run: |
+          while IFS= read -r tag; do
+            [ -n "$tag" ] || continue
+            docker tag finance-tracker-backend:ci "$tag"
+            docker push "$tag"
+          done <<< "${{ steps.backend-meta.outputs.tags }}"
+
+      - name: Save backend image
+        run: docker save finance-tracker-backend:ci -o /tmp/backend-image.tar
 
       - name: Extract metadata for frontend
         id: frontend-meta
@@ -68,16 +80,39 @@ jobs:
             type=sha,prefix=
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      - name: Build and push frontend image
+      - name: Build frontend image
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
-          push: ${{ github.event_name == 'push' }}
-          tags: ${{ steps.frontend-meta.outputs.tags }}
-          labels: ${{ steps.frontend-meta.outputs.labels }}
+          load: true
+          push: false
+          tags: finance-tracker-frontend:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Push frontend to registry
+        if: github.event_name == 'push'
+        run: |
+          while IFS= read -r tag; do
+            [ -n "$tag" ] || continue
+            docker tag finance-tracker-frontend:ci "$tag"
+            docker push "$tag"
+          done <<< "${{ steps.frontend-meta.outputs.tags }}"
+
+      - name: Save frontend image
+        run: docker save finance-tracker-frontend:ci -o /tmp/frontend-image.tar
+
+      - name: Upload Docker images artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-images
+          path: |
+            /tmp/backend-image.tar
+            /tmp/frontend-image.tar
+          retention-days: 1
+          # Docker image layers are already compressed; skipping artifact compression saves CPU time
+          compression-level: 0
 
   # Stage 2: Backend Tests (runs after Docker build succeeds)
   backend-test:
@@ -183,11 +218,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Download Docker images artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-images
+          path: /tmp/docker-images
 
-      - name: Build and start services
-        run: docker compose up -d --build
+      - name: Load Docker images
+        run: |
+          docker load -i /tmp/docker-images/backend-image.tar
+          docker load -i /tmp/docker-images/frontend-image.tar
+
+      - name: Start services
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
 
       - name: Wait for backend to be ready
         run: |

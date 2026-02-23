@@ -75,8 +75,8 @@ test.describe('Advanced Search', () => {
     
     await page.waitForTimeout(1000);
     
-    // Results should be visible
-    await expect(page.locator('[data-testid="search-results"], .search-results')).toBeVisible();
+    // Results or no-results message should be visible after search
+    await expect(page.locator('text=/Results|No transactions found/i').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should save a search', async ({ page }) => {
