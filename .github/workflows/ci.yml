@@ -14,103 +14,10 @@ env:
   FRONTEND_IMAGE: ${{ github.repository }}/frontend
 
 jobs:
-  # Backend Tests
-  backend-test:
-    name: Backend Tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Run tests
-        run: ./gradlew test
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: backend-test-results
-          path: backend/build/reports/tests/test/
-
-      - name: Build JAR
-        run: ./gradlew bootJar
-
-      - name: Upload JAR artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-jar
-          path: backend/build/libs/*.jar
-
-  # Frontend Tests
-  frontend-test:
-    name: Frontend Tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: TypeScript type check
-        run: npx tsc --noEmit
-
-      - name: Run tests
-        run: npm run test:run
-
-      - name: Build frontend
-        run: npm run build
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-build
-          path: frontend/dist/
-
-  # Build and Push Docker Images (build on PRs, build+push on main/develop push)
+  # Stage 1: Build Docker Images
   docker-build:
     name: Build Docker Images
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-test]
-    if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) || (github.event_name == 'pull_request' && (github.base_ref == 'main' || github.base_ref == 'develop'))
     permissions:
       contents: read
       packages: write
@@ -172,12 +79,178 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Security Scan
+  # Stage 2: Backend Tests (runs after Docker build succeeds)
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run tests
+        run: ./gradlew test
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: backend/build/reports/tests/test/
+
+      - name: Build JAR
+        run: ./gradlew bootJar
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: backend/build/libs/*.jar
+
+  # Stage 2: Frontend Tests (runs after Docker build succeeds, in parallel with backend-test)
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npm run test:run
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/dist/
+
+  # Stage 3: E2E Tests (runs after both backend and frontend tests pass)
+  e2e-test:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and start services
+        run: docker compose up -d --build
+
+      - name: Wait for backend to be ready
+        run: |
+          echo "Waiting for backend and frontend to be ready..."
+          timeout 240 bash -c 'until curl -sf http://localhost:8080/actuator/health | grep -q "\"status\":\"UP\""; do echo "Waiting for backend..."; sleep 10; done'
+          echo "Backend is ready!"
+          timeout 60 bash -c 'until curl -sf http://localhost/health > /dev/null 2>&1; do echo "Waiting for frontend..."; sleep 5; done'
+          echo "Frontend is ready!"
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        working-directory: ./frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        working-directory: ./frontend
+        run: npx playwright test
+        env:
+          PLAYWRIGHT_BASE_URL: 'http://localhost'
+          PLAYWRIGHT_API_V1_BASE_URL: 'http://localhost:8080/api/v1'
+
+      - name: Collect Docker logs on failure
+        if: failure()
+        run: docker compose logs --tail=100
+
+      - name: Stop services
+        if: always()
+        run: docker compose down
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-test-results
+          path: frontend/test-results/
+          retention-days: 7
+
+  # Stage 4: Security Scan (runs after E2E tests pass)
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || (github.event_name == 'pull_request' && (github.base_ref == 'main' || github.base_ref == 'develop'))
-    needs: [backend-test, frontend-test]
+    needs: [e2e-test]
+    permissions:
+      contents: read
+      security-events: write
 
     steps:
       - name: Checkout code
