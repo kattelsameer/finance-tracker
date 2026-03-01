@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Wallet, LogOut, X } from 'lucide-react';
 import { mainNavItems, toolsNavItems, manageNavItems, settingsNavItems } from './navigation-config';
+import { useFeatureFlags } from '../../contexts/FeatureFlagsContext';
 
 interface SidebarProps {
   isMobile?: boolean;
@@ -16,12 +17,29 @@ interface SidebarProps {
 
 export function Sidebar({ isMobile = false, isOpen = true, onClose, user, onLogout }: Readonly<SidebarProps>) {
   const location = useLocation();
+  const { navigationFeatures } = useFeatureFlags();
   const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
 
-  const renderNavGroup = (items: typeof mainNavItems) => (
-    <>
+  const filterNavItems = (items: typeof mainNavItems) => {
+    return items.filter(item => {
+      if (item.name === 'Tags') return navigationFeatures.tags;
+      if (item.name === 'Budgets') return navigationFeatures.budgets;
+      if (item.name === 'Reports') return navigationFeatures.reports;
+      if (item.name === 'Recurring') return navigationFeatures.recurring;
+      if (item.name === 'Import/Export') return navigationFeatures.importExport;
+      if (item.name === 'Search') return navigationFeatures.search;
+      if (item.name === 'Categories') return navigationFeatures.categories;
+      return true;
+    });
+  };
+
+  const renderNavGroup = (items: typeof mainNavItems) => {
+    const filteredItems = filterNavItems(items);
+    if (filteredItems.length === 0) return null;
+
+    return (
       <div className="space-y-1">
-        {items.map((item) => {
+        {filteredItems.map((item) => {
           const isActive = location.pathname === item.href;
           return (
             <Link
@@ -42,8 +60,8 @@ export function Sidebar({ isMobile = false, isOpen = true, onClose, user, onLogo
           );
         })}
       </div>
-    </>
-  );
+    );
+  };
 
   const sidebarContent = (
     <div className="flex flex-col h-full overflow-hidden">
@@ -76,14 +94,26 @@ export function Sidebar({ isMobile = false, isOpen = true, onClose, user, onLogo
       <nav className="flex-1 overflow-y-auto px-3 py-4 min-h-0 scrollbar-hide">
         {renderNavGroup(mainNavItems)}
         
-        <div className="my-3 mx-2 border-t border-gray-100"></div>
-        {renderNavGroup(toolsNavItems)}
+        {filterNavItems(toolsNavItems).length > 0 && (
+          <>
+            <div className="my-3 mx-2 border-t border-gray-100"></div>
+            {renderNavGroup(toolsNavItems)}
+          </>
+        )}
         
-        <div className="my-3 mx-2 border-t border-gray-100"></div>
-        {renderNavGroup(manageNavItems)}
+        {filterNavItems(manageNavItems).length > 0 && (
+          <>
+            <div className="my-3 mx-2 border-t border-gray-100"></div>
+            {renderNavGroup(manageNavItems)}
+          </>
+        )}
         
-        <div className="my-3 mx-2 border-t border-gray-100"></div>
-        {renderNavGroup(settingsNavItems)}
+        {filterNavItems(settingsNavItems).length > 0 && (
+          <>
+            <div className="my-3 mx-2 border-t border-gray-100"></div>
+            {renderNavGroup(settingsNavItems)}
+          </>
+        )}
       </nav>
 
       {/* User Profile */}
