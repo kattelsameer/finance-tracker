@@ -10,9 +10,10 @@
 # Prerequisites: demo backend running (port 8081, demo MySQL on 3307)
 # =============================================================================
 
-set -euo pipefail
+set -uo pipefail   # -e intentionally omitted: grep/awk non-match exits 1 and kills script under set -e
 
 BASE="http://localhost:8081/api/v1"
+HOST="http://localhost:8081"
 COOKIES="/tmp/api-test-cookies.txt"
 PASS=0
 FAIL=0
@@ -23,19 +24,19 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-pass() { echo -e "${GREEN}[PASS]${NC} $1"; ((PASS++)); }
-fail() { echo -e "${RED}[FAIL]${NC} $1"; ((FAIL++)); }
+pass() { echo -e "${GREEN}[PASS]${NC} $1"; PASS=$((PASS+1)); }
+fail() { echo -e "${RED}[FAIL]${NC} $1"; FAIL=$((FAIL+1)); }
 section() { echo -e "\n${YELLOW}=== $1 ===${NC}"; }
 
 # ─────────────────────────────────────────────────────────────
 # 0. Health check
 # ─────────────────────────────────────────────────────────────
 section "0. Backend Health"
-HEALTH=$(curl -sf "$BASE/../actuator/health" 2>/dev/null || echo "UNREACHABLE")
+HEALTH=$(curl -sf "$HOST/actuator/health" 2>/dev/null || echo "UNREACHABLE")
 if echo "$HEALTH" | grep -q '"status":"UP"'; then
-  pass "Backend is UP on $BASE"
+  pass "Backend is UP on $HOST"
 else
-  echo -e "${RED}Backend not reachable at $BASE. Exiting.${NC}"
+  echo -e "${RED}Backend not reachable at $HOST. Exiting.${NC}"
   exit 1
 fi
 
@@ -45,11 +46,11 @@ fi
 section "1. Authentication"
 rm -f "$COOKIES"
 
-# Get CSRF token
-CSRF_RESP=$(curl -s -c "$COOKIES" "$BASE/csrf")
-CSRF=$(echo "$CSRF_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))" 2>/dev/null || echo "")
+# Get CSRF token — endpoint /auth/csrf-token returns JSON {"token":"...","headerName":"..."}
+CSRF_RESP=$(curl -s -c "$COOKIES" "$BASE/auth/csrf-token")
+CSRF=$(echo "$CSRF_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))" 2>/dev/null || true)
 
-if [ -z "$CSRF" ]; then
+if [ -z "${CSRF:-}" ]; then
   fail "Could not get CSRF token — response: $CSRF_RESP"
   exit 1
 fi
@@ -70,9 +71,9 @@ else
   exit 1
 fi
 
-# Re-read CSRF after login (Spring rotates it)
-CSRF_RESP=$(curl -s -c "$COOKIES" -b "$COOKIES" "$BASE/csrf")
-CSRF=$(echo "$CSRF_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))" 2>/dev/null || echo "$CSRF")
+# Refresh CSRF after login (Spring rotates the token on authentication)
+CSRF_RESP=$(curl -s -c "$COOKIES" -b "$COOKIES" "$BASE/auth/csrf-token")
+CSRF=$(echo "$CSRF_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))" 2>/dev/null || true)
 
 # ─────────────────────────────────────────────────────────────
 # 2. ISSUE-5.1 — /refresh-rates alias endpoint
@@ -118,26 +119,25 @@ else
   pass "Found $BUDGET_COUNT budget(s)"
 
   # Check if any budget shows non-zero spent (would only be 0 before the fix)
-  NONZERO=$(echo "$BUDGETS" | python3 -c "
+  NONZERO_COUNT=$(echo "$BUDGETS" | python3 -c "
 import sys, json
 budgets = json.load(sys.stdin)
 nonzero = [(b.get('budgetName','?'), b.get('spent', 0)) for b in budgets if float(b.get('spent', 0)) > 0]
 for name, spent in nonzero:
-    print(f'  {name}: spent={spent}')
-print(f'NONZERO_COUNT={len(nonzero)}')
-" 2>/dev/null)
-  echo "$NONZERO"
+    print('  ' + str(name) + ': spent=' + str(spent))
+print(len(nonzero))
+" 2>/dev/null | tail -1)
 
-  NONZERO_COUNT=$(echo "$NONZERO" | grep "NONZERO_COUNT=" | cut -d= -f2)
-  if [ "${NONZERO_COUNT:-0}" -gt 0 ]; then
+  if [ "${NONZERO_COUNT:-0}" -gt 0 ] 2>/dev/null; then
     pass "BUG-1 FIXED: $NONZERO_COUNT budget(s) show non-zero spent amounts"
   else
-    echo -e "${YELLOW}[WARN]${NC} All budgets show \$0.00 spent — may be period mismatch or no matching transactions in demo data"
+    echo -e "${YELLOW}[WARN]${NC} All budgets show \$0.00 spent — budget periods may not overlap demo transaction dates"
     echo "      Budget details:"
     echo "$BUDGETS" | python3 -c "
 import sys, json
 for b in json.load(sys.stdin):
-    print(f\"  {b.get('budgetName','?')}: amount={b.get('amount')}, spent={b.get('spent')}, category={b.get('category',{}).get('categoryName','(all)')}\" if b.get('category') else f\"  {b.get('budgetName','?')}: amount={b.get('amount')}, spent={b.get('spent')}, category=(all)\")
+    cat = b.get('category', {}).get('categoryName', '(all)') if b.get('category') else '(all)'
+    print('  ' + str(b.get('budgetName','?')) + ': amount=' + str(b.get('amount')) + ', spent=' + str(b.get('spent')) + ', category=' + cat)
 " 2>/dev/null
   fi
 fi
@@ -161,12 +161,12 @@ if [ "$REPORT_HTTP" = "200" ]; then
   python3 -c "
 import json
 data = json.load(open('/tmp/api-test-report.json'))
-print(f\"  totalIncome={data.get('totalIncome')}, totalExpenses={data.get('totalExpenses')}, transactions={data.get('transactionCount')}\")
 cats = data.get('categoryBreakdown', [])
+print('  totalIncome=' + str(data.get('totalIncome')) + ', totalExpenses=' + str(data.get('totalExpenses')) + ', transactions=' + str(data.get('transactionCount')) + ', categories=' + str(len(cats)))
 for c in cats[:5]:
-    print(f\"  - {c.get('categoryName')} ({c.get('transactionType')}): {c.get('amount')} ({c.get('percentage'):.1f}%)\")
+    print('  - ' + str(c.get('categoryName')) + ' (' + str(c.get('transactionType')) + '): ' + str(c.get('amount')))
 if len(cats) > 5:
-    print(f'  ... and {len(cats)-5} more categories')
+    print('  ... and ' + str(len(cats)-5) + ' more')
 " 2>/dev/null
 else
   fail "BUG-4: Report returned HTTP $REPORT_HTTP (expected 200)"
