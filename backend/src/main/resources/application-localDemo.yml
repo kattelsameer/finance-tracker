@@ -1,0 +1,12 @@
+# Local override for running the backend against the demo Docker MySQL from the host machine.
+# Usage: --spring.profiles.active=demo,localDemo
+# The demo MySQL container maps to localhost:3307 (see docker-compose.demo.yml).
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3307/finance_tracker_demo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USER:financeuser}
+    password: ${DB_PASSWORD:financepass}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:demo-local-secret-key-32chars-min-required}

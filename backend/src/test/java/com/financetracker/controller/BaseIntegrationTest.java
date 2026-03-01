@@ -12,6 +12,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.UUID;
+
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -70,6 +72,7 @@ public abstract class BaseIntegrationTest {
      * Register a default test user and return the auth cookie.
      */
     protected Cookie registerAndLoginDefaultUser() throws Exception {
-        return registerAndLogin("testuser", "test@example.com", "SecureP@ssw0rd!");
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        return registerAndLogin("user_" + suffix, "user_" + suffix + "@example.com", "SecureP@ssw0rd!");
     }
 }

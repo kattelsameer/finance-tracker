@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -76,39 +77,73 @@ public class ReportService {
         return report;
     }
     
+    /**
+     * Typed composite key used to group transactions by category+type.
+     * Replaces the previous fragile String-based key ("id-name-type") that
+     * broke whenever a category name contained a hyphen.
+     */
+    private static final class CategoryKey {
+        final Long categoryId;
+        final String categoryName;
+        final Transaction.TransactionType transactionType;
+
+        CategoryKey(Long categoryId, String categoryName, Transaction.TransactionType transactionType) {
+            this.categoryId = categoryId;
+            this.categoryName = categoryName;
+            this.transactionType = transactionType;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof CategoryKey)) return false;
+            CategoryKey that = (CategoryKey) o;
+            return Objects.equals(categoryId, that.categoryId)
+                    && Objects.equals(transactionType, that.transactionType);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(categoryId, transactionType);
+        }
+    }
+
     private List<CategoryBreakdown> generateCategoryBreakdown(List<Transaction> transactions,
                                                                 BigDecimal totalIncome,
                                                                 BigDecimal totalExpenses) {
-        Map<String, List<Transaction>> byCategory = transactions.stream()
+        // FIX (BUG-4): Use a typed composite key instead of a fragile hyphen-delimited String.
+        // The old approach did `key.split("-")` which silently produced wrong results (or an
+        // IllegalArgumentException → HTTP 500) whenever a category name contained a hyphen.
+        Map<CategoryKey, List<Transaction>> byCategory = transactions.stream()
                 .filter(t -> t.getCategory() != null)
-                .collect(Collectors.groupingBy(t -> t.getCategory().getId() + "-" + 
-                        t.getCategory().getCategoryName() + "-" + 
-                        t.getTransactionType()));
-        
+                .collect(Collectors.groupingBy(t -> new CategoryKey(
+                        t.getCategory().getId(),
+                        t.getCategory().getCategoryName(),
+                        t.getTransactionType())));
+
         return byCategory.entrySet().stream()
                 .map(entry -> {
-                    String[] keys = entry.getKey().split("-");
-                    Long categoryId = Long.parseLong(keys[0]);
-                    String categoryName = keys[1];
-                    Transaction.TransactionType type = Transaction.TransactionType.valueOf(keys[2]);
-                    
+                    CategoryKey key = entry.getKey();
                     List<Transaction> categoryTxs = entry.getValue();
+
                     BigDecimal amount = categoryTxs.stream()
                             .map(Transaction::getAmount)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
-                    
+
                     CategoryBreakdown breakdown = new CategoryBreakdown(
-                            categoryId, categoryName, type, amount, categoryTxs.size());
-                    
-                    // Calculate percentage
-                    BigDecimal total = type == Transaction.TransactionType.INCOME ? totalIncome : totalExpenses;
+                            key.categoryId, key.categoryName, key.transactionType,
+                            amount, categoryTxs.size());
+
+                    // Calculate percentage share relative to total income or expenses
+                    BigDecimal total = key.transactionType == Transaction.TransactionType.INCOME
+                            ? totalIncome : totalExpenses;
                     if (total.compareTo(BigDecimal.ZERO) > 0) {
                         double percentage = amount.divide(total, 4, RoundingMode.HALF_UP)
                                 .multiply(BigDecimal.valueOf(100))
                                 .doubleValue();
                         breakdown.setPercentage(percentage);
                     }
-                    
+
                     return breakdown;
                 })
                 .sorted((a, b) -> b.getAmount().compareTo(a.getAmount()))

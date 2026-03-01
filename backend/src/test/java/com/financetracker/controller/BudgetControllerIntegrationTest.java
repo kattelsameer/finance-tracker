@@ -18,10 +18,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -31,7 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Transactional
 @DisplayName("Budget Controller Integration Tests")
 @SuppressWarnings("null")
 class BudgetControllerIntegrationTest {
@@ -63,9 +62,10 @@ class BudgetControllerIntegrationTest {
         expenseCategoryId = expenseCategory.getId();
 
         // Register and login user
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
         RegisterRequest registerRequest = new RegisterRequest();
-        registerRequest.setUsername("testuser");
-        registerRequest.setEmail("test@example.com");
+        registerRequest.setUsername("user_" + suffix);
+        registerRequest.setEmail("user_" + suffix + "@example.com");
         registerRequest.setPassword("SecureP@ssw0rd!");
 
         mockMvc.perform(post("/api/v1/auth/register")
@@ -75,7 +75,7 @@ class BudgetControllerIntegrationTest {
                 .andExpect(status().isCreated());
 
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setUsername("testuser");
+        loginRequest.setUsername("user_" + suffix);
         loginRequest.setPassword("SecureP@ssw0rd!");
 
         MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")

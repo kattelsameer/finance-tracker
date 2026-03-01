@@ -66,6 +66,17 @@ public class CurrencyController {
         currencyService.updateExchangeRates();
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * Alias for /update-rates — kept for backward compatibility with older frontend clients.
+     * FIX (ISSUE-5.1): The frontend originally called /refresh-rates which did not exist.
+     */
+    @PostMapping("/refresh-rates")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> refreshExchangeRates() {
+        currencyService.updateExchangeRates();
+        return ResponseEntity.ok().build();
+    }
     
     /**
      * Manually update exchange rate for a currency

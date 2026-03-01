@@ -15,6 +15,8 @@ export const currencyService = {
   },
 
   async refreshRates(): Promise<void> {
-    await apiClient.post('currencies/refresh-rates');
+    // FIX (ISSUE-5.1): The backend exposes POST /currencies/update-rates.
+    // The previous call to /currencies/refresh-rates always returned 404.
+    await apiClient.post('currencies/update-rates');
   }
 };

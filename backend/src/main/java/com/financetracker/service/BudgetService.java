@@ -78,28 +78,22 @@ public class BudgetService {
     @Transactional(readOnly = true)
     public List<BudgetResponse> getAllBudgetsForUser(Long userId) {
         List<Budget> budgets = budgetRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        return budgets.stream()
-                .map(b -> mapToResponse(b, userId))
-                .collect(Collectors.toList());
+        return budgets.stream().map(b -> mapToResponse(b, userId)).collect(Collectors.toList());
     }
-    
+
     @Transactional(readOnly = true)
     public List<BudgetResponse> getActiveBudgetsForUser(Long userId) {
         List<Budget> budgets = budgetRepository.findByUserIdAndIsActiveTrueOrderByCreatedAtDesc(userId);
-        return budgets.stream()
-                .map(b -> mapToResponse(b, userId))
-                .collect(Collectors.toList());
+        return budgets.stream().map(b -> mapToResponse(b, userId)).collect(Collectors.toList());
     }
-    
+
     @Transactional(readOnly = true)
     public List<BudgetResponse> getCurrentPeriodBudgets(Long userId) {
         LocalDate today = LocalDate.now();
         List<Budget> budgets = budgetRepository.findActiveBudgetsForPeriod(userId, today);
-        return budgets.stream()
-                .map(b -> mapToResponse(b, userId))
-                .collect(Collectors.toList());
+        return budgets.stream().map(b -> mapToResponse(b, userId)).collect(Collectors.toList());
     }
-    
+
     @Transactional(readOnly = true)
     public BudgetResponse getBudgetById(Long userId, Long budgetId) {
         Budget budget = budgetRepository.findByIdAndUserId(budgetId, userId)
@@ -179,6 +173,11 @@ public class BudgetService {
     
     private BudgetResponse mapToResponse(Budget budget, Long userId) {
         BigDecimal spent = calculateSpentAmount(budget, userId);
+        return mapToResponseWithSpent(budget, spent);
+    }
+
+    /** Builds a BudgetResponse from a pre-computed spent amount (avoids the per-budget DB query). */
+    private BudgetResponse mapToResponseWithSpent(Budget budget, BigDecimal spent) {
         BigDecimal remaining = budget.getAmount().subtract(spent);
         
         double percentUsed = 0.0;
@@ -220,23 +219,29 @@ public class BudgetService {
     public BigDecimal calculateSpentAmount(Budget budget, Long userId) {
         LocalDate startDate = calculatePeriodStartDate(budget);
         LocalDate endDate = calculatePeriodEndDate(budget);
-        
-        List<Transaction> transactions;
-        
+
         if (budget.getCategory() != null) {
-            // Budget for specific category
-            transactions = transactionRepository.findByUserIdAndCategoryIdAndTransactionDateBetween(
-                    userId, budget.getCategory().getId(), startDate, endDate);
+            // FIX (BUG-1): Use a hierarchy-aware query so that budgets set on a parent
+            // category (e.g. "Food & Dining") correctly aggregate spending from child
+            // categories (e.g. "Groceries", "Dining Out") as well as the parent itself.
+            // The old query used an exact category_id match and therefore returned $0.00
+            // whenever transactions were recorded against subcategories.
+            List<Transaction> transactions =
+                    transactionRepository.findExpensesByUserIdAndCategoryOrSubcategoryAndDateRange(
+                            userId, budget.getCategory().getId(), startDate, endDate,
+                            Transaction.TransactionType.EXPENSE);
+            return transactions.stream()
+                    .map(Transaction::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
         } else {
-            // Budget for all expenses
-            transactions = transactionRepository.findByUserIdAndTransactionDateBetween(
-                    userId, startDate, endDate);
+            // Budget covers all expenses — no category filter
+            List<Transaction> transactions = transactionRepository
+                    .findByUserIdAndTransactionDateBetween(userId, startDate, endDate);
+            return transactions.stream()
+                    .filter(t -> t.getTransactionType() == Transaction.TransactionType.EXPENSE)
+                    .map(Transaction::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
         }
-        
-        return transactions.stream()
-                .filter(t -> t.getTransactionType() == Transaction.TransactionType.EXPENSE)
-                .map(Transaction::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
     
     private LocalDate calculatePeriodStartDate(Budget budget) {
