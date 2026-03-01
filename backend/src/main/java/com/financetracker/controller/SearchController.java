@@ -20,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/search")
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class SearchController {
     
     private final TransactionService transactionService;

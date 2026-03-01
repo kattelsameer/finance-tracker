@@ -1,0 +1,7 @@
+# CI override: use pre-built images from the docker-build job instead of rebuilding
+services:
+  backend:
+    image: finance-tracker-backend:ci
+
+  frontend:
+    image: finance-tracker-frontend:ci

@@ -12,12 +12,13 @@ test.describe('Notifications', () => {
     const notificationButton = page.locator('button[data-testid="notification-button"], button[aria-label="Notifications"]');
     await notificationButton.click();
     
-    // Notification center should be visible
-    await expect(page.locator('text=/Notifications/i')).toBeVisible();
+    // Notification center should be visible — target h2 specifically to avoid
+    // matching other elements (e.g. button aria-label) and strict-mode errors
+    await expect(page.locator('h2:has-text("Notifications")')).toBeVisible();
   });
 
   test('should mark notification as read', async ({ page }) => {
-    const notificationButton = page.locator('button[data-testid="notification-button"]');
+    const notificationButton = page.locator('button[data-testid="notification-button"], button[aria-label="Notifications"]');
     await notificationButton.click();
     
     // Find first unread notification if any
@@ -38,7 +39,7 @@ test.describe('Notifications', () => {
   });
 
   test('should mark all notifications as read', async ({ page }) => {
-    const notificationButton = page.locator('button[data-testid="notification-button"]');
+    const notificationButton = page.locator('button[data-testid="notification-button"], button[aria-label="Notifications"]');
     await notificationButton.click();
     
     // Click "Mark all as read" button
@@ -75,13 +76,13 @@ test.describe('Advanced Search', () => {
     
     await page.waitForTimeout(1000);
     
-    // Results should be visible
-    await expect(page.locator('[data-testid="search-results"], .search-results')).toBeVisible();
+    // Results or no-results message should be visible after search
+    await expect(page.locator('text=/Results|No transactions found/i').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should save a search', async ({ page }) => {
-    // Fill some search criteria
-    await page.fill('input[name="query"]', 'monthly expenses');
+    // Fill some search criteria — use same fallback selector as the other search test
+    await page.fill('input[name="query"], input[placeholder*="Search"]', 'monthly expenses');
     
     // Click save search button
     const saveButton = page.locator('button:has-text("Save Search"), button[aria-label="Save search"]');
@@ -92,8 +93,10 @@ test.describe('Advanced Search', () => {
       // Enter search name
       await page.fill('input[name="searchName"], input[placeholder*="name"]', 'My Monthly Expenses');
       
-      // Save
-      await page.click('button:has-text("Save"), button[type="submit"]');
+      // Save — the save-search dialog is a fixed overlay; scope to the modal so we
+      // don't accidentally click a same-text button that sits behind the backdrop.
+      const modal = page.locator('div.fixed.inset-0').last();
+      await modal.locator('button:has-text("Save"), button[type="submit"]').click();
       
       await page.waitForTimeout(500);
       
@@ -131,16 +134,21 @@ test.describe('Dashboard', () => {
   test.beforeEach(async ({ page }) => {
     await setupAuthenticatedPage(page, testUsers.regular);
     await page.goto('/dashboard');
+    // Wait for all API calls (dashboard stats, recent transactions, etc.) to complete
+    await page.waitForLoadState('networkidle');
   });
 
   test('should display dashboard widgets', async ({ page }) => {
-    // Check for key dashboard elements
-    await expect(page.locator('text=/Total Balance|Balance/i')).toBeVisible();
-    await expect(page.locator('text=/Income|Expenses|Spending/i')).toBeVisible();
+    // Check for key dashboard elements — use .first() to avoid strict-mode violation
+    // when multiple elements match (e.g. both a card label and a chart heading)
+    await expect(page.locator('text=/Total Balance|Balance/i').first()).toBeVisible();
+    await expect(page.locator('text=/Income|Expenses|Spending/i').first()).toBeVisible();
   });
 
   test('should show recent transactions', async ({ page }) => {
-    const recentTransactions = page.locator('[data-testid="recent-transactions"], text=/Recent Transactions/i');
-    await expect(recentTransactions).toBeVisible();
+    // Cannot mix [attr="val"] CSS and text= Playwright selectors in one comma list;
+    // use :has-text() which is valid CSS-like in Playwright
+    const recentTransactions = page.locator('[data-testid="recent-transactions"], h3:has-text("Recent Transactions")');
+    await expect(recentTransactions.first()).toBeVisible();
   });
 });

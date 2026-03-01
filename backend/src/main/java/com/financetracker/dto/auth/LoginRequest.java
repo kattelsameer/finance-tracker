@@ -10,6 +10,8 @@ public class LoginRequest {
     @NotBlank(message = "Password is required")
     private String password;
     
+    private boolean rememberMe = false;
+    
     public LoginRequest() {
     }
     
@@ -32,5 +34,13 @@ public class LoginRequest {
     
     public void setPassword(String password) {
         this.password = password;
+    }
+    
+    public boolean isRememberMe() {
+        return rememberMe;
+    }
+    
+    public void setRememberMe(boolean rememberMe) {
+        this.rememberMe = rememberMe;
     }
 }

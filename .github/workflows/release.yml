@@ -13,9 +13,41 @@ env:
   FRONTEND_IMAGE: ${{ github.repository }}/frontend
 
 jobs:
+  # Run tests before releasing
+  validate:
+    name: Validate Before Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Backend tests
+        run: cd backend && chmod +x gradlew && ./gradlew test
+
+      - name: Frontend lint & type check
+        run: cd frontend && npm ci && npm run lint && npx tsc --noEmit
+
+      - name: Frontend tests
+        run: cd frontend && npm run test:run
+
   release:
     name: Create Release
     runs-on: ubuntu-latest
+    needs: [validate]
     permissions:
       contents: write
       packages: write
@@ -39,16 +71,10 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Build backend
-        run: |
-          cd backend
-          chmod +x gradlew
-          ./gradlew bootJar
+        run: cd backend && chmod +x gradlew && ./gradlew bootJar
 
       - name: Build frontend
-        run: |
-          cd frontend
-          npm ci
-          npm run build
+        run: cd frontend && npm ci && npm run build
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -65,7 +91,7 @@ jobs:
         run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Build and push backend image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./backend
           file: ./backend/Dockerfile
@@ -77,7 +103,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push frontend image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
@@ -89,7 +115,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |

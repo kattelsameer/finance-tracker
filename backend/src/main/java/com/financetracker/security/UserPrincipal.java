@@ -1,6 +1,5 @@
 package com.financetracker.security;
 
-import java.io.Serializable;
 import java.util.Collection;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -9,7 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 /**
  * Custom UserDetails implementation that includes the user ID.
  */
-public class UserPrincipal implements UserDetails, Serializable {
+public class UserPrincipal implements UserDetails {
     
     private static final long serialVersionUID = 1L;
     

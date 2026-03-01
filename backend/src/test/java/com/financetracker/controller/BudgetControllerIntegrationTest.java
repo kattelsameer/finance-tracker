@@ -33,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Transactional
 @DisplayName("Budget Controller Integration Tests")
+@SuppressWarnings("null")
 class BudgetControllerIntegrationTest {
 
     @Autowired
@@ -84,7 +85,11 @@ class BudgetControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        authCookie = new Cookie("auth_token", loginResult.getResponse().getCookie("auth_token").getValue());
+        Cookie cookie = loginResult.getResponse().getCookie("auth_token");
+        if (cookie == null) {
+            throw new IllegalStateException("auth_token cookie not found after login");
+        }
+        authCookie = new Cookie("auth_token", cookie.getValue());
     }
 
     @Test

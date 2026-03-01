@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -36,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Transactional
 @DisplayName("Dashboard Controller Integration Tests")
+@SuppressWarnings("null")
 class DashboardControllerIntegrationTest {
 
     @Autowired
@@ -111,7 +111,11 @@ class DashboardControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        authCookie = new Cookie("auth_token", loginResult.getResponse().getCookie("auth_token").getValue());
+        Cookie cookie = loginResult.getResponse().getCookie("auth_token");
+        if (cookie == null) {
+            throw new IllegalStateException("auth_token cookie not found after login");
+        }
+        authCookie = new Cookie("auth_token", cookie.getValue());
 
         // Create account and transactions for dashboard data
         CreateAccountRequest accountRequest = new CreateAccountRequest();

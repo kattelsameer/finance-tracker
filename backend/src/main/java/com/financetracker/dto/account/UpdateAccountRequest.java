@@ -1,8 +1,9 @@
 package com.financetracker.dto.account;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.*;
-import java.math.BigDecimal;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UpdateAccountRequest {
     
     private Integer accountTypeId;

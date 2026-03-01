@@ -1,65 +1,44 @@
-import { AlertCircle, X } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { AlertCircle, X, Info } from 'lucide-react';
 
-/**
- * DemoBanner component
- * Displays a prominent banner when running in demo mode
- * Shows demo credentials and data reset information
- */
 export function DemoBanner() {
   const [isVisible, setIsVisible] = useState(true);
   const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
-  
-  // Don't render if not in demo mode or if dismissed
+
   if (!isDemoMode || !isVisible) return null;
 
   return (
-    <div className="bg-gradient-to-r from-amber-50 to-amber-100 border-b border-amber-300 px-4 py-3 shadow-sm">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 flex-1">
-          <div className="flex-shrink-0">
-            <AlertCircle className="h-5 w-5 text-amber-600" />
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-amber-900 mb-0.5">
-              🎭 Demo Mode Active
-            </p>
-            <p className="text-xs text-amber-700 leading-relaxed">
-              <span className="inline-flex items-center gap-2 flex-wrap">
-                <span>
-                  Login: <strong className="font-mono bg-amber-200/50 px-1.5 py-0.5 rounded">demo@example.com</strong>
-                </span>
-                <span className="text-amber-500">•</span>
-                <span>
-                  Password: <strong className="font-mono bg-amber-200/50 px-1.5 py-0.5 rounded">Demo123!</strong>
-                </span>
-                <span className="text-amber-500">•</span>
-                <span className="text-amber-600">
-                  Data resets daily at 2:00 AM UTC
-                </span>
-              </span>
-            </p>
-          </div>
+    <div className="fixed bottom-6 right-6 z-[60] max-w-sm w-[calc(100%-3rem)] bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-amber-200 overflow-hidden animate-slide-up transition-all duration-300">
+      <div className="bg-gradient-to-r from-amber-50 to-amber-100/50 px-4 py-3 border-b border-amber-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-amber-500" />
+          <span className="text-sm font-bold text-amber-900 tracking-wide">Demo Environment</span>
         </div>
-
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <a
-            href="/register"
-            className="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-medium text-amber-700 hover:text-amber-900 bg-white hover:bg-amber-50 border border-amber-300 rounded-md transition-colors duration-200"
-          >
-            Create Real Account →
-          </a>
-          
-          <button
-            onClick={() => setIsVisible(false)}
-            className="p-1 text-amber-600 hover:text-amber-900 hover:bg-amber-200/50 rounded transition-colors duration-200"
-            aria-label="Dismiss demo banner"
-            title="Dismiss (will reappear on refresh)"
-          >
-            <X className="h-4 w-4" />
-          </button>
+        <button 
+          onClick={() => setIsVisible(false)}
+          className="text-amber-500 hover:text-amber-700 hover:bg-amber-200/50 p-1 rounded-md transition-colors"
+          aria-label="Close demo alert"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      
+      <div className="p-4 text-sm text-gray-600">
+        <p className="mb-3 leading-relaxed">
+          You are currently exploring a read-only demo instance. Feel free to poke around!
+        </p>
+        
+        <div className="flex items-start gap-2 text-xs text-amber-700 mb-4 bg-amber-50/50 p-2.5 rounded-lg">
+          <Info className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+          <p>Database automatically resets every day at <strong className="font-semibold text-amber-900">2:00 AM UTC</strong>.</p>
         </div>
+        
+        <button 
+          onClick={() => setIsVisible(false)}
+          className="w-full flex items-center justify-center py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow hover:shadow-md font-medium rounded-lg transition-all active:scale-[0.98]"
+        >
+          Got it, continue exploring
+        </button>
       </div>
     </div>
   );

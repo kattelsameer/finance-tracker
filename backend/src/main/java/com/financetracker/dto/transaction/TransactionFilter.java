@@ -84,4 +84,10 @@ public class TransactionFilter {
     public void setIsRecurring(Boolean isRecurring) {
         this.isRecurring = isRecurring;
     }
+
+    public void validateDateRange() {
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("startDate must not be after endDate");
+        }
+    }
 }

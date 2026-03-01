@@ -60,13 +60,19 @@ class ApiClient {
         // Handle errors globally
         if (error.response) {
           const { status, data } = error.response;
+          const isAuthCheck = error.config?.url?.includes('auth/me');
 
           // Handle 401 Unauthorized
           if (status === 401) {
-            // Clear auth state and redirect to login
+            // Clear auth state
             this.csrfToken = null;
-            if (globalThis.location.pathname !== '/login') {
+            // Only redirect to login if not already on login page and not checking auth status
+            if (!isAuthCheck && globalThis.location.pathname !== '/login' && globalThis.location.pathname !== '/register') {
               globalThis.location.href = '/login';
+            }
+            // For auth/me endpoint, return a silent error
+            if (isAuthCheck) {
+              return Promise.reject({ silent: true, status: 401 });
             }
           }
 

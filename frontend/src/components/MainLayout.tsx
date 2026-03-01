@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useFeatureFlags } from '../contexts/FeatureFlagsContext';
 import {
   LayoutDashboard,
   Wallet,
@@ -23,26 +24,40 @@ import { notificationService } from '../services/notification.service';
 import { logger } from '../utils/logger';
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Accounts', href: '/accounts', icon: Wallet },
-  { name: 'Transactions', href: '/transactions', icon: ArrowLeftRight },
-  { name: 'Search', href: '/search', icon: Search },
-  { name: 'Recurring', href: '/recurring-transactions', icon: Repeat },
-  { name: 'Import/Export', href: '/import-export', icon: FileSpreadsheet },
-  { name: 'Categories', href: '/categories', icon: FolderTree },
-  { name: 'Tags', href: '/tags', icon: Tag },
-  { name: 'Budgets', href: '/budgets', icon: Target },
-  { name: 'Reports', href: '/reports', icon: PieChart },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Dashboard', href: '/', icon: LayoutDashboard, required: true },
+  { name: 'Accounts', href: '/accounts', icon: Wallet, required: true },
+  { name: 'Transactions', href: '/transactions', icon: ArrowLeftRight, required: true },
+  { name: 'Search', href: '/search', icon: Search, featureKey: 'search' as const },
+  { name: 'Recurring', href: '/recurring-transactions', icon: Repeat, featureKey: 'recurring' as const },
+  { name: 'Import/Export', href: '/import-export', icon: FileSpreadsheet, featureKey: 'importExport' as const },
+  { name: 'Categories', href: '/categories', icon: FolderTree, featureKey: 'categories' as const },
+  { name: 'Tags', href: '/tags', icon: Tag, featureKey: 'tags' as const },
+  { name: 'Budgets', href: '/budgets', icon: Target, featureKey: 'budgets' as const },
+  { name: 'Reports', href: '/reports', icon: PieChart, featureKey: 'reports' as const },
+  { name: 'Settings', href: '/settings', icon: Settings, required: true },
 ];
 
 export function MainLayout() {
   const { user, logout } = useAuth();
+  const { navigationFeatures } = useFeatureFlags();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Filter navigation items based on feature flags
+  const visibleNavigation = navigation.filter(item => {
+    if (item.required) return true;
+    if (item.featureKey) return navigationFeatures[item.featureKey];
+    return true;
+  });
+
+  // Group navigation items
+  const mainNav = visibleNavigation.filter(item => ['Dashboard', 'Accounts', 'Transactions'].includes(item.name));
+  const toolsNav = visibleNavigation.filter(item => ['Search', 'Recurring', 'Import/Export'].includes(item.name));
+  const manageNav = visibleNavigation.filter(item => ['Categories', 'Tags', 'Budgets', 'Reports'].includes(item.name));
+  const settingsNav = visibleNavigation.filter(item => item.name === 'Settings');
 
   const loadUnreadCount = useCallback(async () => {
     try {
@@ -74,7 +89,7 @@ export function MainLayout() {
   // Get page title based on current path
   const getPageTitle = () => {
     if (location.pathname === '/settings') return 'Settings';
-    const currentPage = navigation.find(item => item.href === location.pathname);
+    const currentPage = visibleNavigation.find(item => item.href === location.pathname);
     return currentPage?.name || 'Finance Tracker';
   };
 
@@ -115,7 +130,7 @@ export function MainLayout() {
           <nav className="flex-1 overflow-y-auto px-2 py-3">
             {/* Main navigation group */}
             <div className="space-y-1">
-              {navigation.slice(0, 3).map((item) => {
+              {mainNav.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link
@@ -145,7 +160,7 @@ export function MainLayout() {
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tools</span>
             </div>
             <div className="space-y-1">
-              {navigation.slice(3, 6).map((item) => {
+              {toolsNav.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link
@@ -175,7 +190,7 @@ export function MainLayout() {
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Manage</span>
             </div>
             <div className="space-y-1">
-              {navigation.slice(6, 10).map((item) => {
+              {manageNav.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link
@@ -202,7 +217,7 @@ export function MainLayout() {
 
             {/* Settings */}
             <div className="space-y-1">
-              {navigation.slice(10).map((item) => {
+              {settingsNav.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link
@@ -266,7 +281,7 @@ export function MainLayout() {
           <nav className="flex-1 overflow-y-auto px-2 py-3">
             {/* Main navigation group */}
             <div className="space-y-1">
-              {navigation.slice(0, 3).map((item) => {
+              {mainNav.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link
@@ -293,7 +308,7 @@ export function MainLayout() {
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tools</span>
             </div>
             <div className="space-y-1">
-              {navigation.slice(3, 6).map((item) => {
+              {toolsNav.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link
@@ -320,7 +335,7 @@ export function MainLayout() {
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Manage</span>
             </div>
             <div className="space-y-1">
-              {navigation.slice(6, 10).map((item) => {
+              {manageNav.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link
@@ -344,7 +359,7 @@ export function MainLayout() {
 
             {/* Settings */}
             <div className="space-y-1">
-              {navigation.slice(10).map((item) => {
+              {settingsNav.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link

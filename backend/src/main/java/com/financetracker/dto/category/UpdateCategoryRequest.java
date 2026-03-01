@@ -1,8 +1,10 @@
 package com.financetracker.dto.category;
 
-import com.financetracker.entity.Category.CategoryType;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.*;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UpdateCategoryRequest {
     
     @Size(min = 1, max = 50, message = "Category name must be between 1 and 50 characters")

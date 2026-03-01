@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
+import { FeatureFlagsProvider } from './contexts/FeatureFlagsContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AppLayout } from './components/layout';
 import { LoginPage, RegisterPage } from './pages/auth';
@@ -31,31 +32,33 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <AppLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<DashboardPage />} />
-              <Route path="accounts" element={<AccountsPage />} />
-              <Route path="transactions" element={<TransactionsPage />} />
-              <Route path="search" element={<AdvancedSearchPage />} />
-              <Route path="recurring-transactions" element={<RecurringTransactionsPage />} />
-              <Route path="import-export" element={<ImportExportPage />} />
-              <Route path="categories" element={<CategoriesPage />} />
-              <Route path="tags" element={<TagsPage />} />
-              <Route path="budgets" element={<BudgetsPage />} />
-              <Route path="reports" element={<ReportsPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <FeatureFlagsProvider>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<DashboardPage />} />
+                <Route path="accounts" element={<AccountsPage />} />
+                <Route path="transactions" element={<TransactionsPage />} />
+                <Route path="search" element={<AdvancedSearchPage />} />
+                <Route path="recurring-transactions" element={<RecurringTransactionsPage />} />
+                <Route path="import-export" element={<ImportExportPage />} />
+                <Route path="categories" element={<CategoriesPage />} />
+                <Route path="tags" element={<TagsPage />} />
+                <Route path="budgets" element={<BudgetsPage />} />
+                <Route path="reports" element={<ReportsPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </FeatureFlagsProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

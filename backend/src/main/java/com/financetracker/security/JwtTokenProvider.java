@@ -35,8 +35,12 @@ public class JwtTokenProvider {
     }
     
     public String generateToken(Long userId, String username) {
+        return generateToken(userId, username, jwtProperties.getExpirationMs());
+    }
+    
+    public String generateToken(Long userId, String username, long expirationMs) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtProperties.getExpirationMs());
+        Date expiryDate = new Date(now.getTime() + expirationMs);
         
         return Jwts.builder()
                 .subject(userId.toString())

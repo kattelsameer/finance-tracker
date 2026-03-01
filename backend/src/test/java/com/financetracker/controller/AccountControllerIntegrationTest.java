@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Transactional
 @DisplayName("Account Controller Integration Tests")
+@SuppressWarnings("null")
 class AccountControllerIntegrationTest {
 
     @Autowired

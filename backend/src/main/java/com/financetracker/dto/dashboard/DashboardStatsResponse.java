@@ -1,7 +1,6 @@
 package com.financetracker.dto.dashboard;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 
 public class DashboardStatsResponse {

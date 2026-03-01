@@ -1,5 +1,45 @@
-import { Edit3, Trash2, EyeOff } from 'lucide-react';
+import { 
+  Edit3, 
+  Trash2, 
+  EyeOff,
+  Wallet,
+  PiggyBank,
+  CreditCard,
+  TrendingUp,
+  Banknote,
+  Car,
+  Home,
+  Building2,
+  CircleDollarSign,
+  Landmark,
+  type LucideIcon
+} from 'lucide-react';
 import type { Account } from '../../types';
+
+// Map icon names to Lucide icon components
+const ICON_MAP: Record<string, LucideIcon> = {
+  wallet: Wallet,
+  'piggy-bank': PiggyBank,
+  'credit-card': CreditCard,
+  'trending-up': TrendingUp,
+  banknote: Banknote,
+  car: Car,
+  home: Home,
+  building: Building2,
+  'circle-dollar-sign': CircleDollarSign,
+  landmark: Landmark,
+};
+
+function getAccountIcon(iconName: string | undefined, colorCode: string) {
+  const IconComponent = iconName ? ICON_MAP[iconName.toLowerCase()] : null;
+  
+  if (IconComponent) {
+    return <IconComponent className="h-6 w-6" style={{ color: colorCode }} />;
+  }
+  
+  // Fallback to wallet icon if not found
+  return <Wallet className="h-6 w-6" style={{ color: colorCode }} />;
+}
 
 interface AccountListProps {
   accounts: Account[];
@@ -17,6 +57,7 @@ export function AccountList({ accounts, formatCurrency, onEdit, onDelete, showIn
       {activeAccounts.map((account) => (
         <div
           key={account.id}
+          data-testid="account-item"
           className="bg-white rounded-xl p-6 border-2 hover:shadow-lg transition-all"
           style={{ borderColor: account.colorCode }}
         >
@@ -26,7 +67,7 @@ export function AccountList({ accounts, formatCurrency, onEdit, onDelete, showIn
                 className="w-12 h-12 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: `${account.colorCode}20` }}
               >
-                <span className="text-2xl">{account.icon || '💰'}</span>
+                {getAccountIcon(account.icon, account.colorCode)}
               </div>
               <div>
                 <h3 className="font-bold text-gray-900">{account.accountName}</h3>
@@ -36,12 +77,14 @@ export function AccountList({ accounts, formatCurrency, onEdit, onDelete, showIn
             <div className="flex gap-1">
               <button
                 onClick={() => onEdit(account)}
+                aria-label="Edit"
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Edit3 className="h-4 w-4 text-gray-600" />
               </button>
               <button
                 onClick={() => onDelete(account.id)}
+                aria-label="Delete"
                 className="p-2 hover:bg-red-50 rounded-lg transition-colors"
               >
                 <Trash2 className="h-4 w-4 text-red-600" />

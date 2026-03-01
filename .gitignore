@@ -27,7 +27,7 @@ replay_pid*
 # Gradle
 .gradle/
 build/
-!gradle/wrapper/gradle-wrapper.jar
+!**/gradle/wrapper/gradle-wrapper.jar
 
 # Maven
 target/
@@ -69,6 +69,7 @@ coverage/
 docker/mysql/data/
 .playwright-mcp/
 package-lock.json
+!/frontend/package-lock.json
 
 # Temp files
 cookies.txt

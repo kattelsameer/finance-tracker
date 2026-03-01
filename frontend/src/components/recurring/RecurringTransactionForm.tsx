@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import type { Account, Category, CreateRecurringTransactionRequest, Frequency, RecurringTransaction } from '../../types';
+import type { Account, Category, CreateRecurringTransactionRequest, Frequency } from '../../types';
 
 interface RecurringTransactionFormProps {
   formData: CreateRecurringTransactionRequest;

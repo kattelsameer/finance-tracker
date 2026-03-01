@@ -3,15 +3,30 @@ import { currencyService } from '../services/currency.service';
 import type { Currency } from '../types';
 import { ArrowDownUp, DollarSign, AlertCircle, RefreshCw } from 'lucide-react';
 
+// Default currencies as fallback when API fails
+const DEFAULT_CURRENCIES: Currency[] = [
+  { code: 'USD', name: 'US Dollar', symbol: '$' },
+  { code: 'EUR', name: 'Euro', symbol: '€' },
+  { code: 'GBP', name: 'British Pound', symbol: '£' },
+  { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
+  { code: 'CHF', name: 'Swiss Franc', symbol: 'CHF' },
+  { code: 'CAD', name: 'Canadian Dollar', symbol: 'CA$' },
+  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+  { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
+  { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
+  { code: 'MXN', name: 'Mexican Peso', symbol: 'MX$' },
+];
+
 export function CurrencyConverter() {
-  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [currencies, setCurrencies] = useState<Currency[]>(DEFAULT_CURRENCIES);
   const [amount, setAmount] = useState<string>('100');
-  const [fromCurrency, setFromCurrency] = useState('NPR');
-  const [toCurrency, setToCurrency] = useState('USD');
+  const [fromCurrency, setFromCurrency] = useState('USD');
+  const [toCurrency, setToCurrency] = useState('EUR');
   const [convertedAmount, setConvertedAmount] = useState<number | null>(null);
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
 
   useEffect(() => {
     fetchCurrencies();
@@ -51,10 +66,18 @@ export function CurrencyConverter() {
   const fetchCurrencies = async () => {
     try {
       const data = await currencyService.getAll();
-      setCurrencies(data);
+      if (data && data.length > 0) {
+        setCurrencies(data);
+      }
     } catch {
-      setError('Failed to fetch currencies');
+      // Keep using default currencies on error - don't show error for this
+      console.warn('Using default currencies - API unavailable');
     }
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    handleConvert();
   };
 
   const handleSwapCurrencies = () => {
@@ -81,9 +104,18 @@ export function CurrencyConverter() {
       
       <div className="p-6 space-y-5">
         {error && (
-          <div className="flex items-center gap-3 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-            <AlertCircle className="h-5 w-5" />
-            <span className="font-medium">{error}</span>
+          <div className="flex items-center justify-between gap-3 p-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg text-sm">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <span className="font-medium">Currency service unavailable</span>
+            </div>
+            <button
+              onClick={handleRetry}
+              className="flex items-center gap-1 px-2 py-1 bg-amber-100 hover:bg-amber-200 rounded text-xs font-medium transition-colors"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Retry
+            </button>
           </div>
         )}
 

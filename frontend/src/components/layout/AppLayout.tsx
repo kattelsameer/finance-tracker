@@ -100,7 +100,7 @@ export function AppLayout() {
         />
 
         {/* Page content */}
-        <main className="flex-1 overflow-x-hidden">
+        <main className="flex-1 overflow-x-hidden animate-fade-in">
           <div className="p-4 sm:p-6 max-w-7xl mx-auto w-full">
             <Outlet />
           </div>

@@ -31,20 +31,23 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built files from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Install curl for healthcheck and set proper permissions
+# Install curl for healthcheck and set permissions for non-root nginx
 RUN apk add --no-cache curl && \
     chown -R nginx:nginx /usr/share/nginx/html && \
-    chmod -R 755 /usr/share/nginx/html
+    chmod -R 755 /usr/share/nginx/html && \
+    chown -R nginx:nginx /var/cache/nginx /var/log/nginx /etc/nginx/conf.d && \
+    touch /var/run/nginx.pid && \
+    chown nginx:nginx /var/run/nginx.pid
 
-# Don't switch to non-root user - nginx needs root to bind to port 80
-# USER nginx
+# Run as non-root user
+USER nginx
 
-# Expose port
-EXPOSE 80
+# Expose non-privileged port
+EXPOSE 8080
 
-# Health check - use curl instead of wget for proper health checking
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=10s \
-  CMD curl -f http://localhost/health || exit 1
+  CMD curl -f http://localhost:8080/health || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

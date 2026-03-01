@@ -1,5 +1,6 @@
 package com.financetracker.service;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +29,29 @@ public class DemoDataService {
 
     private final JdbcTemplate jdbcTemplate;
     private final ResourceLoader resourceLoader;
+
+    /**
+     * Initialize demo data on application startup if not already present.
+     */
+    @PostConstruct
+    @Transactional
+    public void initializeDemoData() {
+        log.info("Checking demo data initialization...");
+        
+        try {
+            Long demoUserId = getDemoUserId();
+            
+            if (demoUserId == null) {
+                log.info("Demo user not found. Running initial demo data setup...");
+                executeDemoMigrations();
+                log.info("Initial demo data setup completed successfully");
+            } else {
+                log.info("Demo user already exists. Skipping initial data setup.");
+            }
+        } catch (Exception e) {
+            log.error("Failed to initialize demo data", e);
+        }
+    }
 
     /**
      * Reset demo data on a schedule (default: daily at 2 AM UTC).
@@ -117,7 +140,8 @@ public class DemoDataService {
             "classpath:db/demo/V103__seed_demo_expenses_part1.sql",
             "classpath:db/demo/V104__seed_demo_expenses_part2.sql",
             "classpath:db/demo/V105__seed_demo_transfers_and_investments.sql",
-            "classpath:db/demo/V106__seed_demo_budgets_and_recurring.sql"
+            "classpath:db/demo/V106__seed_demo_budgets_and_recurring.sql",
+            "classpath:db/demo/V107__seed_demo_2026_transactions.sql"
         };
         
         for (String migrationFile : migrationFiles) {
@@ -129,31 +153,42 @@ public class DemoDataService {
 
     /**
      * Execute a single SQL file.
-     * Splits on semicolon and executes each statement.
+     * Removes comment lines, then splits on semicolon and executes each statement.
      */
+    @SuppressWarnings("null")
     private void executeSqlFile(String filePath) throws Exception {
-        log.debug("Executing SQL file: {}", filePath);
+        log.info("Executing SQL file: {}", filePath);
         
         Resource resource = resourceLoader.getResource(filePath);
         
-        String sql = new BufferedReader(
-            new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)
-        ).lines().collect(Collectors.joining("\n"));
+        String sql;
+        try (BufferedReader reader = new BufferedReader(
+            new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
+            sql = reader.lines()
+                // Remove comment lines and empty lines BEFORE joining
+                .filter(line -> !line.trim().startsWith("--"))
+                .filter(line -> !line.trim().isEmpty())
+                .collect(Collectors.joining("\n"));
+        }
         
         // Split by semicolon and execute each statement
-        Arrays.stream(sql.split(";"))
-            .map(String::trim)
-            .filter(statement -> !statement.isEmpty())
-            .filter(statement -> !statement.startsWith("--"))
-            .filter(statement -> !statement.startsWith("/*"))
-            .forEach(statement -> {
-                try {
-                    jdbcTemplate.execute(statement);
-                } catch (Exception e) {
-                    log.warn("Error executing statement (continuing): {}", statement.substring(0, Math.min(100, statement.length())), e);
-                }
-            });
+        int statementCount = 0;
+        for (String statement : sql.split(";")) {
+            statement = statement.trim();
+            if (statement.isEmpty() || statement.startsWith("/*")) {
+                continue;
+            }
+            
+            try {
+                log.info("Executing statement: {}", statement.substring(0, Math.min(100, statement.length())));
+                jdbcTemplate.execute(statement);
+                statementCount++;
+            } catch (Exception e) {
+                log.error("Error executing statement: {}", statement, e);
+                throw e; // Rethrow to fail fast
+            }
+        }
         
-        log.debug("Successfully executed SQL file: {}", filePath);
+        log.info("Successfully executed {} statements from: {}", statementCount, filePath);
     }
 }

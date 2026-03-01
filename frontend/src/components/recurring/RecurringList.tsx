@@ -86,7 +86,7 @@ export function RecurringList({
                     </span>
                     <span className="text-xs text-gray-500 flex items-center gap-1">
                       <Repeat className="h-3 w-3" />
-                      {getFrequencyLabel(transaction.frequency.frequencyType)}
+                      {getFrequencyLabel(transaction.frequency)}
                     </span>
                   </div>
                 </div>
@@ -121,12 +121,14 @@ export function RecurringList({
                   <button
                     onClick={() => onEdit(transaction)}
                     className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    aria-label="Edit"
                   >
                     <Edit3 className="h-4 w-4 text-gray-600" />
                   </button>
                   <button
                     onClick={() => onDelete(transaction.id)}
                     className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                    aria-label="Delete"
                   >
                     <Trash2 className="h-4 w-4 text-red-600" />
                   </button>

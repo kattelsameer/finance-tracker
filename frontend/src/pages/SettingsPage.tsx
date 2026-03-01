@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useFeatureFlags } from '../contexts/FeatureFlagsContext';
 import { authService } from '../services/auth.service';
 import { notificationService } from '../services/notification.service';
-import { logger } from '../utils/logger';
+
+import { DateRangeFilter } from '../components/dashboard/DateRangeFilter';
 import { 
   DollarSign, 
   Globe, 
@@ -27,12 +29,19 @@ import {
   EyeOff,
   UserCircle,
   Calendar,
-  Shield
+  Shield,
+  LayoutDashboard,
+  BarChart3,
+  PieChart,
+  Receipt,
+  ArrowDownUp,
+  Search,
+  FolderTree
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import type { NotificationPreference } from '../types';
 
-type SettingsTab = 'general' | 'notifications' | 'user';
+type SettingsTab = 'general' | 'notifications' | 'features' | 'user';
 
 // Supported currencies - limited to these 6 options
 const SUPPORTED_CURRENCIES = [
@@ -46,6 +55,7 @@ const SUPPORTED_CURRENCIES = [
 
 export function SettingsPage() {
   const { user, refetchUser } = useAuth();
+  const { dashboardFeatures, updateDashboardFeature, navigationFeatures, updateNavigationFeature, resetToDefaults } = useFeatureFlags();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<SettingsTab>(
     (searchParams.get('tab') as SettingsTab) || 'general'
@@ -58,6 +68,22 @@ export function SettingsPage() {
   const [settings, setSettings] = useState({
     defaultCurrency: user?.defaultCurrency || 'NPR',
     timezone: user?.timezone || 'UTC',
+  });
+
+  // Dashboard date range filter state
+  const [dashboardDateRange, setDashboardDateRange] = useState(() => {
+    const saved = sessionStorage.getItem('dashboardDateRange');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    // Default to last 6 months to show demo data
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 6);
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0],
+    };
   });
 
   // Notification preferences state
@@ -156,6 +182,10 @@ export function SettingsPage() {
         timezone: settings.timezone,
       });
       await refetchUser();
+      
+      // Save dashboard date range to localStorage
+      sessionStorage.setItem('dashboardDateRange', JSON.stringify(dashboardDateRange));
+      
       setSuccess('Settings saved successfully!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: unknown) {
@@ -163,6 +193,10 @@ export function SettingsPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleDateRangeChange = (startDate: string, endDate: string) => {
+    setDashboardDateRange({ startDate, endDate });
   };
 
   const handleSaveNotifications = async () => {
@@ -294,9 +328,104 @@ export function SettingsPage() {
     </button>
   );
 
+  const DashboardFeatures = () => {
+    const featureCards = [
+      { key: 'summaryCards', label: 'Summary Cards', icon: BarChart3, description: 'Income, expenses, and balance overview' },
+      { key: 'monthlyTrends', label: 'Monthly Trends', icon: TrendingUp, description: 'Income vs expenses chart over time' },
+      { key: 'topSpendingCategories', label: 'Top Spending Categories', icon: PieChart, description: 'Pie chart showing spending breakdown' },
+      { key: 'currencyConverter', label: 'Currency Converter', icon: ArrowDownUp, description: 'Real-time currency conversion' },
+      { key: 'budgetStatus', label: 'Budget Status', icon: Target, description: 'Budget progress and alerts' },
+      { key: 'recentTransactions', label: 'Recent Transactions', icon: Receipt, description: 'Latest 5 transactions' },
+      { key: 'accountBalances', label: 'Account Balances', icon: Wallet, description: 'All account balances at a glance' },
+    ];
+
+    return (
+      <div className="space-y-4">
+        {featureCards.map(({ key, label, icon: Icon, description }) => (
+          <div key={key} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Icon className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <div className="font-medium text-gray-800 text-sm">{label}</div>
+                <div className="text-xs text-gray-500">{description}</div>
+              </div>
+            </div>
+            <ToggleSwitch
+              checked={dashboardFeatures[key as keyof typeof dashboardFeatures]}
+              onChange={(checked) => updateDashboardFeature(key as keyof typeof dashboardFeatures, checked)}
+            />
+          </div>
+        ))}
+        
+        <div className="flex gap-3 pt-4">
+          <button
+            onClick={resetToDefaults}
+            className="inline-flex items-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Reset to Defaults
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const NavigationFeatures = () => {
+    const featureCards = [
+      { key: 'search', label: 'Search', icon: Search, description: 'Advanced search across all data' },
+      { key: 'recurring', label: 'Recurring Transactions', icon: Repeat, description: 'Manage recurring payments' },
+      { key: 'importExport', label: 'Import/Export', icon: FileText, description: 'Import and export transaction data' },
+      { key: 'categories', label: 'Categories', icon: FolderTree, description: 'Organize transactions by categories' },
+      { key: 'tags', label: 'Tags', icon: Target, description: 'Tag transactions for better organization' },
+      { key: 'budgets', label: 'Budgets', icon: Target, description: 'Set and track spending budgets' },
+      { key: 'reports', label: 'Reports', icon: PieChart, description: 'Generate financial reports' },
+    ];
+
+    return (
+      <div className="space-y-4">
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-800">
+            <strong>Note:</strong> Core navigation items (Dashboard, Accounts, Transactions, Settings) cannot be disabled as they are essential for the application.
+          </p>
+        </div>
+        
+        {featureCards.map(({ key, label, icon: Icon, description }) => (
+          <div key={key} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Icon className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <div className="font-medium text-gray-800 text-sm">{label}</div>
+                <div className="text-xs text-gray-500">{description}</div>
+              </div>
+            </div>
+            <ToggleSwitch
+              checked={navigationFeatures[key as keyof typeof navigationFeatures]}
+              onChange={(checked) => updateNavigationFeature(key as keyof typeof navigationFeatures, checked)}
+            />
+          </div>
+        ))}
+        
+        <div className="flex gap-3 pt-4">
+          <button
+            onClick={resetToDefaults}
+            className="inline-flex items-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Reset to Defaults
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const tabs: { id: SettingsTab; label: string; icon: typeof DollarSign }[] = [
     { id: 'general', label: 'General', icon: DollarSign },
     { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'features', label: 'Features', icon: LayoutDashboard },
     { id: 'user', label: 'User', icon: User },
   ];
 
@@ -411,6 +540,30 @@ export function SettingsPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-gray-100" />
+
+              {/* Dashboard Date Range Filter */}
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900">Dashboard Date Range</label>
+                    <p className="text-xs text-gray-500">Set default date range for dashboard data</p>
+                  </div>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <DateRangeFilter
+                    startDate={dashboardDateRange.startDate}
+                    endDate={dashboardDateRange.endDate}
+                    onStartDateChange={(date) => handleDateRangeChange(date, dashboardDateRange.endDate)}
+                    onEndDateChange={(date) => handleDateRangeChange(dashboardDateRange.startDate, date)}
+                  />
+                </div>
               </div>
 
               {/* Save Button */}
@@ -716,6 +869,31 @@ export function SettingsPage() {
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {activeTab === 'features' && (
+          <div className="p-6 space-y-8">
+            {/* Dashboard Features Section */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Dashboard Features</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Customize which cards appear on your dashboard. Disabled cards will be hidden from view.
+              </p>
+              <DashboardFeatures />
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-gray-200"></div>
+
+            {/* Navigation Features Section */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Navigation Features</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Control which menu items appear in the sidebar navigation. Required items cannot be disabled.
+              </p>
+              <NavigationFeatures />
+            </div>
           </div>
         )}
 

@@ -1,4 +1,8 @@
+
 package com.financetracker.service;
+
+import org.springframework.lang.NonNull;
+import java.util.Objects;
 
 import com.financetracker.dto.auth.*;
 import com.financetracker.entity.RevokedToken;
@@ -23,11 +27,13 @@ import java.time.ZoneId;
 import java.util.Date;
 
 @Service
+@SuppressWarnings("null")
 public class AuthService {
     
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
     private static final int MAX_LOGIN_ATTEMPTS = 5;
     private static final int LOCKOUT_DURATION_MINUTES = 15;
+    private static final long REMEMBER_ME_DURATION_MS = 30L * 24 * 60 * 60 * 1000; // 30 days
     
     private final UserRepository userRepository;
     private final RevokedTokenRepository revokedTokenRepository;
@@ -79,7 +85,7 @@ public class AuthService {
         );
     }
     
-    @Transactional
+    @Transactional(noRollbackFor = ApiException.class)
     public AuthResponse login(LoginRequest request, HttpServletResponse response) {
         User user = userRepository.findByUsernameOrEmail(request.getUsername(), request.getUsername())
                 .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CREDENTIALS));
@@ -118,14 +124,16 @@ public class AuthService {
         user.setLastLoginAt(Instant.now());
         userRepository.save(user);
         
-        // Generate JWT token
-        String token = tokenProvider.generateToken(user.getId(), user.getUsername());
+        // Generate JWT token with appropriate expiration
+        long tokenExpiration = request.isRememberMe() ? REMEMBER_ME_DURATION_MS : tokenProvider.getExpirationMs();
+        String token = tokenProvider.generateToken(user.getId(), user.getUsername(), tokenExpiration);
         Date expirationDate = tokenProvider.getExpirationFromToken(token);
         LocalDateTime expiresAt = LocalDateTime.ofInstant(
                 expirationDate.toInstant(), ZoneId.systemDefault());
         
-        // Set token in HttpOnly cookie
-        setAuthCookie(response, token);
+        // Set token in HttpOnly cookie with appropriate max age
+        int cookieMaxAge = (int) (tokenExpiration / 1000);
+        setAuthCookie(response, token, cookieMaxAge);
         
         logger.info("User logged in successfully: {}", user.getUsername());
         
@@ -160,8 +168,8 @@ public class AuthService {
     }
     
     @Transactional
-    public void changePassword(Long userId, ChangePasswordRequest request) {
-        User user = userRepository.findById(userId)
+    public void changePassword(@NonNull Long userId, @NonNull ChangePasswordRequest request) {
+        User user = userRepository.findById(Objects.requireNonNull(userId))
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         
         // Verify current password
@@ -171,14 +179,14 @@ public class AuthService {
         
         // Update password
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
+        userRepository.save(Objects.requireNonNull(user));
         
         logger.info("Password changed for user: {}", user.getUsername());
     }
     
     @Transactional(readOnly = true)
-    public UserResponse getCurrentUser(Long userId) {
-        User user = userRepository.findById(userId)
+    public UserResponse getCurrentUser(@NonNull Long userId) {
+        User user = userRepository.findById(Objects.requireNonNull(userId))
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         
         LocalDateTime createdAtLocal = user.getCreatedAt() != null 
@@ -197,13 +205,13 @@ public class AuthService {
     }
     
     @Transactional
-    public UserResponse updateProfile(Long userId, UpdateProfileRequest request) {
-        User user = userRepository.findById(userId)
+    public UserResponse updateProfile(@NonNull Long userId, @NonNull UpdateProfileRequest request) {
+        User user = userRepository.findById(Objects.requireNonNull(userId))
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         
         // Update email if provided and different
         if (request.getEmail() != null && !request.getEmail().equalsIgnoreCase(user.getEmail())) {
-            if (userRepository.existsByEmail(request.getEmail())) {
+            if (userRepository.existsByEmail(Objects.requireNonNull(request.getEmail()))) {
                 throw new ApiException(ErrorCode.EMAIL_ALREADY_EXISTS);
             }
             user.setEmail(request.getEmail().toLowerCase());
@@ -224,19 +232,19 @@ public class AuthService {
             user.setTimezone(request.getTimezone());
         }
         
-        userRepository.save(user);
+        userRepository.save(Objects.requireNonNull(user));
         
         logger.info("Profile updated for user: {}", user.getUsername());
         
         return getCurrentUser(userId);
     }
     
-    private void setAuthCookie(HttpServletResponse response, String token) {
+    private void setAuthCookie(HttpServletResponse response, String token, int maxAge) {
         Cookie cookie = new Cookie(tokenProvider.getCookieName(), token);
         cookie.setHttpOnly(true);
         cookie.setSecure(tokenProvider.isCookieSecure());
         cookie.setPath("/");
-        cookie.setMaxAge((int) (tokenProvider.getExpirationMs() / 1000));
+        cookie.setMaxAge(maxAge);
         
         // Add SameSite attribute via response header (Cookie API doesn't support SameSite directly)
         String secureAttribute = tokenProvider.isCookieSecure() ? "Secure; " : "";
@@ -244,7 +252,7 @@ public class AuthService {
             "%s=%s; Path=/; Max-Age=%d; HttpOnly; %sSameSite=%s",
                 tokenProvider.getCookieName(),
                 token,
-                (int) (tokenProvider.getExpirationMs() / 1000),
+                maxAge,
             secureAttribute,
                 tokenProvider.getCookieSameSite()
         );

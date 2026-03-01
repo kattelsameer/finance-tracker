@@ -14,10 +14,111 @@ env:
   FRONTEND_IMAGE: ${{ github.repository }}/frontend
 
 jobs:
-  # Backend Tests
+  # Stage 1: Build Docker Images
+  docker-build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for backend
+        id: backend-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          load: true
+          push: false
+          tags: finance-tracker-backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Push backend to registry
+        if: github.event_name == 'push'
+        run: |
+          while IFS= read -r tag; do
+            [ -n "$tag" ] || continue
+            docker tag finance-tracker-backend:ci "$tag"
+            docker push "$tag"
+          done <<< "${{ steps.backend-meta.outputs.tags }}"
+
+      - name: Save backend image
+        run: docker save finance-tracker-backend:ci -o /tmp/backend-image.tar
+
+      - name: Extract metadata for frontend
+        id: frontend-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          load: true
+          push: false
+          tags: finance-tracker-frontend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Push frontend to registry
+        if: github.event_name == 'push'
+        run: |
+          while IFS= read -r tag; do
+            [ -n "$tag" ] || continue
+            docker tag finance-tracker-frontend:ci "$tag"
+            docker push "$tag"
+          done <<< "${{ steps.frontend-meta.outputs.tags }}"
+
+      - name: Save frontend image
+        run: docker save finance-tracker-frontend:ci -o /tmp/frontend-image.tar
+
+      - name: Upload Docker images artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-images
+          path: |
+            /tmp/backend-image.tar
+            /tmp/frontend-image.tar
+          retention-days: 1
+          # Docker image layers are already compressed; skipping artifact compression saves CPU time
+          compression-level: 0
+
+  # Stage 2: Backend Tests (runs after Docker build succeeds)
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
+    needs: [docker-build]
     defaults:
       run:
         working-directory: ./backend
@@ -32,6 +133,16 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
           cache: gradle
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -55,10 +166,11 @@ jobs:
           name: backend-jar
           path: backend/build/libs/*.jar
 
-  # Frontend Tests
+  # Stage 2: Frontend Tests (runs after Docker build succeeds, in parallel with backend-test)
   frontend-test:
     name: Frontend Tests
     runs-on: ubuntu-latest
+    needs: [docker-build]
     defaults:
       run:
         working-directory: ./frontend
@@ -80,6 +192,9 @@ jobs:
       - name: Run linter
         run: npm run lint
 
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
       - name: Run tests
         run: npm run test:run
 
@@ -92,87 +207,38 @@ jobs:
           name: frontend-build
           path: frontend/dist/
 
-  # Build and Push Docker Images (only on main/develop push)
-  docker-build:
-    name: Build Docker Images
+  # Stage 3: E2E Tests (runs after both backend and frontend tests pass)
+  e2e-test:
+    name: E2E Tests
     runs-on: ubuntu-latest
     needs: [backend-test, frontend-test]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
-    permissions:
-      contents: read
-      packages: write
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Download Docker images artifact
+        uses: actions/download-artifact@v4
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          name: docker-images
+          path: /tmp/docker-images
 
-      - name: Extract metadata for backend
-        id: backend-meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix=
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+      - name: Load Docker images
+        run: |
+          docker load -i /tmp/docker-images/backend-image.tar
+          docker load -i /tmp/docker-images/frontend-image.tar
 
-      - name: Build and push backend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          file: ./backend/Dockerfile
-          push: true
-          tags: ${{ steps.backend-meta.outputs.tags }}
-          labels: ${{ steps.backend-meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Start services
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
 
-      - name: Extract metadata for frontend
-        id: frontend-meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix=
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          push: true
-          tags: ${{ steps.frontend-meta.outputs.tags }}
-          labels: ${{ steps.frontend-meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # Code Quality Checks
-  code-quality:
-    name: Code Quality
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: gradle
+      - name: Wait for backend to be ready
+        run: |
+          echo "Waiting for backend and frontend to be ready..."
+          timeout 240 bash -c 'until curl -sf http://localhost:8080/actuator/health | grep -q "\"status\":\"UP\""; do echo "Waiting for backend..."; sleep 10; done'
+          echo "Backend is ready!"
+          timeout 60 bash -c 'until curl -sf http://localhost/health > /dev/null 2>&1; do echo "Waiting for frontend..."; sleep 5; done'
+          echo "Frontend is ready!"
 
       - name: Set up Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
@@ -181,28 +247,60 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install frontend dependencies
-        run: cd frontend && npm ci
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
 
-      - name: Check frontend formatting
-        run: cd frontend && npm run lint
+      - name: Install Playwright Browsers
+        working-directory: ./frontend
+        run: npx playwright install --with-deps chromium
 
-      - name: Check backend compilation
-        run: cd backend && chmod +x gradlew && ./gradlew compileJava
+      - name: Run Playwright tests
+        working-directory: ./frontend
+        run: npx playwright test
+        env:
+          PLAYWRIGHT_BASE_URL: 'http://localhost'
+          PLAYWRIGHT_API_V1_BASE_URL: 'http://localhost:8080/api/v1'
 
-  # Security Scan (on main only)
+      - name: Collect Docker logs on failure
+        if: failure()
+        run: docker compose logs --tail=100
+
+      - name: Stop services
+        if: always()
+        run: docker compose down
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-test-results
+          path: frontend/test-results/
+          retention-days: 7
+
+  # Stage 4: Security Scan (runs after E2E tests pass)
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    needs: [backend-test, frontend-test]
+    needs: [e2e-test]
+    permissions:
+      contents: read
+      security-events: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: 'fs'
           scan-ref: '.'

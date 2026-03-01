@@ -1,4 +1,6 @@
+
 package com.financetracker.service;
+
 
 import com.financetracker.dto.recurring.CreateRecurringTransactionRequest;
 import com.financetracker.dto.recurring.RecurringTransactionResponse;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@SuppressWarnings("null")
 public class RecurringTransactionService {
     
     private static final Logger logger = LoggerFactory.getLogger(RecurringTransactionService.class);
@@ -43,6 +46,7 @@ public class RecurringTransactionService {
         this.transactionRepository = transactionRepository;
     }
     
+    @SuppressWarnings("null")
     public RecurringTransactionResponse createRecurringTransaction(Long userId, CreateRecurringTransactionRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
@@ -121,6 +125,7 @@ public class RecurringTransactionService {
     }
     
     @Transactional(readOnly = true)
+    @SuppressWarnings("null")
     public RecurringTransactionResponse getRecurringTransactionById(Long userId, Long recurringId) {
         RecurringTransaction recurringTransaction = recurringTransactionRepository
                 .findByIdAndUserId(recurringId, userId)
@@ -129,6 +134,7 @@ public class RecurringTransactionService {
         return mapToResponse(recurringTransaction);
     }
     
+    @SuppressWarnings("null")
     public RecurringTransactionResponse updateRecurringTransaction(
             Long userId, Long recurringId, UpdateRecurringTransactionRequest request) {
         
@@ -214,6 +220,7 @@ public class RecurringTransactionService {
         return mapToResponse(updated);
     }
     
+    @SuppressWarnings("null")
     public void deleteRecurringTransaction(Long userId, Long recurringId) {
         RecurringTransaction recurringTransaction = recurringTransactionRepository
                 .findByIdAndUserId(recurringId, userId)

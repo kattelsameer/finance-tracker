@@ -9,7 +9,7 @@ interface HeaderProps {
 
 export function Header({ title, onMenuClick, onNotificationClick, unreadCount = 0 }: Readonly<HeaderProps>) {
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
+    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100/50 shadow-sm transition-all duration-300">
       <div className="flex items-center justify-between h-16 px-4 sm:px-6">
         {/* Mobile menu button and title */}
         <div className="flex items-center gap-3 min-w-0">

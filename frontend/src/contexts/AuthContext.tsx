@@ -24,6 +24,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       const userData = await authService.getCurrentUser();
       setUser(userData);
     } catch {
+      // Silently handle 401 errors (expected when not authenticated)
       setUser(null);
     } finally {
       setIsLoading(false);

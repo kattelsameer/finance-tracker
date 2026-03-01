@@ -6,7 +6,6 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Transaction, Account, Category, TransactionFilter, CreateTransactionRequest, PageResponse } from '../types';
 import { logger } from '../utils/logger';
 import {
-  ArrowLeftRight,
   Plus,
   Search,
   Filter,
@@ -175,17 +174,6 @@ export function TransactionsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="space-y-8 pb-12">
-        {/* Header */}
-        <div className="text-center pt-8 pb-4">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-3xl mb-5 shadow-lg">
-            <ArrowLeftRight className="h-10 w-10 text-white" />
-          </div>
-          <h1 className="text-4xl font-black text-gray-900 mb-3">Transactions</h1>
-          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-            View, add, and manage all your financial transactions
-          </p>
-        </div>
-
         {/* Actions Bar */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
           <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -202,6 +190,7 @@ export function TransactionsPage() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-3 rounded-xl border transition-colors ${showFilters ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+              aria-label="Toggle filters"
             >
               <Filter className="h-5 w-5" />
             </button>

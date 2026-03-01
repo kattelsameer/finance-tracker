@@ -90,7 +90,7 @@ export function RecurringTransactionsPage() {
       transactionType: transaction.transactionType,
       amount: transaction.amount,
       description: transaction.description,
-      frequency: transaction.frequency.frequencyType,
+      frequency: transaction.frequency,
       startDate: transaction.startDate.split('T')[0],
       endDate: transaction.endDate?.split('T')[0],
       dayOfMonth: transaction.dayOfMonth,

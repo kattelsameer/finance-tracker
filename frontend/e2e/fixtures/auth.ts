@@ -6,16 +6,21 @@ export interface TestUser {
   password: string;
 }
 
+// Generate a session-unique ID to avoid conflicts with existing DB users across runs.
+// Includes random component so parallel workers starting in the same ms get different IDs.
+const SESSION_ID = `${Date.now()}${Math.floor(Math.random() * 9000) + 1000}`;
+
 export const testUsers = {
   regular: {
-    username: 'admin',
-    email: 'admin@example.com',
-    password: 'Admin@123',
+    username: `e2euser${SESSION_ID}`,
+    email: `e2euser${SESSION_ID}@test.com`,
+    // Must satisfy backend: min 12 chars, uppercase, lowercase, digit, special (@$!%*?&)
+    password: 'Admin@12345678',
   },
   admin: {
-    username: 'admin',
-    email: 'admin@example.com',
-    password: 'Admin@123',
+    username: `e2euser${SESSION_ID}`,
+    email: `e2euser${SESSION_ID}@test.com`,
+    password: 'Admin@12345678',
   },
 } as const;
 
@@ -35,8 +40,12 @@ export async function registerUser(page: Page, user: TestUser) {
   });
   
   // Check if registration was successful (201) or user already exists (409 conflict)
+  if (response.status() === 429) {
+    throw new Error(`Registration rate-limited (429). Restart the backend with app.rate-limiting.enabled=false in application-dev.yml`);
+  }
   if (response.status() !== 201 && response.status() !== 409) {
-    throw new Error(`Registration failed with status ${response.status()}`);
+    const body = await response.text().catch(() => '');
+    throw new Error(`Registration failed with status ${response.status()}: ${body}`);
   }
 }
 
@@ -50,27 +59,39 @@ export async function login(page: Page, usernameOrEmail: string, password: strin
   await page.fill('input#username', usernameOrEmail);
   await page.fill('input#password', password);
   
-  // SPA navigation: wait for URL change instead of full navigation
-  await page.click('button[type="submit"]');
-  await page.waitForURL(/\/(dashboard)?$/, { timeout: 15000 });
-  
-  // Check if we're on an authenticated page
-  const currentUrl = page.url();
-  if (currentUrl.endsWith('/login')) {
-    // Still on login page - login failed
-    throw new Error(`Login failed - still on login page after submitting credentials`);
+  // Intercept the login API response to detect failures immediately instead of
+  // waiting 15 s for URL change that will never happen when login is rejected.
+  const [response] = await Promise.all([
+    page.waitForResponse(
+      (res) => res.url().includes('/auth/login') && res.request().method() === 'POST',
+      { timeout: 15000 }
+    ),
+    page.click('button[type="submit"]'),
+  ]);
+
+  const status = response.status();
+  if (status === 429) {
+    throw new Error(
+      `Login rate-limited (429). Restart the backend with app.rate-limiting.enabled=false in application-dev.yml`
+    );
   }
-  
-  // Successfully logged in - we're on dashboard or home page
-  return undefined;
+  if (status !== 200) {
+    const body = await response.text().catch(() => '');
+    throw new Error(`Login failed with HTTP ${status}: ${body}`);
+  }
+
+  // Login accepted – wait for SPA to navigate away from /login
+  await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 10000 });
 }
 
 /**
  * Logout the current user
  */
 export async function logout(page: Page) {
-  // Click logout button (could be in different places - desktop vs mobile)
-  const logoutButton = page.locator('button:has-text("Logout")').first();
+  // Click logout button in sidebar (has title="Logout" with a LogOut icon, no visible text).
+  // Filter for the VISIBLE instance — mobile sidebar is hidden at desktop viewport so
+  // .first() would otherwise pick the hidden mobile button and hang.
+  const logoutButton = page.locator('button[title="Logout"]').filter({ visible: true }).first();
   await logoutButton.click();
   
   // Wait for redirect to login
@@ -90,13 +111,17 @@ export async function setupAuthenticatedPage(page: Page, user: TestUser = testUs
   // Register user via API (ignore if already exists)
   try {
     await registerUser(page, user);
-  } catch (error) {
+  } catch {
     // User may already exist, continue to login
     console.log('Registration skipped, user may already exist');
   }
   
   // Login via UI
   await login(page, user.username, user.password);
+
+  // Wait for the React app to finish its initial API calls. This ensures the
+  // XSRF-TOKEN cookie is issued by the server before any subsequent write requests.
+  await page.waitForLoadState('networkidle');
   
   return page;
 }
@@ -118,4 +143,55 @@ export async function navigateToProtectedRoute(page: Page, route: string) {
   
   // Should not redirect to login if authenticated
   await expect(page).not.toHaveURL('/login');
+}
+
+/**
+ * Create a test account via the API for use in tests that require an existing account.
+ * The page must be logged in before calling this function.
+ */
+export async function createTestAccount(page: Page, accountName?: string) {
+  const name = accountName ?? `E2E Account ${Date.now()}`;
+
+  // Fetch available account types.
+  const typesResponse = await page.request.get(`${API_V1_BASE_URL}/accounts/types`);
+  const types = typesResponse.ok() ? await typesResponse.json() : [];
+  const typeId: number = types[0]?.id ?? 1;
+
+  // Fetch CSRF token from the dedicated endpoint (same approach as the frontend app).
+  // Reading the XSRF-TOKEN cookie is unreliable because Spring Security 6 uses deferred
+  // CSRF tokens that may not be set on GET responses.
+  const csrfResponse = await page.request.get(`${API_V1_BASE_URL}/auth/csrf-token`);
+  const csrfData = csrfResponse.ok() ? await csrfResponse.json() : {};
+  const csrfToken: string = csrfData.token || '';
+
+  let response = await page.request.post(`${API_V1_BASE_URL}/accounts`, {
+    headers: { 'X-XSRF-TOKEN': csrfToken },
+    data: {
+      accountName: name,
+      accountTypeId: typeId,
+      currency: 'USD',
+      initialBalance: 1000,
+    },
+  });
+
+  // Retry once with a fresh CSRF token on 403 (token may have been rotated after a prior POST)
+  if (response.status() === 403) {
+    const retryCsrf = await page.request.get(`${API_V1_BASE_URL}/auth/csrf-token`);
+    const retryData = retryCsrf.ok() ? await retryCsrf.json() : {};
+    const retryToken: string = retryData.token || '';
+    response = await page.request.post(`${API_V1_BASE_URL}/accounts`, {
+      headers: { 'X-XSRF-TOKEN': retryToken },
+      data: {
+        accountName: name,
+        accountTypeId: typeId,
+        currency: 'USD',
+        initialBalance: 1000,
+      },
+    });
+  }
+
+  if (!response.ok()) {
+    throw new Error(`Failed to create test account: ${response.status()} ${await response.text()}`);
+  }
+  return response.json();
 }

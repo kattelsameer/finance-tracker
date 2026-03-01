@@ -13,6 +13,11 @@ spring:
   jpa:
     show-sql: true
 
+# Disable rate limiting in development/tests so E2E tests can register/login freely
+app:
+  rate-limiting:
+    enabled: false
+
 # Development specific logging
 logging:
   level:

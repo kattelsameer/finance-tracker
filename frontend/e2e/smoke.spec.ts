@@ -27,8 +27,7 @@ test.describe('Smoke Tests', () => {
     await expect(submitButton).toBeVisible();
   });
 
-  // TODO: Fix register page redirect issue - navigating to /register redirects to /login
-  test.skip('should load register page', async ({ page }) => {
+  test('should load register page', async ({ page }) => {
     await page.goto('/register');
     
     // Wait for page to load

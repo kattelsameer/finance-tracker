@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
+import org.springframework.lang.NonNull;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,12 +38,12 @@ public class AccountService {
     }
     
     @Transactional
-    public AccountResponse createAccount(Long userId, CreateAccountRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
-        
-        AccountType accountType = accountTypeRepository.findById(request.getAccountTypeId())
-                .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "Account type not found"));
+    public AccountResponse createAccount(@NonNull Long userId, @NonNull CreateAccountRequest request) {
+        User user = userRepository.findById(Objects.requireNonNull(userId))
+            .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+
+        AccountType accountType = accountTypeRepository.findById(Objects.requireNonNull(request.getAccountTypeId()))
+            .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "Account type not found"));
         
         Account account = new Account();
         account.setUser(user);
@@ -57,7 +59,7 @@ public class AccountService {
         account.setIncludeInNetWorth(request.getIncludeInNetWorth());
         account.setNotes(request.getNotes());
         
-        account = accountRepository.save(account);
+        account = accountRepository.save(Objects.requireNonNull(account));
         
         logger.info("Account created: {} for user: {}", account.getId(), userId);
         
@@ -65,37 +67,36 @@ public class AccountService {
     }
     
     @Transactional(readOnly = true)
-    public List<AccountResponse> getAllAccounts(Long userId) {
-        return accountRepository.findByUserIdOrderByAccountNameAsc(userId)
+    public List<AccountResponse> getAllAccounts(@NonNull Long userId) {
+        return accountRepository.findByUserIdOrderByAccountNameAsc(Objects.requireNonNull(userId))
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
     
     @Transactional(readOnly = true)
-    public List<AccountResponse> getActiveAccounts(Long userId) {
-        return accountRepository.findByUserIdAndIsActiveOrderByAccountNameAsc(userId, true)
+    public List<AccountResponse> getActiveAccounts(@NonNull Long userId) {
+        return accountRepository.findByUserIdAndIsActiveOrderByAccountNameAsc(Objects.requireNonNull(userId), true)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
     
     @Transactional(readOnly = true)
-    public AccountResponse getAccount(Long userId, Long accountId) {
-        Account account = accountRepository.findByIdAndUserId(accountId, userId)
+    public AccountResponse getAccount(@NonNull Long userId, @NonNull Long accountId) {
+        Account account = accountRepository.findByIdAndUserId(Objects.requireNonNull(accountId), Objects.requireNonNull(userId))
                 .orElseThrow(() -> new ApiException(ErrorCode.ACCOUNT_NOT_FOUND));
-        
         return mapToResponse(account);
     }
     
     @Transactional
-    public AccountResponse updateAccount(Long userId, Long accountId, UpdateAccountRequest request) {
+    public AccountResponse updateAccount(@NonNull Long userId, @NonNull Long accountId, @NonNull UpdateAccountRequest request) {
         Account account = accountRepository.findByIdAndUserId(accountId, userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.ACCOUNT_NOT_FOUND));
         
         if (request.getAccountTypeId() != null) {
-            AccountType accountType = accountTypeRepository.findById(request.getAccountTypeId())
-                    .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "Account type not found"));
+            AccountType accountType = accountTypeRepository.findById(Objects.requireNonNull(request.getAccountTypeId()))
+                .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "Account type not found"));
             account.setAccountType(accountType);
         }
         
@@ -127,7 +128,7 @@ public class AccountService {
             account.setNotes(request.getNotes());
         }
         
-        account = accountRepository.save(account);
+        account = accountRepository.save(Objects.requireNonNull(account));
         
         logger.info("Account updated: {} for user: {}", accountId, userId);
         
@@ -135,31 +136,29 @@ public class AccountService {
     }
     
     @Transactional
-    public void deleteAccount(Long userId, Long accountId) {
-        Account account = accountRepository.findByIdAndUserId(accountId, userId)
+    public void deleteAccount(@NonNull Long userId, @NonNull Long accountId) {
+        Account account = accountRepository.findByIdAndUserId(Objects.requireNonNull(accountId), Objects.requireNonNull(userId))
                 .orElseThrow(() -> new ApiException(ErrorCode.ACCOUNT_NOT_FOUND));
-        
         // Soft delete - just mark as inactive
         account.setIsActive(false);
-        accountRepository.save(account);
-        
+        accountRepository.save(Objects.requireNonNull(account));
         logger.info("Account soft deleted: {} for user: {}", accountId, userId);
     }
     
     @Transactional
-    public void hardDeleteAccount(Long userId, Long accountId) {
+    public void hardDeleteAccount(@NonNull Long userId, @NonNull Long accountId) {
         if (!accountRepository.existsByIdAndUserId(accountId, userId)) {
             throw new ApiException(ErrorCode.ACCOUNT_NOT_FOUND);
         }
         
-        accountRepository.deleteById(accountId);
+        accountRepository.deleteById(Objects.requireNonNull(accountId));
         
         logger.info("Account hard deleted: {} for user: {}", accountId, userId);
     }
     
     @Transactional(readOnly = true)
-    public BigDecimal getNetWorth(Long userId) {
-        BigDecimal netWorth = accountRepository.calculateNetWorth(userId);
+    public BigDecimal getNetWorth(@NonNull Long userId) {
+        BigDecimal netWorth = accountRepository.calculateNetWorth(Objects.requireNonNull(userId));
         return netWorth != null ? netWorth : BigDecimal.ZERO;
     }
     

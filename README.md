@@ -71,6 +71,7 @@ Build a personal finance management application that enables a single user to:
 ### 1.5 Quick Start
 
 #### 🎭 Try Demo Mode (Fastest)
+
 Experience the full application with pre-populated realistic data:
 
 ```bash
@@ -91,12 +92,14 @@ docker compose -f docker-compose.demo.yml up -d
 ```
 
 **Demo Features:**
+
 - ✅ 180+ realistic transactions over 6 months
 - ✅ 6 diverse account types (checking, savings, credit, investment, loan, cash)
 - ✅ Budgets, recurring transactions, and notifications
 - ✅ Auto-resets daily at 2 AM UTC
 
 #### 🔧 Development Mode
+
 For feature development with empty database:
 
 ```bash
