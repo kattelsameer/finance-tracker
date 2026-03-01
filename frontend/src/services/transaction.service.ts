@@ -10,8 +10,16 @@ import type {
 
 export const transactionService = {
   async getAll(filter?: TransactionFilter): Promise<PageResponse<Transaction>> {
+    // Map frontend filter field names to backend query parameter names
+    const params = filter ? {
+      ...filter,
+      type: filter.transactionType,
+      search: filter.searchTerm,
+      transactionType: undefined,
+      searchTerm: undefined,
+    } : undefined;
     return apiClient.get<PageResponse<Transaction>>(ENDPOINTS.TRANSACTIONS, {
-      params: filter,
+      params,
     });
   },
 

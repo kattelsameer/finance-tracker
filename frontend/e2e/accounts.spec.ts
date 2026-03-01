@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupAuthenticatedPage, testUsers } from './fixtures/auth';
+import { setupAuthenticatedPage, testUsers, createTestAccount } from './fixtures/auth';
 
 // Run tests serially within this file to ensure accounts created early
 // are available for later tests
@@ -22,7 +22,7 @@ test.describe('Account Management', () => {
     const timestamp = Date.now();
     await page.fill('input#account-name', `Test Account ${timestamp}`);
     // account-type select already defaults to first available type
-    await page.fill('input#currency', 'NPR');
+    await page.fill('input#currency', 'USD');
     await page.fill('input#initial-balance', '1000');
 
     // Submit form
@@ -36,9 +36,13 @@ test.describe('Account Management', () => {
   });
 
   test('should view account details', async ({ page }) => {
-    // The accounts page itself displays balance and account type for each card
-    await expect(page.locator('text=/Balance/i').first()).toBeVisible();
-    await expect(page.locator('text=/Checking|Savings|Cash|Account/i').first()).toBeVisible();
+    // Wait for at least one account card to be visible
+    const accountItem = page.locator('[data-testid="account-item"]').first();
+    await expect(accountItem).toBeVisible({ timeout: 10000 });
+    // Verify balance label is shown inside the account card
+    await expect(accountItem.locator('text=/Balance/i')).toBeVisible();
+    // Verify account type (e.g. "Checking Account", "Savings Account") is shown inside the card
+    await expect(accountItem.locator('p.text-sm.text-gray-500')).toBeVisible();
   });
 
   test('should edit an account', async ({ page }) => {
@@ -71,7 +75,7 @@ test.describe('Account Management', () => {
     const timestamp = Date.now();
     const accountName = `Delete Test ${timestamp}`;
     await page.fill('input#account-name', accountName);
-    await page.fill('input#currency', 'NPR');
+    await page.fill('input#currency', 'USD');
     await page.fill('input#initial-balance', '0');
     await page.click('button[type="submit"]');
 
@@ -101,30 +105,44 @@ test.describe('Account Management', () => {
   });
 
   test('should update balance after creating a transaction', async ({ page }) => {
-    // Get current balance text from first account card
-    const accountCard = page.locator('[data-testid="account-item"]').first();
+    // Create a dedicated account so we know exactly which account to measure.
+    const balanceAccountName = `Balance Test ${Date.now()}`;
+    await createTestAccount(page, balanceAccountName);
+    // Reload accounts page so the new account card appears
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+
+    // Find the card for our known account and capture its initial balance
+    const accountCard = page.locator(`[data-testid="account-item"]:has-text("${balanceAccountName}")`);
+    await expect(accountCard).toBeVisible({ timeout: 5000 });
     const initialBalanceText = await accountCard.locator('text=/\\d+[\\.\\,]\\d+/').first().textContent();
 
     // Navigate to transactions
     await page.goto('/transactions');
     await page.waitForLoadState('networkidle');
 
-    // Create an INCOME transaction for the first account
+    // Create an INCOME transaction for our specific account
     await page.click('button:has-text("Add Transaction")');
     await page.click('button:has-text("INCOME")');
-    await page.selectOption('select#account', { index: 1 });
+    // Select the account by its exact label so we're certain it's the same account
+    await page.selectOption('select#account', { label: balanceAccountName });
     await page.fill('input#amount', '100.00');
     await page.fill('input#transaction-date', '2025-12-03');
+    await page.selectOption('select#category', { index: 1 }); // category required for submission
     await page.fill('input#description', 'Balance update test');
-    await page.click('button[type="submit"]');
 
-    await page.waitForTimeout(1000);
+    // Wait for the POST response to confirm the transaction was saved
+    const [txnResponse] = await Promise.all([
+      page.waitForResponse((res) => res.url().includes('/transactions') && res.request().method() === 'POST', { timeout: 10000 }),
+      page.click('button[type="submit"]'),
+    ]);
+    expect(txnResponse.ok()).toBeTruthy();
 
-    // Go back to accounts
+    // Go back to accounts and wait for fresh data
     await page.goto('/accounts');
     await page.waitForLoadState('networkidle');
 
-    // Check that balance has changed
+    // Verify the balance changed for our specific account
     const newBalanceText = await accountCard.locator('text=/\\d+[\\.\\,]\\d+/').first().textContent();
     expect(newBalanceText).not.toBe(initialBalanceText);
   });

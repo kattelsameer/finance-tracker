@@ -190,6 +190,7 @@ export function TransactionsPage() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-3 rounded-xl border transition-colors ${showFilters ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+              aria-label="Toggle filters"
             >
               <Filter className="h-5 w-5" />
             </button>

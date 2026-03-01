@@ -12,9 +12,7 @@ export interface RecurringTransaction {
   amount: number;
   currency: string;
   description: string;
-  frequency: {
-    frequencyType: Frequency;
-  };
+  frequency: Frequency;
   startDate: string;
   endDate?: string;
   nextOccurrence: string;

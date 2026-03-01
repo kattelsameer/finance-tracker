@@ -22,8 +22,14 @@ export default function LoginPage() {
       await login({ username, password, rememberMe });
       navigate('/');
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error?.response?.data?.message || 'Invalid username or password');
+      // The api-client interceptor wraps API errors as plain Error objects,
+      // so err.message contains the server's error message (e.g. "Account is locked...").
+      if (err instanceof Error && err.message) {
+        setError(err.message);
+      } else {
+        const error = err as { response?: { data?: { message?: string } } };
+        setError(error?.response?.data?.message || 'Invalid username or password');
+      }
     } finally {
       setLoading(false);
     }

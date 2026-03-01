@@ -85,7 +85,7 @@ public class AuthService {
         );
     }
     
-    @Transactional
+    @Transactional(noRollbackFor = ApiException.class)
     public AuthResponse login(LoginRequest request, HttpServletResponse response) {
         User user = userRepository.findByUsernameOrEmail(request.getUsername(), request.getUsername())
                 .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CREDENTIALS));
