@@ -3,6 +3,7 @@ import { categoryService } from '../services/category.service';
 import type { Category, CreateCategoryRequest, UpdateCategoryRequest } from '../types';
 import { CategoryTree } from '../components/categories/CategoryTree';
 import { CategoryForm } from '../components/categories/CategoryForm';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { 
   FolderTree, 
   Plus, 
@@ -83,14 +84,22 @@ export function CategoriesPage() {
     }
   };
 
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number | null }>({ open: false, id: null });
+
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this category?')) return;
+    setDeleteConfirm({ open: true, id });
+  };
+
+  const confirmDelete = async () => {
+    if (deleteConfirm.id === null) return;
     try {
-      await categoryService.delete(id);
+      await categoryService.delete(deleteConfirm.id);
       fetchCategories();
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || 'Failed to delete category');
+    } finally {
+      setDeleteConfirm({ open: false, id: null });
     }
   };
 
@@ -234,6 +243,17 @@ export function CategoriesPage() {
           onClose={() => setShowModal(false)}
         />
       )}
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.open}
+        title="Delete Category"
+        message="Are you sure you want to delete this category? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirm({ open: false, id: null })}
+      />
     </div>
   );
 }

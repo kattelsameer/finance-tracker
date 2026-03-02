@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
 import { AlertCircle, X, Info } from 'lucide-react';
 
+const DEMO_BANNER_DISMISSED_KEY = 'demoBannerDismissed';
+
 export function DemoBanner() {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(() => {
+    return sessionStorage.getItem(DEMO_BANNER_DISMISSED_KEY) !== 'true';
+  });
   const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
+
+  const handleDismiss = () => {
+    setIsVisible(false);
+    sessionStorage.setItem(DEMO_BANNER_DISMISSED_KEY, 'true');
+  };
 
   if (!isDemoMode || !isVisible) return null;
 
@@ -15,7 +24,7 @@ export function DemoBanner() {
           <span className="text-sm font-bold text-amber-900 tracking-wide">Demo Environment</span>
         </div>
         <button 
-          onClick={() => setIsVisible(false)}
+          onClick={handleDismiss}
           className="text-amber-500 hover:text-amber-700 hover:bg-amber-200/50 p-1 rounded-md transition-colors"
           aria-label="Close demo alert"
         >
@@ -34,7 +43,7 @@ export function DemoBanner() {
         </div>
         
         <button 
-          onClick={() => setIsVisible(false)}
+          onClick={handleDismiss}
           className="w-full flex items-center justify-center py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow hover:shadow-md font-medium rounded-lg transition-all active:scale-[0.98]"
         >
           Got it, continue exploring

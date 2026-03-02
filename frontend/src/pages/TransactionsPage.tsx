@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useDebounce } from '../hooks/useDebounce';
 import { transactionService } from '../services/transaction.service';
 import { accountService } from '../services/account.service';
 import { categoryService } from '../services/category.service';
@@ -19,6 +20,7 @@ import {
   TransactionForm,
   TransactionPagination
 } from '../components/transactions';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 
 export function TransactionsPage() {
   const { user } = useAuth();
@@ -39,6 +41,13 @@ export function TransactionsPage() {
     size: 10
   });
 
+  // Debounce search term to avoid firing API on every keystroke
+  const debouncedSearchTerm = useDebounce(filter.searchTerm, 300);
+  const debouncedFilter = useMemo(
+    () => ({ ...filter, searchTerm: debouncedSearchTerm }),
+    [filter, debouncedSearchTerm]
+  );
+
   const [formData, setFormData] = useState<CreateTransactionRequest>({
     accountId: 0,
     transactionType: 'EXPENSE',
@@ -57,7 +66,7 @@ export function TransactionsPage() {
     try {
       setLoading(true);
       setError(null);
-      const response: PageResponse<Transaction> = await transactionService.getAll(filter);
+      const response: PageResponse<Transaction> = await transactionService.getAll(debouncedFilter);
       setTransactions(response.content);
       setPagination({
         page: response.page,
@@ -70,7 +79,7 @@ export function TransactionsPage() {
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [debouncedFilter]);
 
   useEffect(() => {
     fetchTransactions();
@@ -114,14 +123,23 @@ export function TransactionsPage() {
     }).format(amount);
   };
 
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number | null }>({ open: false, id: null });
+
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this transaction?')) return;
+    setDeleteConfirm({ open: true, id });
+  };
+
+  const confirmDelete = async () => {
+    if (deleteConfirm.id === null) return;
     try {
-      await transactionService.delete(id);
+      await transactionService.delete(deleteConfirm.id);
       fetchTransactions();
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || 'Failed to delete transaction');
+    } finally {
+      setDeleteConfirm({ open: false, id: null });
     }
   };
 
@@ -276,6 +294,17 @@ export function TransactionsPage() {
           onClose={() => setShowModal(false)}
         />
       )}
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.open}
+        title="Delete Transaction"
+        message="Are you sure you want to delete this transaction? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirm({ open: false, id: null })}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { categoryService } from '../services/category.service';
 import { useAuth } from '../contexts/AuthContext';
 import type { RecurringTransaction, Frequency, CreateRecurringTransactionRequest, Account, Category } from '../types';
 import { RecurringList, RecurringTransactionForm } from '../components/recurring';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { logger } from '../utils/logger';
 import {
   Plus,
@@ -70,15 +71,22 @@ export function RecurringTransactionsPage() {
     }
   };
 
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number | null }>({ open: false, id: null });
+
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this recurring transaction?')) return;
-    
+    setDeleteConfirm({ open: true, id });
+  };
+
+  const confirmDelete = async () => {
+    if (deleteConfirm.id === null) return;
     try {
-      await recurringTransactionService.delete(id);
+      await recurringTransactionService.delete(deleteConfirm.id);
       fetchRecurringTransactions();
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || 'Failed to delete recurring transaction');
+    } finally {
+      setDeleteConfirm({ open: false, id: null });
     }
   };
 
@@ -273,6 +281,17 @@ export function RecurringTransactionsPage() {
           onToggleActive={handleToggleActive}
         />
       )}
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.open}
+        title="Delete Recurring Transaction"
+        message="Are you sure you want to delete this recurring transaction? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirm({ open: false, id: null })}
+      />
     </div>
   );
 }

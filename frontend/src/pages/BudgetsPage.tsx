@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Budget, Category, CreateBudgetRequest, UpdateBudgetRequest, PeriodType } from '../types';
 import { BudgetList } from '../components/budgets/BudgetList';
 import { BudgetForm } from '../components/budgets/BudgetForm';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import {
   Target,
   Plus,
@@ -99,14 +100,22 @@ export function BudgetsPage() {
     }
   };
 
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number | null }>({ open: false, id: null });
+
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this budget?')) return;
+    setDeleteConfirm({ open: true, id });
+  };
+
+  const confirmDelete = async () => {
+    if (deleteConfirm.id === null) return;
     try {
-      await budgetService.delete(id);
+      await budgetService.delete(deleteConfirm.id);
       fetchData();
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || 'Failed to delete budget');
+    } finally {
+      setDeleteConfirm({ open: false, id: null });
     }
   };
 
@@ -304,6 +313,17 @@ export function BudgetsPage() {
           onClose={() => setShowModal(false)}
         />
       )}
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.open}
+        title="Delete Budget"
+        message="Are you sure you want to delete this budget? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirm({ open: false, id: null })}
+      />
     </div>
   );
 }

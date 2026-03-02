@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Account, AccountType, CreateAccountRequest, UpdateAccountRequest } from '../types';
 import { AccountList } from '../components/accounts/AccountList';
 import { AccountForm } from '../components/accounts/AccountForm';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import {
   Wallet,
   Plus,
@@ -105,14 +106,22 @@ export function AccountsPage() {
     }
   };
 
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number | null }>({ open: false, id: null });
+
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this account?')) return;
+    setDeleteConfirm({ open: true, id });
+  };
+
+  const confirmDelete = async () => {
+    if (deleteConfirm.id === null) return;
     try {
-      await accountService.delete(id);
+      await accountService.delete(deleteConfirm.id);
       fetchData();
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || 'Failed to delete account');
+    } finally {
+      setDeleteConfirm({ open: false, id: null });
     }
   };
 
@@ -318,6 +327,17 @@ export function AccountsPage() {
           onClose={() => setShowModal(false)}
         />
       )}
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.open}
+        title="Delete Account"
+        message="Are you sure you want to delete this account? All associated transactions will be removed. This action cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirm({ open: false, id: null })}
+      />
     </div>
   );
 }
