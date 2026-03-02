@@ -7,8 +7,10 @@ import com.financetracker.exception.ErrorCode;
 import com.financetracker.repository.CurrencyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,9 +30,13 @@ import java.util.stream.Collectors;
 public class CurrencyService {
     private final CurrencyRepository currencyRepository;
     private final RestTemplate restTemplate = new RestTemplate();
-    
-    // Free API for exchange rates (no key required for basic usage)
-    private static final String EXCHANGE_RATE_API_URL = "https://api.exchangerate-api.com/v4/latest/";
+
+    // Primary CDN (jsdelivr) — fetches USD-based rates
+    private static final String FAWAZ_PRIMARY_URL =
+            "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.min.json";
+    // Cloudflare fallback
+    private static final String FAWAZ_FALLBACK_URL =
+            "https://latest.currency-api.pages.dev/v1/currencies/usd.min.json";
     
     /**
      * Get all active currencies
@@ -131,48 +137,84 @@ public class CurrencyService {
     }
     
     /**
-     * Update exchange rates from external API
+     * Update exchange rates from fawazahmed0/exchange-api (free, no key, 200+ currencies).
+     * Primary: jsdelivr CDN. Fallback: Cloudflare Pages.
+     * Response format: { "date": "YYYY-MM-DD", "usd": { "eur": 0.92, "gbp": 0.79, ... } }
+     * Rates are USD-based (1 USD = X currency), matching our DB storage convention.
      */
     @CacheEvict(value = "currencyConversions", allEntries = true)
     public void updateExchangeRates() {
-        log.info("Updating exchange rates from API...");
-        
-        Currency baseCurrency = currencyRepository.findByIsBaseCurrencyTrue()
-                .orElseThrow(() -> new ApiException(
-                        ErrorCode.CURRENCY_NOT_FOUND,
-                        "Base currency not configured"
-                ));
-        
-        try {
-            // Fetch rates from API
-            String url = EXCHANGE_RATE_API_URL + baseCurrency.getCode();
-            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
-            
-            if (response != null && response.containsKey("rates")) {
-                Map<String, Double> rates = (Map<String, Double>) response.get("rates");
-                
-                // Update all currencies in database
-                List<Currency> currencies = currencyRepository.findAll();
-                for (Currency currency : currencies) {
-                    if (currency.getIsBaseCurrency()) {
-                        currency.setExchangeRate(BigDecimal.ONE);
-                    } else if (rates.containsKey(currency.getCode())) {
-                        Double rate = rates.get(currency.getCode());
-                        currency.setExchangeRate(BigDecimal.valueOf(rate));
-                    }
-                    currency.setLastUpdated(LocalDateTime.now());
-                }
-                
-                currencyRepository.saveAll(currencies);
-                log.info("Successfully updated exchange rates for {} currencies", currencies.size());
+        log.info("Updating exchange rates from fawazahmed0/exchange-api...");
+
+        Map<String, Object> response = fetchExchangeRates();
+        if (response == null) {
+            log.warn("Could not fetch exchange rates from any source; rates remain unchanged");
+            return;
+        }
+
+        // The "usd" key holds a map of lowercase currency codes → rate (1 USD = X)
+        Object ratesObj = response.get("usd");
+        if (!(ratesObj instanceof Map)) {
+            log.warn("Unexpected API response format; rates remain unchanged");
+            return;
+        }
+
+        Map<String, Object> rawRates = (Map<String, Object>) ratesObj;
+
+        List<Currency> currencies = currencyRepository.findAll();
+        int updated = 0;
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Currency currency : currencies) {
+            if (Boolean.TRUE.equals(currency.getIsBaseCurrency())) {
+                currency.setExchangeRate(BigDecimal.ONE);
+                currency.setLastUpdated(now);
+                updated++;
+                continue;
             }
+            String key = currency.getCode().toLowerCase();
+            Object rateRaw = rawRates.get(key);
+            if (rateRaw != null) {
+                double rate = ((Number) rateRaw).doubleValue();
+                if (rate > 0) {
+                    currency.setExchangeRate(BigDecimal.valueOf(rate));
+                    currency.setLastUpdated(now);
+                    updated++;
+                }
+            }
+        }
+
+        currencyRepository.saveAll(currencies);
+        log.info("Successfully updated exchange rates for {}/{} currencies", updated, currencies.size());
+    }
+
+    /** Try primary CDN, then Cloudflare fallback. Returns null on total failure. */
+    private Map<String, Object> fetchExchangeRates() {
+        for (String url : List.of(FAWAZ_PRIMARY_URL, FAWAZ_FALLBACK_URL)) {
+            try {
+                Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+                if (response != null && response.containsKey("usd")) {
+                    log.info("Fetched exchange rates from: {}", url);
+                    return response;
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch rates from {}: {}", url, e.getMessage());
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Refresh rates once the application is fully started.
+     * Wrapped in try-catch so a CDN outage never prevents startup.
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    public void refreshRatesOnStartup() {
+        log.info("Application ready — refreshing exchange rates on startup...");
+        try {
+            updateExchangeRates();
         } catch (Exception e) {
-            log.error("Failed to update exchange rates from API", e);
-            throw new ApiException(
-                    ErrorCode.EXTERNAL_API_ERROR,
-                    "Failed to update exchange rates: " + e.getMessage(),
-                    e
-            );
+            log.warn("Startup exchange rate refresh failed (non-fatal): {}", e.getMessage());
         }
     }
     

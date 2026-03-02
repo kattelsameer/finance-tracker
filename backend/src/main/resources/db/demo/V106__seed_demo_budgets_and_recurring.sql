@@ -52,14 +52,14 @@ INSERT INTO recurring_transactions (user_id, account_id, category_id, transactio
 INSERT INTO notifications (user_id, notification_type, title, message, priority, is_read, sent_at, created_at) VALUES
 -- Unread Notifications
 (@demo_user_id, 'BUDGET_ALERT', 'Food Budget Alert', 'You have spent 87% of your monthly food budget. You have $78 remaining.', 'NORMAL', FALSE, NOW(), NOW()),
-(@demo_user_id, 'RECURRING_TRANSACTION', 'Upcoming Bill Reminder', 'Electric bill of $110.00 is due in 3 days.', 'NORMAL', FALSE, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
+(@demo_user_id, 'RECURRING_TRANSACTION_DUE', 'Upcoming Bill Reminder', 'Electric bill of $110.00 is due in 3 days.', 'NORMAL', FALSE, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY)),
 (@demo_user_id, 'BUDGET_ALERT', 'Transportation Budget Warning', 'You have exceeded your monthly transportation budget by $45.50.', 'HIGH', FALSE, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
 
 -- Read Notifications
-(@demo_user_id, 'RECURRING_TRANSACTION', 'Payment Reminder', 'Rent payment of $1500.00 is due tomorrow.', 'HIGH', TRUE, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY)),
+(@demo_user_id, 'RECURRING_TRANSACTION_DUE', 'Payment Reminder', 'Rent payment of $1500.00 is due tomorrow.', 'HIGH', TRUE, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY)),
 (@demo_user_id, 'BUDGET_ALERT', 'Shopping Budget Alert', 'You have spent 75% of your monthly shopping budget.', 'NORMAL', TRUE, DATE_SUB(NOW(), INTERVAL 7 DAY), DATE_SUB(NOW(), INTERVAL 7 DAY)),
-(@demo_user_id, 'SYSTEM', 'Welcome to Finance Tracker', 'Your demo account has been set up successfully. Explore all features!', 'LOW', TRUE, DATE_SUB(NOW(), INTERVAL 180 DAY), DATE_SUB(NOW(), INTERVAL 180 DAY)),
-(@demo_user_id, 'MONTHLY_SUMMARY', 'September Financial Summary', 'Total Income: $6400.00 | Total Expenses: $4867.32 | Net Savings: $1532.68', 'NORMAL', TRUE, DATE_SUB(NOW(), INTERVAL 30 DAY), DATE_SUB(NOW(), INTERVAL 30 DAY));
+(@demo_user_id, 'MONTHLY_SUMMARY', 'Welcome to Finance Tracker', 'Your demo account has been set up with realistic financial data. Explore all features!', 'LOW', TRUE, DATE_SUB(NOW(), INTERVAL 180 DAY), DATE_SUB(NOW(), INTERVAL 180 DAY)),
+(@demo_user_id, 'MONTHLY_SUMMARY', 'February Financial Summary', 'Total Income: $6400.00 | Total Expenses: $4867.32 | Net Savings: $1532.68', 'NORMAL', TRUE, DATE_SUB(NOW(), INTERVAL 30 DAY), DATE_SUB(NOW(), INTERVAL 30 DAY));
 
 -- NOTIFICATION PREFERENCES
 INSERT INTO notification_preferences (

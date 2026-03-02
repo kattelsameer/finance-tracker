@@ -141,7 +141,8 @@ public class DemoDataService {
             "classpath:db/demo/V104__seed_demo_expenses_part2.sql",
             "classpath:db/demo/V105__seed_demo_transfers_and_investments.sql",
             "classpath:db/demo/V106__seed_demo_budgets_and_recurring.sql",
-            "classpath:db/demo/V107__seed_demo_2026_transactions.sql"
+            "classpath:db/demo/V107__seed_demo_2026_transactions.sql",
+            "classpath:db/demo/V108__seed_demo_notifications.sql"
         };
         
         for (String migrationFile : migrationFiles) {
