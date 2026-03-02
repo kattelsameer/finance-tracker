@@ -32,6 +32,7 @@ export function TagsPage() {
     tagName: '',
     colorCode: TAG_COLORS[0]
   });
+  const [tagNameError, setTagNameError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTags();
@@ -53,6 +54,10 @@ export function TagsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.tagName.trim()) {
+      setTagNameError('Tag name is required');
+      return;
+    }
     try {
       setSaving(true);
       if (editingTag) {
@@ -66,6 +71,7 @@ export function TagsPage() {
       }
       setShowModal(false);
       setEditingTag(null);
+      setTagNameError(null);
       resetForm();
       fetchTags();
     } catch (err) {
@@ -89,12 +95,14 @@ export function TagsPage() {
 
   const openCreateModal = () => {
     setEditingTag(null);
+    setTagNameError(null);
     resetForm();
     setShowModal(true);
   };
 
   const openEditModal = (tag: Tag) => {
     setEditingTag(tag);
+    setTagNameError(null);
     setFormData({
       tagName: tag.tagName,
       colorCode: tag.colorCode
@@ -279,8 +287,8 @@ export function TagsPage() {
           <div className="flex min-h-screen items-center justify-center p-4">
             <div 
               className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" 
-              onClick={() => setShowModal(false)}
-              onKeyDown={(e) => e.key === 'Escape' && setShowModal(false)}
+              onClick={() => { setShowModal(false); setTagNameError(null); }}
+              onKeyDown={(e) => e.key === 'Escape' && (setShowModal(false), setTagNameError(null))}
               role="button"
               tabIndex={-1}
               aria-label="Close modal"
@@ -291,7 +299,7 @@ export function TagsPage() {
                   {editingTag ? 'Edit Tag' : 'Create Tag'}
                 </h2>
                 <button
-                  onClick={() => setShowModal(false)}
+                  onClick={() => { setShowModal(false); setTagNameError(null); }}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <X className="h-5 w-5" />
@@ -304,12 +312,22 @@ export function TagsPage() {
                   <input
                     type="text"
                     value={formData.tagName}
-                    onChange={(e) => setFormData({ ...formData, tagName: e.target.value })}
-                    required
+                    onChange={(e) => {
+                      setFormData({ ...formData, tagName: e.target.value });
+                      if (tagNameError) setTagNameError(null);
+                    }}
                     maxLength={50}
                     placeholder="Enter tag name"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
+                      tagNameError ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                    }`}
                   />
+                  {tagNameError && (
+                    <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="h-4 w-4" />
+                      {tagNameError}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -356,14 +374,14 @@ export function TagsPage() {
                 <div className="flex gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => setShowModal(false)}
+                    onClick={() => { setShowModal(false); setTagNameError(null); }}
                     className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    disabled={saving || !formData.tagName.trim()}
+                    disabled={saving}
                     className="flex-1 px-4 py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {saving ? 'Saving...' : editingTag ? 'Update Tag' : 'Create Tag'}
