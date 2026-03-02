@@ -10,11 +10,12 @@ export interface PaginatedResponse<T> {
 
 export interface PageResponse<T> {
   content: T[];
-  page: number;
+  number: number;  // current page index (0-based) — matches Spring Data Page.number
   size: number;
   totalElements: number;
   totalPages: number;
   last: boolean;
+  first: boolean;
 }
 
 export interface ApiError {

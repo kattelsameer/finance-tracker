@@ -1,4 +1,7 @@
-import { X } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import type { AccountType, CreateAccountRequest } from '../../types';
 
 interface AccountFormProps {
@@ -6,8 +9,8 @@ interface AccountFormProps {
   accountTypes: AccountType[];
   isEditing: boolean;
   saving: boolean;
-  onSubmit: (e: React.FormEvent) => void;
-  onChange: (data: CreateAccountRequest) => void;
+  onSubmit: (data: CreateAccountRequest) => void;
+  onChange?: (data: CreateAccountRequest) => void; // Keeping for compatibility but less critical now
   onClose: () => void;
 }
 
@@ -16,7 +19,46 @@ const ACCOUNT_COLORS = [
   '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
 ];
 
-export function AccountForm({ formData, accountTypes, isEditing, saving, onSubmit, onChange, onClose }: Readonly<AccountFormProps>) {
+const accountSchema = z.object({
+  accountName: z.string().min(1, 'Account name is required').trim(),
+  accountTypeId: z.number().int().min(1, 'Account type is required'),
+  currency: z.string().min(1, 'Currency is required').trim(),
+  initialBalance: z.number({ invalid_type_error: 'Initial balance must be a number' }),
+  colorCode: z.string().optional(),
+});
+
+type AccountFormValues = z.infer<typeof accountSchema>;
+
+export function AccountForm({ formData, accountTypes, isEditing, saving, onSubmit, onClose }: Readonly<AccountFormProps>) {
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<AccountFormValues>({
+    resolver: zodResolver(accountSchema),
+    defaultValues: {
+      accountName: formData.accountName || '',
+      accountTypeId: formData.accountTypeId || (accountTypes[0]?.id ?? 0),
+      currency: formData.currency || 'USD',
+      initialBalance: formData.initialBalance || 0,
+      colorCode: formData.colorCode || ACCOUNT_COLORS[0],
+    },
+  });
+
+  const currentColor = watch('colorCode');
+
+  const onFormSubmit = (data: AccountFormValues) => {
+    onSubmit({
+      accountName: data.accountName,
+      accountTypeId: data.accountTypeId,
+      currency: data.currency,
+      initialBalance: data.initialBalance,
+      colorCode: data.colorCode,
+    });
+  };
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
@@ -38,37 +80,45 @@ export function AccountForm({ formData, accountTypes, isEditing, saving, onSubmi
             </button>
           </div>
 
-          <form onSubmit={onSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-5">
             <div>
-              <label htmlFor="account-name" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="accountName" className="block text-sm font-semibold text-gray-700 mb-2">
                 Account Name
               </label>
               <input
-                id="account-name"
+                id="accountName"
                 type="text"
-                value={formData.accountName}
-                onChange={(e) => onChange({ ...formData, accountName: e.target.value })}
-                required
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                {...register('accountName')}
+                className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.accountName ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
                 placeholder="e.g., Main Checking"
               />
+              {errors.accountName && (
+                <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-4 w-4" />
+                  {errors.accountName.message}
+                </p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="account-type" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="accountTypeId" className="block text-sm font-semibold text-gray-700 mb-2">
                 Account Type
               </label>
               <select
-                id="account-type"
-                value={formData.accountTypeId}
-                onChange={(e) => onChange({ ...formData, accountTypeId: Number(e.target.value) })}
-                required
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                id="accountTypeId"
+                {...register('accountTypeId', { valueAsNumber: true })}
+                className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.accountTypeId ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
               >
                 {accountTypes.map(type => (
                   <option key={type.id} value={type.id}>{type.typeName}</option>
                 ))}
               </select>
+              {errors.accountTypeId && (
+                <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-4 w-4" />
+                  {errors.accountTypeId.message}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -79,25 +129,33 @@ export function AccountForm({ formData, accountTypes, isEditing, saving, onSubmi
                 <input
                   id="currency"
                   type="text"
-                  value={formData.currency}
-                  onChange={(e) => onChange({ ...formData, currency: e.target.value })}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  {...register('currency')}
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.currency ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
                 />
+                {errors.currency && (
+                  <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.currency.message}
+                  </p>
+                )}
               </div>
               <div>
-                <label htmlFor="initial-balance" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="initialBalance" className="block text-sm font-semibold text-gray-700 mb-2">
                   Initial Balance
                 </label>
                 <input
-                  id="initial-balance"
+                  id="initialBalance"
                   type="number"
                   step="0.01"
-                  value={formData.initialBalance}
-                  onChange={(e) => onChange({ ...formData, initialBalance: Number.parseFloat(e.target.value) || 0 })}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  {...register('initialBalance', { valueAsNumber: true })}
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.initialBalance ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
                 />
+                {errors.initialBalance && (
+                  <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.initialBalance.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -108,8 +166,8 @@ export function AccountForm({ formData, accountTypes, isEditing, saving, onSubmi
                   <button
                     key={color}
                     type="button"
-                    onClick={() => onChange({ ...formData, colorCode: color })}
-                    className={`w-8 h-8 rounded-lg border-2 ${formData.colorCode === color ? 'border-gray-900 scale-110' : 'border-transparent'}`}
+                    onClick={() => setValue('colorCode', color)}
+                    className={`w-8 h-8 rounded-lg border-2 ${currentColor === color ? 'border-gray-900 scale-110' : 'border-transparent'}`}
                     style={{ backgroundColor: color }}
                   />
                 ))}

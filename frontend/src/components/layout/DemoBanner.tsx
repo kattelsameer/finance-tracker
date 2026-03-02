@@ -5,13 +5,13 @@ const DEMO_BANNER_DISMISSED_KEY = 'demoBannerDismissed';
 
 export function DemoBanner() {
   const [isVisible, setIsVisible] = useState(() => {
-    return sessionStorage.getItem(DEMO_BANNER_DISMISSED_KEY) !== 'true';
+    return localStorage.getItem(DEMO_BANNER_DISMISSED_KEY) !== 'true';
   });
   const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
 
   const handleDismiss = () => {
     setIsVisible(false);
-    sessionStorage.setItem(DEMO_BANNER_DISMISSED_KEY, 'true');
+    localStorage.setItem(DEMO_BANNER_DISMISSED_KEY, 'true');
   };
 
   if (!isDemoMode || !isVisible) return null;

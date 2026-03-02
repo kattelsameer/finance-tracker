@@ -1,4 +1,7 @@
-import { X } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import type { Account, Category, CreateTransactionRequest } from '../../types';
 
 interface TransactionFormProps {
@@ -6,10 +9,38 @@ interface TransactionFormProps {
   accounts: Account[];
   categories: Category[];
   isEditing: boolean;
-  onSubmit: (e: React.FormEvent) => void;
-  onChange: (data: CreateTransactionRequest) => void;
+  onSubmit: (data: CreateTransactionRequest) => void;
+  onChange?: (data: CreateTransactionRequest) => void;
   onClose: () => void;
 }
+
+const transactionSchema = z.object({
+  transactionType: z.enum(['INCOME', 'EXPENSE', 'TRANSFER'] as const),
+  accountId: z.number({ invalid_type_error: 'Account is required' }).int().min(1, 'Account is required'),
+  transferToAccountId: z.number().int().optional().nullable(),
+  amount: z.number({ invalid_type_error: 'Amount is required' }).min(0.01, 'Amount must be greater than 0'),
+  transactionDate: z.string().min(1, 'Date is required'),
+  categoryId: z.number().int().optional().nullable(),
+  description: z.string().min(1, 'Description is required').trim(),
+  notes: z.string().optional().nullable(),
+}).superRefine((data, ctx) => {
+  if (data.transactionType === 'TRANSFER' && !data.transferToAccountId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Transfer destination account is required',
+      path: ['transferToAccountId'],
+    });
+  }
+  if (data.transactionType !== 'TRANSFER' && !data.categoryId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Category is required',
+      path: ['categoryId'],
+    });
+  }
+});
+
+type TransactionFormValues = z.infer<typeof transactionSchema>;
 
 export function TransactionForm({ 
   formData, 
@@ -17,12 +48,49 @@ export function TransactionForm({
   categories, 
   isEditing, 
   onSubmit, 
-  onChange, 
   onClose 
 }: Readonly<TransactionFormProps>) {
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    control,
+    formState: { errors },
+  } = useForm<TransactionFormValues>({
+    resolver: zodResolver(transactionSchema),
+    defaultValues: {
+      transactionType: formData.transactionType || 'EXPENSE',
+      accountId: formData.accountId || undefined,
+      transferToAccountId: formData.transferToAccountId || undefined,
+      amount: formData.amount || undefined,
+      transactionDate: formData.transactionDate || new Date().toISOString().split('T')[0],
+      categoryId: formData.categoryId || undefined,
+      description: formData.description || '',
+      notes: formData.notes || '',
+    },
+  });
+
+  const currentType = watch('transactionType');
+  const activeAccountId = watch('accountId');
+
   const filteredCategories = categories.filter(cat => 
-    formData.transactionType === 'TRANSFER' ? false : cat.categoryType === formData.transactionType
+    currentType === 'TRANSFER' ? false : cat.categoryType === currentType
   );
+
+  const onFormSubmit = (data: TransactionFormValues) => {
+    onSubmit({
+      transactionType: data.transactionType,
+      accountId: data.accountId,
+      transferToAccountId: data.transferToAccountId ?? undefined,
+      amount: data.amount,
+      transactionDate: data.transactionDate,
+      categoryId: data.categoryId ?? undefined,
+      description: data.description,
+      notes: data.notes ?? undefined,
+    });
+  };
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -45,14 +113,14 @@ export function TransactionForm({
             </button>
           </div>
 
-          <form onSubmit={onSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Type</label>
               <div className="grid grid-cols-3 gap-2">
                 {(['INCOME', 'EXPENSE', 'TRANSFER'] as const).map((type) => {
                   let buttonClass = 'bg-gray-100 text-gray-600 border-2 border-transparent';
                   
-                  if (formData.transactionType === type) {
+                  if (currentType === type) {
                     if (type === 'INCOME') {
                       buttonClass = 'bg-emerald-100 text-emerald-700 border-2 border-emerald-500';
                     } else if (type === 'EXPENSE') {
@@ -66,7 +134,13 @@ export function TransactionForm({
                     <button
                       key={type}
                       type="button"
-                      onClick={() => onChange({ ...formData, transactionType: type, categoryId: undefined })}
+                      onClick={() => {
+                        setValue('transactionType', type);
+                        setValue('categoryId', null as any);
+                        if (type !== 'TRANSFER') {
+                          setValue('transferToAccountId', null as any);
+                        }
+                      }}
                       className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-colors ${buttonClass}`}
                     >
                       {type}
@@ -77,40 +151,48 @@ export function TransactionForm({
             </div>
 
             <div>
-              <label htmlFor="account" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="accountId" className="block text-sm font-semibold text-gray-700 mb-2">
                 Account
               </label>
               <select
-                id="account"
-                value={formData.accountId}
-                onChange={(e) => onChange({ ...formData, accountId: Number(e.target.value) })}
-                required
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                id="accountId"
+                {...register('accountId', { valueAsNumber: true })}
+                className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.accountId ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
               >
                 <option value="">Select Account</option>
                 {accounts.map(acc => (
                   <option key={acc.id} value={acc.id}>{acc.accountName}</option>
                 ))}
               </select>
+              {errors.accountId && (
+                <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-4 w-4" />
+                  {errors.accountId.message}
+                </p>
+              )}
             </div>
 
-            {formData.transactionType === 'TRANSFER' && (
+            {currentType === 'TRANSFER' && (
               <div>
-                <label htmlFor="transfer-to" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="transferToAccountId" className="block text-sm font-semibold text-gray-700 mb-2">
                   Transfer To
                 </label>
                 <select
-                  id="transfer-to"
-                  value={formData.transferToAccountId || ''}
-                  onChange={(e) => onChange({ ...formData, transferToAccountId: Number(e.target.value) })}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  id="transferToAccountId"
+                  {...register('transferToAccountId', { valueAsNumber: true })}
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.transferToAccountId ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
                 >
                   <option value="">Select Account</option>
-                  {accounts.filter(a => a.id !== formData.accountId).map(acc => (
+                  {accounts.filter(a => a.id !== activeAccountId).map(acc => (
                     <option key={acc.id} value={acc.id}>{acc.accountName}</option>
                   ))}
                 </select>
+                {errors.transferToAccountId && (
+                  <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.transferToAccountId.message}
+                  </p>
+                )}
               </div>
             )}
 
@@ -123,43 +205,56 @@ export function TransactionForm({
                   id="amount"
                   type="number"
                   step="0.01"
-                  value={formData.amount}
-                  onChange={(e) => onChange({ ...formData, amount: Number.parseFloat(e.target.value) || 0 })}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  {...register('amount', { valueAsNumber: true })}
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.amount ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
                 />
+                {errors.amount && (
+                  <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.amount.message}
+                  </p>
+                )}
               </div>
               <div>
-                <label htmlFor="transaction-date" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="transactionDate" className="block text-sm font-semibold text-gray-700 mb-2">
                   Date
                 </label>
                 <input
-                  id="transaction-date"
+                  id="transactionDate"
                   type="date"
-                  value={formData.transactionDate}
-                  onChange={(e) => onChange({ ...formData, transactionDate: e.target.value })}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  {...register('transactionDate')}
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.transactionDate ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
                 />
+                {errors.transactionDate && (
+                  <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.transactionDate.message}
+                  </p>
+                )}
               </div>
             </div>
 
-            {formData.transactionType !== 'TRANSFER' && (
+            {currentType !== 'TRANSFER' && (
               <div>
-                <label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="categoryId" className="block text-sm font-semibold text-gray-700 mb-2">
                   Category
                 </label>
                 <select
-                  id="category"
-                  value={formData.categoryId || ''}
-                  onChange={(e) => onChange({ ...formData, categoryId: e.target.value ? Number(e.target.value) : undefined })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  id="categoryId"
+                  {...register('categoryId', { valueAsNumber: true })}
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.categoryId ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
                 >
                   <option value="">Select Category</option>
                   {filteredCategories.map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.categoryName}</option>
                   ))}
                 </select>
+                {errors.categoryId && (
+                  <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.categoryId.message}
+                  </p>
+                )}
               </div>
             )}
 
@@ -170,11 +265,16 @@ export function TransactionForm({
               <input
                 id="description"
                 type="text"
-                value={formData.description}
-                onChange={(e) => onChange({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                {...register('description')}
+                className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.description ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
                 placeholder="Enter description"
               />
+              {errors.description && (
+                <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-4 w-4" />
+                  {errors.description.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -183,9 +283,8 @@ export function TransactionForm({
               </label>
               <textarea
                 id="notes"
-                value={formData.notes || ''}
-                onChange={(e) => onChange({ ...formData, notes: e.target.value })}
                 rows={2}
+                {...register('notes')}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                 placeholder="Additional notes..."
               />

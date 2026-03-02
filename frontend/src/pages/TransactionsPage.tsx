@@ -69,7 +69,7 @@ export function TransactionsPage() {
       const response: PageResponse<Transaction> = await transactionService.getAll(debouncedFilter);
       setTransactions(response.content);
       setPagination({
-        page: response.page,
+        page: response.number,
         totalPages: response.totalPages,
         totalElements: response.totalElements
       });

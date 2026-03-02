@@ -39,7 +39,6 @@ const AdvancedSearchPage: React.FC = () => {
   
   // Search criteria state
   const [searchCriteria, setSearchCriteria] = useState<TransactionSearchRequest>({
-    query: '',
     page: 0,
     size: 20,
     sortBy: 'transactionDate',
@@ -101,7 +100,6 @@ const AdvancedSearchPage: React.FC = () => {
 
   const handleReset = () => {
     setSearchCriteria({
-      query: '',
       page: 0,
       size: 20,
       sortBy: 'transactionDate',

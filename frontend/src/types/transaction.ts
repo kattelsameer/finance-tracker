@@ -70,7 +70,6 @@ export interface TransactionFilter {
 }
 
 export interface TransactionSearchRequest {
-  query: string;
   accountId?: number;
   categoryId?: number;
   transactionType?: TransactionType;
