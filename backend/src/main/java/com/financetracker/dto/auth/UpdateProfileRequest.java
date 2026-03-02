@@ -15,6 +15,9 @@ public class UpdateProfileRequest {
     @Size(min = 3, max = 10, message = "Currency code must be between 3 and 10 characters")
     private String defaultCurrency;
     
+    @Size(min = 3, max = 3, message = "Secondary currency must be a 3-character code")
+    private String secondaryCurrency;
+
     @Size(max = 50, message = "Timezone must be at most 50 characters")
     private String timezone;
     
@@ -45,6 +48,14 @@ public class UpdateProfileRequest {
         this.defaultCurrency = defaultCurrency;
     }
     
+    public String getSecondaryCurrency() {
+        return secondaryCurrency;
+    }
+
+    public void setSecondaryCurrency(String secondaryCurrency) {
+        this.secondaryCurrency = secondaryCurrency;
+    }
+
     public String getTimezone() {
         return timezone;
     }

@@ -4,6 +4,7 @@ export interface User {
   email: string;
   displayName?: string;
   defaultCurrency: string;
+  secondaryCurrency?: string | null;
   timezone?: string;
   createdAt: string;
 }
@@ -30,6 +31,7 @@ export interface UpdateProfileRequest {
   email?: string;
   displayName?: string;
   defaultCurrency?: string;
+  secondaryCurrency?: string | null;
   timezone?: string;
 }
 

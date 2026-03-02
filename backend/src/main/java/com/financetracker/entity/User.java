@@ -39,6 +39,9 @@ public class User {
     @Builder.Default
     private String defaultCurrency = "NPR";
 
+    @Column(name = "secondary_currency", length = 3)
+    private String secondaryCurrency;
+
     @Column(length = 50, columnDefinition = "VARCHAR(50) DEFAULT 'UTC'")
     @Builder.Default
     private String timezone = "UTC";

@@ -2,6 +2,7 @@ import { TrendingDown, PiggyBank } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import type { CategorySpending } from '../../types';
 import type { CardWidth } from '../../contexts/FeatureFlagsContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface TopSpendingCategoriesProps {
   categories: CategorySpending[];
@@ -33,6 +34,8 @@ interface TooltipProps {
 }
 
 const CustomTooltip = ({ active, payload }: TooltipProps) => {
+  const { user } = useAuth();
+  const currency = user?.defaultCurrency || 'NPR';
   if (active && payload && payload.length) {
     return (
       <div 
@@ -44,7 +47,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps) => {
       >
         <p className="font-semibold text-gray-900 mb-1 text-sm">{payload[0].name}</p>
         <p className="text-sm text-gray-700 font-medium">
-          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(payload[0].value)}
+          {new Intl.NumberFormat('en-NP', { style: 'currency', currency }).format(payload[0].value)}
         </p>
         <p className="text-xs text-gray-500 mt-1">
           {payload[0].payload.percentage.toFixed(1)}% of total

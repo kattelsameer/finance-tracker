@@ -1,5 +1,6 @@
 import { Edit, Trash2, Tag as TagIcon, TrendingUp, TrendingDown, ArrowRightLeft } from 'lucide-react';
 import type { Transaction } from '../../types';
+import { SecondaryCurrencyBadge } from '../ui/SecondaryCurrencyBadge';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -79,8 +80,16 @@ export function TransactionTable({
                 <span className="text-sm text-gray-600">{transaction.accountName}</span>
               </td>
               <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-bold ${getTransactionColor(transaction.transactionType)}`}>
-                {transaction.transactionType === 'EXPENSE' ? '-' : ''}
-                {formatCurrency(transaction.amount, transaction.currency)}
+                <div className="flex flex-col items-end gap-1">
+                  <span>
+                    {transaction.transactionType === 'EXPENSE' ? '-' : ''}
+                    {formatCurrency(transaction.amount, transaction.currency)}
+                  </span>
+                  <SecondaryCurrencyBadge
+                    amount={Math.abs(transaction.amount)}
+                    primaryCurrency={transaction.currency}
+                  />
+                </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-center">
                 <div className="flex items-center justify-center gap-2">

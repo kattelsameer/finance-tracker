@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { transactionService } from '../../services/transaction.service';
 import type { Transaction } from '../../types';
+import { SecondaryCurrencyBadge } from '../ui/SecondaryCurrencyBadge';
 
 interface RecentTransactionsProps {
   formatCurrency: (amount: number) => string;
@@ -105,6 +106,11 @@ export function RecentTransactions({ formatCurrency }: Readonly<RecentTransactio
                     {transaction.transactionType === 'INCOME' ? '+' : '-'}
                     {formatCurrency(Math.abs(transaction.amount))}
                   </p>
+                  <SecondaryCurrencyBadge
+                    amount={Math.abs(transaction.amount)}
+                    primaryCurrency={transaction.currency}
+                    className="mt-0.5"
+                  />
                 </div>
               </div>
             ))}

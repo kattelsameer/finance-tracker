@@ -1,5 +1,6 @@
 import { TrendingUp, TrendingDown, PiggyBank, Wallet } from 'lucide-react';
 import type { DashboardStats } from '../../types';
+import { SecondaryCurrencyBadge } from '../ui/SecondaryCurrencyBadge';
 
 interface SummaryCardsProps {
   stats: DashboardStats;
@@ -18,6 +19,7 @@ export function SummaryCards({ stats, formatCurrency }: Readonly<SummaryCardsPro
           <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Income</span>
         </div>
         <p className="text-xl lg:text-2xl font-bold tracking-tight text-gray-900 mb-1">{formatCurrency(stats.totalIncome)}</p>
+        <SecondaryCurrencyBadge amount={stats.totalIncome} className="mb-1" />
         <p className="text-xs sm:text-sm text-gray-600">This period</p>
       </div>
 
@@ -30,6 +32,7 @@ export function SummaryCards({ stats, formatCurrency }: Readonly<SummaryCardsPro
           <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Expenses</span>
         </div>
         <p className="text-xl lg:text-2xl font-bold tracking-tight text-gray-900 mb-1">{formatCurrency(stats.totalExpenses)}</p>
+        <SecondaryCurrencyBadge amount={stats.totalExpenses} className="mb-1" />
         <p className="text-xs sm:text-sm text-gray-600">This period</p>
       </div>
 
@@ -58,6 +61,7 @@ export function SummaryCards({ stats, formatCurrency }: Readonly<SummaryCardsPro
           <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</span>
         </div>
         <p className="text-xl lg:text-2xl font-bold tracking-tight text-gray-900 mb-1">{formatCurrency(stats.totalBalance)}</p>
+        <SecondaryCurrencyBadge amount={stats.totalBalance} className="mb-1" />
         <p className="text-xs sm:text-sm text-gray-600">{stats.activeAccountsCount} accounts</p>
       </div>
     </div>

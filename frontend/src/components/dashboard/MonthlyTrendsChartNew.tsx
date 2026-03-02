@@ -1,6 +1,7 @@
 import { BarChart3 } from 'lucide-react';
 import { Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Line, ComposedChart } from 'recharts';
 import type { MonthlyTrend } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface MonthlyTrendsChartProps {
   trends: MonthlyTrend[];
@@ -19,19 +20,22 @@ interface TooltipProps {
 }
 
 const CustomTooltip = ({ active, payload }: TooltipProps) => {
+  const { user } = useAuth();
+  const currency = user?.defaultCurrency || 'NPR';
+  const fmt = (n: number) => new Intl.NumberFormat('en-NP', { style: 'currency', currency }).format(n);
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
         <p className="font-semibold text-gray-900 mb-2">{payload[0].payload.month}</p>
         <div className="space-y-1 text-sm">
           <p className="text-emerald-600 font-medium">
-            Income: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(payload[0].payload.income)}
+            Income: {fmt(payload[0].payload.income)}
           </p>
           <p className="text-red-600 font-medium">
-            Expenses: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(payload[0].payload.expenses)}
+            Expenses: {fmt(payload[0].payload.expenses)}
           </p>
           <p className={`font-semibold ${payload[0].payload.net >= 0 ? 'text-teal-600' : 'text-red-600'}`}>
-            Net: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(payload[0].payload.net)}
+            Net: {fmt(payload[0].payload.net)}
           </p>
         </div>
       </div>

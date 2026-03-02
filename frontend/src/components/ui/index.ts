@@ -28,3 +28,6 @@ export type { SpinnerProps, LoadingProps } from './Spinner';
 
 export { Alert } from './Alert';
 export type { AlertProps } from './Alert';
+
+export { SecondaryCurrencyBadge } from './SecondaryCurrencyBadge';
+export { CurrencyChangeModal } from './CurrencyChangeModal';

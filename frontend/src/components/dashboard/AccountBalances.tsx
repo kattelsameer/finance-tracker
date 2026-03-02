@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { accountService } from '../../services/account.service';
 import type { Account } from '../../types';
+import { SecondaryCurrencyBadge } from '../ui/SecondaryCurrencyBadge';
 
 interface AccountBalancesProps {
   formatCurrency: (amount: number) => string;
@@ -103,6 +104,11 @@ export function AccountBalances({ formatCurrency }: Readonly<AccountBalancesProp
                   <p className="text-sm font-bold text-gray-900">
                     {formatCurrency(account.currentBalance)}
                   </p>
+                  <SecondaryCurrencyBadge
+                    amount={account.currentBalance}
+                    primaryCurrency={account.currency}
+                    className="mt-0.5"
+                  />
                 </div>
               </div>
             ))}

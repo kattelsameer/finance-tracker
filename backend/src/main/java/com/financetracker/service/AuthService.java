@@ -199,6 +199,7 @@ public class AuthService {
                 user.getEmail(),
                 user.getDisplayName(),
                 user.getDefaultCurrency(),
+                user.getSecondaryCurrency(),
                 user.getTimezone(),
                 createdAtLocal
         );
@@ -225,6 +226,11 @@ public class AuthService {
         // Update default currency if provided
         if (request.getDefaultCurrency() != null) {
             user.setDefaultCurrency(request.getDefaultCurrency());
+        }
+        
+        // Update secondary currency if provided (null means keep existing, empty string clears it)
+        if (request.getSecondaryCurrency() != null) {
+            user.setSecondaryCurrency(request.getSecondaryCurrency().isBlank() ? null : request.getSecondaryCurrency().toUpperCase());
         }
         
         // Update timezone if provided

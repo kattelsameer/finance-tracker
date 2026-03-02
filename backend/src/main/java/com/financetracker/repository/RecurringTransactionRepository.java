@@ -41,4 +41,8 @@ public interface RecurringTransactionRepository extends JpaRepository<RecurringT
     @Query("SELECT COUNT(rt) FROM RecurringTransaction rt " +
            "WHERE rt.user.id = :userId AND rt.isActive = true")
     long countActiveByUserId(@Param("userId") Long userId);
+
+    List<RecurringTransaction> findByUserId(Long userId);
+
+    void deleteAllByUserId(Long userId);
 }

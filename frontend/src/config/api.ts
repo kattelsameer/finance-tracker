@@ -27,4 +27,8 @@ export const ENDPOINTS = {
   TAGS: 'tags',
   // Budgets
   BUDGETS: 'budgets',
+  // Settings
+  SETTINGS: {
+    CURRENCY_CHANGE: 'settings/currency-change',
+  },
 } as const;

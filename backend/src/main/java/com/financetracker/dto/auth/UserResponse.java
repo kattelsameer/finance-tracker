@@ -9,6 +9,7 @@ public class UserResponse {
     private String email;
     private String displayName;
     private String defaultCurrency;
+    private String secondaryCurrency;
     private String timezone;
     private LocalDateTime createdAt;
     
@@ -16,12 +17,14 @@ public class UserResponse {
     }
     
     public UserResponse(Long id, String username, String email, String displayName,
-                        String defaultCurrency, String timezone, LocalDateTime createdAt) {
+                        String defaultCurrency, String secondaryCurrency, String timezone,
+                        LocalDateTime createdAt) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.displayName = displayName;
         this.defaultCurrency = defaultCurrency;
+        this.secondaryCurrency = secondaryCurrency;
         this.timezone = timezone;
         this.createdAt = createdAt;
     }
@@ -64,6 +67,14 @@ public class UserResponse {
     
     public void setDefaultCurrency(String defaultCurrency) {
         this.defaultCurrency = defaultCurrency;
+    }
+    
+    public String getSecondaryCurrency() {
+        return secondaryCurrency;
+    }
+    
+    public void setSecondaryCurrency(String secondaryCurrency) {
+        this.secondaryCurrency = secondaryCurrency;
     }
     
     public String getTimezone() {

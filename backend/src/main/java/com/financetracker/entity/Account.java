@@ -24,7 +24,7 @@ public class Account {
     private String accountName;
     
     @Column(length = 3)
-    private String currency = "USD";
+    private String currency = "NPR";
     
     @Column(name = "initial_balance", precision = 15, scale = 2)
     private BigDecimal initialBalance = BigDecimal.ZERO;

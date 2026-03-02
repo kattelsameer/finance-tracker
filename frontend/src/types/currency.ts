@@ -33,3 +33,25 @@ export interface ConvertAmountResponse {
   toCurrency: string;
   exchangeRate: number;
 }
+
+// ── Currency change workflow ──────────────────────────────────────────────────
+
+export type CurrencyChangeAction = 'CONVERT' | 'RESET';
+
+export interface CurrencyChangeRequest {
+  newCurrency: string;
+  action: CurrencyChangeAction;
+  /** Required when action === 'CONVERT' */
+  exchangeRate?: number;
+}
+
+export interface CurrencyChangeResponse {
+  previousCurrency: string;
+  newCurrency: string;
+  action: CurrencyChangeAction;
+  accountsUpdated: number;
+  transactionsUpdated: number;
+  recurringUpdated: number;
+  budgetsUpdated: number;
+  message: string;
+}

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFeatureFlags } from '../contexts/FeatureFlagsContext';
+import { useSecondaryCurrency } from '../contexts/SecondaryCurrencyContext';
 import { authService } from '../services/auth.service';
 import { notificationService } from '../services/notification.service';
+import { CurrencyChangeModal } from '../components/ui/CurrencyChangeModal';
 
 import { DateRangeFilter } from '../components/dashboard/DateRangeFilter';
 import { 
@@ -91,6 +93,7 @@ const NAVIGATION_FEATURE_CARDS = [
 export function SettingsPage() {
   const { user, refetchUser } = useAuth();
   const { dashboardFeatures, updateDashboardFeature, navigationFeatures, updateNavigationFeature, resetToDefaults } = useFeatureFlags();
+  const { secondaryCurrency, setSecondaryCurrency } = useSecondaryCurrency();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<SettingsTab>(
     (searchParams.get('tab') as SettingsTab) || 'general'
@@ -99,11 +102,18 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+
+  // Currency change modal state
+  const [currencyModalOpen, setCurrencyModalOpen] = useState(false);
+  const [pendingCurrency, setPendingCurrency] = useState<string | null>(null);
   
   const [settings, setSettings] = useState({
     defaultCurrency: user?.defaultCurrency || 'NPR',
     timezone: user?.timezone || 'UTC',
   });
+
+  // Staged currency (shown in dropdown, not yet committed)
+  const [stagedCurrency, setStagedCurrency] = useState(user?.defaultCurrency || 'NPR');
 
   // Dashboard date range filter state
   const [dashboardDateRange, setDashboardDateRange] = useState(() => {
@@ -179,6 +189,7 @@ export function SettingsPage() {
         defaultCurrency: user.defaultCurrency || 'NPR',
         timezone: user.timezone || 'UTC',
       });
+      setStagedCurrency(user.defaultCurrency || 'NPR');
       setProfile({
         displayName: user.displayName || '',
         email: user.email || '',
@@ -207,13 +218,20 @@ export function SettingsPage() {
   };
 
   const handleSave = async () => {
+    // If the currency has changed, open the modal instead of saving directly
+    const currentCurrency = user?.defaultCurrency || 'NPR';
+    if (stagedCurrency !== currentCurrency) {
+      setPendingCurrency(stagedCurrency);
+      setCurrencyModalOpen(true);
+      return;
+    }
+
     setSaving(true);
     setError('');
     setSuccess('');
     
     try {
       await authService.updateProfile({
-        defaultCurrency: settings.defaultCurrency,
         timezone: settings.timezone,
       });
       await refetchUser();
@@ -228,6 +246,18 @@ export function SettingsPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCurrencyChangeSuccess = async (newCurrency: string) => {
+    // The backend already updated the currency; now update profile for timezone too
+    await authService.updateProfile({ defaultCurrency: newCurrency, timezone: settings.timezone });
+    await refetchUser();
+    setStagedCurrency(newCurrency);
+    setSettings(prev => ({ ...prev, defaultCurrency: newCurrency }));
+    sessionStorage.setItem('dashboardDateRange', JSON.stringify(dashboardDateRange));
+    setSuccess('Currency changed successfully! Page will refresh.');
+    // Reload to clear all caches
+    setTimeout(() => window.location.reload(), 1500);
   };
 
   const handleDateRangeChange = (startDate: string, endDate: string) => {
@@ -403,7 +433,7 @@ export function SettingsPage() {
             )}
 
             <div className="space-y-6">
-              {/* Currency Setting */}
+              {/* Default Currency Setting */}
               <div>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-lg bg-green-50 border border-green-100 flex items-center justify-center">
@@ -411,12 +441,12 @@ export function SettingsPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-900">Default Currency</label>
-                    <p className="text-xs text-gray-500">Used for new transactions</p>
+                    <p className="text-xs text-gray-500">Base currency for all transactions and balances</p>
                   </div>
                 </div>
                 <select
-                  value={settings.defaultCurrency}
-                  onChange={(e) => setSettings({ ...settings, defaultCurrency: e.target.value })}
+                  value={stagedCurrency}
+                  onChange={(e) => setStagedCurrency(e.target.value)}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-colors"
                 >
                   {SUPPORTED_CURRENCIES.map((currency) => (
@@ -425,6 +455,45 @@ export function SettingsPage() {
                     </option>
                   ))}
                 </select>
+                {stagedCurrency !== (user?.defaultCurrency || 'NPR') && (
+                  <p className="mt-2 text-xs text-amber-600 flex items-center gap-1">
+                    <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                    Saving will prompt you to convert or reset existing data.
+                  </p>
+                )}
+              </div>
+
+              {/* Secondary Currency Setting */}
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+                    <ArrowDownUp className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900">Secondary Currency</label>
+                    <p className="text-xs text-gray-500">Display converted amounts next to primary values</p>
+                  </div>
+                </div>
+                <select
+                  value={secondaryCurrency ?? ''}
+                  onChange={(e) => setSecondaryCurrency(e.target.value || null)}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-colors"
+                >
+                  <option value="">— None (disable secondary display) —</option>
+                  {SUPPORTED_CURRENCIES.filter(c => c.code !== stagedCurrency).map((currency) => (
+                    <option key={currency.code} value={currency.code}>
+                      {currency.symbol} {currency.code} - {currency.name}
+                    </option>
+                  ))}
+                </select>
+                {secondaryCurrency && (
+                  <p className="mt-2 text-xs text-indigo-600 flex items-center gap-1.5">
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    Amounts will show{' '}
+                    <span className="font-medium">{secondaryCurrency}</span>{' '}
+                    equivalents in real time across the app.
+                  </p>
+                )}
               </div>
 
               {/* Divider */}
@@ -1111,6 +1180,21 @@ export function SettingsPage() {
           </div>
         )}
       </div>
+
+      {/* Currency Change Modal */}
+      {pendingCurrency && (
+        <CurrencyChangeModal
+          isOpen={currencyModalOpen}
+          fromCurrency={user?.defaultCurrency || 'NPR'}
+          toCurrency={pendingCurrency}
+          onClose={() => {
+            setCurrencyModalOpen(false);
+            // Revert staged currency back to current
+            setStagedCurrency(user?.defaultCurrency || 'NPR');
+          }}
+          onSuccess={handleCurrencyChangeSuccess}
+        />
+      )}
     </div>
   );
 }

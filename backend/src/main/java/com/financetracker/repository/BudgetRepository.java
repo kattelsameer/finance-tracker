@@ -52,4 +52,6 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
     
     @Query("SELECT b FROM Budget b WHERE b.user.id = :userId AND b.isActive = true")
     List<Budget> findActiveByUserId(@Param("userId") Long userId);
+
+    void deleteAllByUserId(Long userId);
 }

@@ -43,4 +43,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     BigDecimal sumCurrentBalanceByUserId(@Param("userId") Long userId);
     
     long countByUserIdAndIsActive(Long userId, Boolean isActive);
+
+    void deleteAllByUserId(Long userId);
 }

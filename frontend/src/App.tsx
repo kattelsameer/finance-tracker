@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { FeatureFlagsProvider } from './contexts/FeatureFlagsContext';
+import { SecondaryCurrencyProvider } from './contexts/SecondaryCurrencyContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AppLayout } from './components/layout';
 import { LoginPage, RegisterPage } from './pages/auth';
@@ -32,6 +33,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
+          <SecondaryCurrencyProvider>
           <FeatureFlagsProvider>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
@@ -59,6 +61,7 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </FeatureFlagsProvider>
+          </SecondaryCurrencyProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

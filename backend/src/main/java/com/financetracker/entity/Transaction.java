@@ -39,7 +39,7 @@ public class Transaction {
     private BigDecimal amount;
     
     @Column(length = 3)
-    private String currency = "USD";
+    private String currency = "NPR";
     
     @Column(name = "transaction_date", nullable = false)
     private LocalDate transactionDate;

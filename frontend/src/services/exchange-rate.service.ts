@@ -87,7 +87,8 @@ async function convert(
 ): Promise<{ convertedAmount: number; rate: number }> {
   const rate = await getRate(fromCode, toCode);
   return {
-    convertedAmount: Math.round(amount * rate * 100) / 100,
+    // Preserve full precision — callers are responsible for display rounding
+    convertedAmount: amount * rate,
     rate,
   };
 }
