@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, AlertCircle, Loader2, Wallet, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Loader2, Wallet, Eye, EyeOff, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function LoginPage() {
@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showDemoCreds, setShowDemoCreds] = useState(true);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault(); // Prevent form submission
@@ -46,8 +47,13 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo and Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-xl mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-xl mb-4 relative flex-shrink-0">
             <Wallet className="w-8 h-8 text-white" />
+            {import.meta.env.VITE_DEMO_MODE === 'true' && (
+              <span className="absolute -top-2 -right-2 bg-purple-500 text-white text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full shadow-sm border-2 border-gray-50 z-10">
+                DEMO
+              </span>
+            )}
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">
             Welcome back
@@ -192,6 +198,32 @@ export default function LoginPage() {
           </button>
         </p>
       </div>
+      {/* Floating Demo Credentials Modal */}
+      {import.meta.env.VITE_DEMO_MODE === 'true' && showDemoCreds && (
+        <div className="fixed bottom-6 right-6 w-80 bg-white rounded-xl shadow-xl border border-purple-200 z-50 overflow-hidden transform transition-all duration-300 ease-in-out">
+          <div className="bg-purple-50 px-4 py-3 border-b border-purple-100 flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-700 flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5" /> Demo Access
+            </span>
+            <button 
+              onClick={() => setShowDemoCreds(false)}
+              className="text-purple-400 hover:text-purple-700 transition-colors p-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="p-4 space-y-3">
+            <div className="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+              <span className="text-gray-500 text-sm font-medium">Email</span>
+              <span className="font-mono text-sm font-medium text-gray-900 select-all">demo@example.com</span>
+            </div>
+            <div className="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+              <span className="text-gray-500 text-sm font-medium">Password</span>
+              <span className="font-mono text-sm font-medium text-gray-900 select-all">Demo123!</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
