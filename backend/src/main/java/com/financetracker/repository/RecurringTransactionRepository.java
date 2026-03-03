@@ -45,4 +45,14 @@ public interface RecurringTransactionRepository extends JpaRepository<RecurringT
     List<RecurringTransaction> findByUserId(Long userId);
 
     void deleteAllByUserId(Long userId);
+
+    /**
+     * Find all active recurring transactions whose next occurrence falls within the given date range.
+     * Used for advance-reminder notifications.
+     */
+    @Query("SELECT rt FROM RecurringTransaction rt WHERE rt.isActive = true " +
+           "AND rt.nextOccurrence >= :fromDate AND rt.nextOccurrence <= :toDate")
+    List<RecurringTransaction> findUpcomingByDateRange(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate);
 }

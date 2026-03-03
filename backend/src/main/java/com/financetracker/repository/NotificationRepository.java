@@ -36,4 +36,11 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findUnsentNotificationsBeforeTime(Instant cutoffTime);
     
     void deleteByUserIdAndCreatedAtBefore(Long userId, Instant cutoffTime);
+
+    /**
+     * Check if an unread notification of a specific type already exists for a related entity.
+     * Used to prevent duplicate budget alert / exceeded notifications.
+     */
+    boolean existsByUserIdAndRelatedEntityIdAndNotificationTypeAndIsReadFalse(
+            Long userId, Long relatedEntityId, NotificationType notificationType);
 }

@@ -3,18 +3,18 @@ import type {
   Notification,
   NotificationPreference,
   UpdateNotificationPreferenceRequest,
-  PaginatedResponse,
+  PageResponse,
 } from '../types';
 
 export const notificationService = {
   /**
-   * Get paginated notifications
+   * Get paginated notifications (matches Spring Data Page format)
    */
   async getNotifications(
     page: number = 0,
     size: number = 20
-  ): Promise<PaginatedResponse<Notification>> {
-    return apiClient.get<PaginatedResponse<Notification>>(
+  ): Promise<PageResponse<Notification>> {
+    return apiClient.get<PageResponse<Notification>>(
       'notifications',
       { params: { page, size } }
     );

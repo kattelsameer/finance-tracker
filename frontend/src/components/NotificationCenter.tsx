@@ -17,6 +17,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -26,11 +27,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
   const loadNotifications = async () => {
     setLoading(true);
+    setError(null);
     try {
       const unread = await notificationService.getUnreadNotifications();
       setNotifications(unread);
-    } catch (error) {
-      logger.error('Failed to load notifications:', error);
+    } catch (err) {
+      logger.error('Failed to load notifications:', err);
+      setError('Failed to load notifications. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -192,6 +195,20 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-4 w-4 text-blue-600" />
               </div>
               <p className="mt-4 text-gray-500 text-sm">Loading notifications...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center h-64 px-6">
+              <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
+                <Bell className="h-8 w-8 text-red-300" />
+              </div>
+              <p className="text-base font-semibold text-gray-800">Could not load notifications</p>
+              <p className="text-sm text-gray-500 mt-1 text-center">{error}</p>
+              <button
+                onClick={loadNotifications}
+                className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                Retry
+              </button>
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 px-6">

@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -191,6 +192,100 @@ public class NotificationService {
         return mapPreferenceToResponse(preference);
     }
     
+    /**
+     * Check if an unread notification of the given type already exists for a related entity.
+     * Used to prevent duplicate budget-alert / budget-exceeded notifications.
+     */
+    @Transactional(readOnly = true)
+    public boolean hasUnreadNotificationForEntity(Long userId, Long relatedEntityId, NotificationType type) {
+        return notificationRepository.existsByUserIdAndRelatedEntityIdAndNotificationTypeAndIsReadFalse(
+                userId, relatedEntityId, type);
+    }
+
+    /**
+     * Fires a LOW_BALANCE_WARNING notification if the account balance is at or below
+     * the user's configured threshold and no unread warning already exists for this account.
+     */
+    @Transactional
+    public void triggerLowBalanceCheck(Long userId, Long accountId, String accountName, BigDecimal currentBalance) {
+        try {
+            NotificationPreference pref = getOrCreatePreference(userId);
+            if (!shouldSendNotification(pref, NotificationType.LOW_BALANCE_WARNING)) {
+                return;
+            }
+            if (currentBalance.compareTo(pref.getLowBalanceThreshold()) > 0) {
+                return; // still above threshold
+            }
+            boolean alreadyNotified = notificationRepository
+                    .existsByUserIdAndRelatedEntityIdAndNotificationTypeAndIsReadFalse(
+                            userId, accountId, NotificationType.LOW_BALANCE_WARNING);
+            if (!alreadyNotified) {
+                String msg = String.format(
+                        "Your account '%s' balance is %s, which is at or below your low-balance threshold of %s.",
+                        accountName, currentBalance, pref.getLowBalanceThreshold());
+                createNotification(userId, NotificationType.LOW_BALANCE_WARNING,
+                        "Low Balance: " + accountName, msg, Priority.HIGH,
+                        "ACCOUNT", accountId, "/accounts");
+            }
+        } catch (Exception e) {
+            logger.warn("Low balance check failed for user {} account {}: {}", userId, accountId, e.getMessage());
+        }
+    }
+
+    /**
+     * Fires a LARGE_TRANSACTION notification if the transaction amount exceeds the user's threshold.
+     */
+    @Transactional
+    public void triggerLargeTransactionCheck(Long userId, Long transactionId, BigDecimal amount,
+                                             String description, Long accountId) {
+        try {
+            NotificationPreference pref = getOrCreatePreference(userId);
+            if (!shouldSendNotification(pref, NotificationType.LARGE_TRANSACTION)) {
+                return;
+            }
+            if (amount.compareTo(pref.getLargeTransactionThreshold()) < 0) {
+                return; // below threshold
+            }
+            String msg = String.format(
+                    "A large transaction of %s was recorded%s. Review your transactions if this was unexpected.",
+                    amount, description != null && !description.isBlank() ? " (" + description + ")" : "");
+            createNotification(userId, NotificationType.LARGE_TRANSACTION,
+                    "Large Transaction Detected", msg, Priority.NORMAL,
+                    "TRANSACTION", transactionId, "/transactions");
+        } catch (Exception e) {
+            logger.warn("Large transaction check failed for user {} tx {}: {}", userId, transactionId, e.getMessage());
+        }
+    }
+
+    /**
+     * Fires a RECURRING_TRANSACTION_DUE reminder for an upcoming recurring transaction.
+     * Deduplicates within the same calendar day by checking for an existing unread notification
+     * for this recurring transaction entity.
+     */
+    @Transactional
+    public void triggerRecurringReminder(Long userId, Long recurringId, String description,
+                                         BigDecimal amount, String currency, String dueDate) {
+        try {
+            NotificationPreference pref = getOrCreatePreference(userId);
+            if (!shouldSendNotification(pref, NotificationType.RECURRING_TRANSACTION_DUE)) {
+                return;
+            }
+            boolean alreadyNotified = notificationRepository
+                    .existsByUserIdAndRelatedEntityIdAndNotificationTypeAndIsReadFalse(
+                            userId, recurringId, NotificationType.RECURRING_TRANSACTION_DUE);
+            if (!alreadyNotified) {
+                String msg = String.format(
+                        "Your recurring transaction '%s' of %s %s is due on %s.",
+                        description != null ? description : "Recurring", currency, amount, dueDate);
+                createNotification(userId, NotificationType.RECURRING_TRANSACTION_DUE,
+                        "Upcoming: " + (description != null ? description : "Recurring Transaction"),
+                        msg, Priority.LOW, "RECURRING_TRANSACTION", recurringId, "/recurring-transactions");
+            }
+        } catch (Exception e) {
+            logger.warn("Recurring reminder failed for user {} recurring {}: {}", userId, recurringId, e.getMessage());
+        }
+    }
+
     /**
      * Clean up old read notifications (older than 30 days)
      */

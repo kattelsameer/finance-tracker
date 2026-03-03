@@ -7,6 +7,8 @@ import com.financetracker.dto.category.CategoryResponse;
 import com.financetracker.entity.Budget;
 import com.financetracker.entity.Budget.PeriodType;
 import com.financetracker.entity.Category;
+import com.financetracker.entity.Notification.NotificationType;
+import com.financetracker.entity.Notification.Priority;
 import com.financetracker.entity.Transaction;
 import com.financetracker.entity.User;
 import com.financetracker.exception.ApiException;
@@ -15,6 +17,7 @@ import com.financetracker.repository.BudgetRepository;
 import com.financetracker.repository.CategoryRepository;
 import com.financetracker.repository.TransactionRepository;
 import com.financetracker.repository.UserRepository;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,15 +36,18 @@ public class BudgetService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
+    private final NotificationService notificationService;
     
     public BudgetService(BudgetRepository budgetRepository,
                          UserRepository userRepository,
                          CategoryRepository categoryRepository,
-                         TransactionRepository transactionRepository) {
+                         TransactionRepository transactionRepository,
+                         @Lazy NotificationService notificationService) {
         this.budgetRepository = budgetRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
+        this.notificationService = notificationService;
     }
     
     public BudgetResponse createBudget(Long userId, CreateBudgetRequest request) {
@@ -160,6 +166,70 @@ public class BudgetService {
         budgetRepository.delete(budget);
     }
     
+    /**
+     * Evaluates all active budgets for a user and fires budget-alert / budget-exceeded
+     * notifications as appropriate.  Called after any expense transaction is saved.
+     */
+    @Transactional
+    public void checkAndNotifyBudgets(Long userId) {
+        LocalDate today = LocalDate.now();
+        List<Budget> budgets = budgetRepository.findActiveBudgetsWithAlertsEnabled(userId, today);
+
+        for (Budget budget : budgets) {
+            if (!Boolean.TRUE.equals(budget.getAlertEnabled())) {
+                continue;
+            }
+            BigDecimal spent = calculateSpentAmount(budget, userId);
+            if (budget.getAmount().compareTo(BigDecimal.ZERO) == 0) {
+                continue;
+            }
+
+            double pct = spent.divide(budget.getAmount(), 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100))
+                    .doubleValue();
+
+            boolean exceeded = spent.compareTo(budget.getAmount()) > 0;
+            boolean nearThreshold = !exceeded && pct >= budget.getAlertThreshold();
+
+            if (exceeded) {
+                boolean alreadyNotified = notificationService.hasUnreadNotificationForEntity(
+                        userId, budget.getId(), NotificationType.BUDGET_EXCEEDED);
+                if (!alreadyNotified) {
+                    String msg = String.format(
+                            "Your '%s' budget of %s has been exceeded. You have spent %s (%.1f%% of budget).",
+                            budget.getBudgetName(), budget.getAmount(), spent, pct);
+                    notificationService.createNotification(
+                            userId,
+                            NotificationType.BUDGET_EXCEEDED,
+                            budget.getBudgetName() + " Budget Exceeded",
+                            msg,
+                            Priority.HIGH,
+                            "BUDGET",
+                            budget.getId(),
+                            "/budgets");
+                }
+            } else if (nearThreshold) {
+                boolean alreadyNotified = notificationService.hasUnreadNotificationForEntity(
+                        userId, budget.getId(), NotificationType.BUDGET_ALERT);
+                if (!alreadyNotified) {
+                    String msg = String.format(
+                            "You have used %.1f%% of your '%s' budget. Budget: %s, Spent: %s, Remaining: %s.",
+                            pct, budget.getBudgetName(), budget.getAmount(), spent,
+                            budget.getAmount().subtract(spent));
+                    notificationService.createNotification(
+                            userId,
+                            NotificationType.BUDGET_ALERT,
+                            budget.getBudgetName() + " Budget at " + (int) pct + "%",
+                            msg,
+                            Priority.NORMAL,
+                            "BUDGET",
+                            budget.getId(),
+                            "/budgets");
+                }
+            }
+        }
+    }
+
     @Transactional(readOnly = true)
     public List<BudgetResponse> getBudgetsNearThreshold(Long userId) {
         LocalDate today = LocalDate.now();

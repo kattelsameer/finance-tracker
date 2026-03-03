@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import com.financetracker.exception.ApiException;
 import com.financetracker.exception.ErrorCode;
 import com.financetracker.repository.*;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,18 +34,21 @@ public class RecurringTransactionService {
     private final AccountRepository accountRepository;
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
+    private final NotificationService notificationService;
     
     public RecurringTransactionService(
             RecurringTransactionRepository recurringTransactionRepository,
             UserRepository userRepository,
             AccountRepository accountRepository,
             CategoryRepository categoryRepository,
-            TransactionRepository transactionRepository) {
+            TransactionRepository transactionRepository,
+            @Lazy NotificationService notificationService) {
         this.recurringTransactionRepository = recurringTransactionRepository;
         this.userRepository = userRepository;
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
+        this.notificationService = notificationService;
     }
     
     @SuppressWarnings("null")
@@ -244,6 +249,34 @@ public class RecurringTransactionService {
             } catch (Exception e) {
                 // Log error but continue processing other recurring transactions
                 logger.error("Error processing recurring transaction {}: {}", recurring.getId(), e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * Daily at 8 AM: send RECURRING_TRANSACTION_DUE reminders for recurring transactions
+     * due within the next 3 days so users have advance notice.
+     */
+    @Scheduled(cron = "0 0 8 * * *")
+    @Transactional
+    public void sendUpcomingRecurringReminders() {
+        LocalDate today = LocalDate.now();
+        LocalDate cutoff = today.plusDays(3);
+        List<RecurringTransaction> upcoming =
+                recurringTransactionRepository.findUpcomingByDateRange(today, cutoff);
+        logger.info("Sending recurring reminders for {} upcoming transactions", upcoming.size());
+        for (RecurringTransaction rt : upcoming) {
+            try {
+                Long userId = rt.getUser().getId();
+                notificationService.triggerRecurringReminder(
+                        userId,
+                        rt.getId(),
+                        rt.getDescription(),
+                        rt.getAmount(),
+                        rt.getCurrency(),
+                        rt.getNextOccurrence().toString());
+            } catch (Exception e) {
+                logger.warn("Failed to send reminder for recurring {}: {}", rt.getId(), e.getMessage());
             }
         }
     }

@@ -10,6 +10,7 @@ import com.financetracker.repository.*;
 import com.financetracker.specification.TransactionSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,17 +35,23 @@ public class TransactionService {
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
     private final UserRepository userRepository;
+    private final BudgetService budgetService;
+    private final NotificationService notificationService;
     
     public TransactionService(TransactionRepository transactionRepository,
                                AccountRepository accountRepository,
                                CategoryRepository categoryRepository,
                                TagRepository tagRepository,
-                               UserRepository userRepository) {
+                               UserRepository userRepository,
+                               @Lazy BudgetService budgetService,
+                               @Lazy NotificationService notificationService) {
         this.transactionRepository = transactionRepository;
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
         this.tagRepository = tagRepository;
         this.userRepository = userRepository;
+        this.budgetService = budgetService;
+        this.notificationService = notificationService;
     }
     
     @Transactional
@@ -131,6 +138,28 @@ public class TransactionService {
         transaction = transactionRepository.save(transaction);
         
         logger.info("Transaction created: {} for user: {}", transaction.getId(), userId);
+
+        // Post-save notification checks (non-blocking)
+        final Long txId = transaction.getId();
+        final BigDecimal txAmount = transaction.getAmount();
+        final String txDesc = transaction.getDescription();
+        final TransactionType txType = transaction.getTransactionType();
+        final Long acctId = account.getId();
+        final String acctName = account.getAccountName();
+        final BigDecimal newBalance = account.getCurrentBalance();
+
+        // Budget threshold check (expenses only)
+        if (txType == TransactionType.EXPENSE) {
+            try { budgetService.checkAndNotifyBudgets(userId); }
+            catch (Exception e) { logger.warn("Budget check failed for user {}: {}", userId, e.getMessage()); }
+            // Low balance check
+            notificationService.triggerLowBalanceCheck(userId, acctId, acctName, newBalance);
+        } else if (txType == TransactionType.TRANSFER) {
+            // Low balance on the debit side
+            notificationService.triggerLowBalanceCheck(userId, acctId, acctName, newBalance);
+        }
+        // Large transaction check — any type except internal transfer leg
+        notificationService.triggerLargeTransactionCheck(userId, txId, txAmount, txDesc, acctId);
         
         return mapToResponse(transaction);
     }
@@ -183,6 +212,17 @@ public class TransactionService {
         transaction = transactionRepository.save(transaction);
         
         logger.info("Transaction updated: {} for user: {}", transactionId, userId);
+
+        // Re-check notifications after update
+        final TransactionType updatedType = transaction.getTransactionType();
+        if (updatedType == TransactionType.EXPENSE) {
+            try { budgetService.checkAndNotifyBudgets(userId); }
+            catch (Exception e) { logger.warn("Budget check failed for user {}: {}", userId, e.getMessage()); }
+            notificationService.triggerLowBalanceCheck(userId, transaction.getAccount().getId(),
+                    transaction.getAccount().getAccountName(), transaction.getAccount().getCurrentBalance());
+        }
+        notificationService.triggerLargeTransactionCheck(userId, transaction.getId(),
+                transaction.getAmount(), transaction.getDescription(), transaction.getAccount().getId());
         
         return mapToResponse(transaction);
     }
