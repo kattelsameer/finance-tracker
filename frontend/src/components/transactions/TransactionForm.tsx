@@ -30,9 +30,9 @@ interface TransactionFormProps {
 
 const transactionSchema = z.object({
   transactionType: z.enum(['INCOME', 'EXPENSE', 'TRANSFER'] as const),
-  accountId: z.number({ invalid_type_error: 'Account is required' }).int().min(1, 'Account is required'),
+  accountId: z.number({ error: 'Account is required' }).int().min(1, 'Account is required'),
   transferToAccountId: z.number().int().optional().nullable(),
-  amount: z.number({ invalid_type_error: 'Amount is required' }).min(0.01, 'Amount must be greater than 0'),
+  amount: z.number({ error: 'Amount is required' }).min(0.01, 'Amount must be greater than 0'),
   transactionDate: z.string().min(1, 'Date is required'),
   categoryId: z.number().int().optional().nullable(),
   description: z.string().min(1, 'Description is required').trim(),

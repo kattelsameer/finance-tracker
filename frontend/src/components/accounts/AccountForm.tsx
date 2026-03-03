@@ -37,7 +37,7 @@ const accountSchema = z.object({
   accountName: z.string().min(1, 'Account name is required').trim(),
   accountTypeId: z.number().int().min(1, 'Account type is required'),
   currency: z.string().min(1, 'Currency is required').trim(),
-  initialBalance: z.number({ invalid_type_error: 'Initial balance must be a number' }),
+  initialBalance: z.number({ error: 'Initial balance must be a number' }),
   colorCode: z.string().optional(),
 });
 
@@ -110,7 +110,9 @@ export function AccountForm({ formData, accountTypes, isEditing, saving, serverE
       accountTypeId: data.accountTypeId,
       currency: data.currency,
       initialBalance: data.initialBalance,
-      colorCode: data.colorCode,
+      colorCode: data.colorCode ?? ACCOUNT_COLORS[0],
+      icon: formData.icon ?? '',
+      includeInNetWorth: formData.includeInNetWorth ?? true,
     });
   };
 
