@@ -26,6 +26,7 @@ export function CategoriesPage() {
     icon: 'folder',
   });
   const [saving, setSaving] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCategories();
@@ -38,8 +39,7 @@ export function CategoriesPage() {
       const data = await categoryService.getAll();
       setCategories(data);
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to fetch categories');
+      setError((err as Error).message || 'Failed to fetch categories');
     } finally {
       setLoading(false);
     }
@@ -59,6 +59,7 @@ export function CategoriesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setModalError(null);
     try {
       setSaving(true);
       if (editingCategory) {
@@ -74,11 +75,21 @@ export function CategoriesPage() {
       }
       setShowModal(false);
       setEditingCategory(null);
+      setModalError(null);
       resetForm();
       fetchCategories();
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to save category');
+      const apiErr = err as Error & { fieldErrors?: Array<{ field: string; message: string }> };
+      const fieldErrors = apiErr.fieldErrors;
+      if (fieldErrors && fieldErrors.length > 0) {
+        const fieldLabels: Record<string, string> = {
+          categoryName: 'Category Name', colorCode: 'Color', icon: 'Icon',
+          parentId: 'Parent Category', categoryType: 'Category Type',
+        };
+        setModalError(fieldErrors.map(fe => `${fieldLabels[fe.field] ?? fe.field}: ${fe.message}`).join(' • '));
+      } else {
+        setModalError(apiErr.message || 'Failed to save category. Please check your inputs.');
+      }
     } finally {
       setSaving(false);
     }
@@ -96,8 +107,7 @@ export function CategoriesPage() {
       await categoryService.delete(deleteConfirm.id);
       fetchCategories();
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to delete category');
+      setError((err as Error).message || 'Failed to delete category');
     } finally {
       setDeleteConfirm({ open: false, id: null });
     }
@@ -105,6 +115,7 @@ export function CategoriesPage() {
 
   const openCreateModal = (parentId?: number) => {
     setEditingCategory(null);
+    setModalError(null);
     setFormData({
       categoryName: '',
       categoryType: activeTab,
@@ -117,6 +128,7 @@ export function CategoriesPage() {
 
   const openEditModal = (category: Category) => {
     setEditingCategory(category);
+    setModalError(null);
     setFormData({
       categoryName: category.categoryName,
       categoryType: category.categoryType,
@@ -238,9 +250,10 @@ export function CategoriesPage() {
           categories={categories}
           isEditing={!!editingCategory}
           saving={saving}
+          serverError={modalError}
           onSubmit={handleSubmit}
           onChange={setFormData}
-          onClose={() => setShowModal(false)}
+          onClose={() => { setShowModal(false); setModalError(null); }}
         />
       )}
 

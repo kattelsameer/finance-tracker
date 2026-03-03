@@ -4,6 +4,9 @@ import { accountService } from '../services/account.service';
 import { categoryService } from '../services/category.service';
 import { useAuth } from '../contexts/AuthContext';
 import { logger } from '../utils/logger';
+import { formatCurrency as formatCurrencyUtil } from '../utils/formatters';
+import { SecondaryCurrencyBadge } from '../components/ui/SecondaryCurrencyBadge';
+import { getCurrencySymbol } from '../contexts/SecondaryCurrencyContext';
 import {
   TransactionSearchRequest,
   Transaction,
@@ -26,7 +29,6 @@ import {
   Calendar,
   Wallet,
   FolderTree,
-  DollarSign,
   Repeat,
   X,
   Sparkles,
@@ -158,12 +160,7 @@ const AdvancedSearchPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchCriteria.page]);
 
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || defaultCurrency,
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number, currency: string) => formatCurrencyUtil(amount, currency || defaultCurrency);
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -344,7 +341,7 @@ const AdvancedSearchPage: React.FC = () => {
             {/* Amount Range */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                <DollarSign className="h-4 w-4 text-gray-400" />
+                <span className="inline-flex items-center justify-center w-4 h-4 text-xs font-bold text-gray-400">{getCurrencySymbol(defaultCurrency)}</span>
                 Min Amount
               </label>
               <input
@@ -359,7 +356,7 @@ const AdvancedSearchPage: React.FC = () => {
 
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                <DollarSign className="h-4 w-4 text-gray-400" />
+                <span className="inline-flex items-center justify-center w-4 h-4 text-xs font-bold text-gray-400">{getCurrencySymbol(defaultCurrency)}</span>
                 Max Amount
               </label>
               <input
@@ -543,7 +540,10 @@ const AdvancedSearchPage: React.FC = () => {
                           ? 'text-rose-600'
                           : 'text-blue-600'
                       }`}>
-                        {formatCurrency(transaction.amount, transaction.currency)}
+                        <div className="flex flex-col items-end gap-1">
+                          <span>{formatCurrency(transaction.amount, transaction.currency)}</span>
+                          <SecondaryCurrencyBadge amount={transaction.amount} />
+                        </div>
                       </td>
                     </tr>
                   );

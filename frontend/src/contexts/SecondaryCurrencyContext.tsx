@@ -79,8 +79,12 @@ interface SecondaryCurrencyContextType {
     amount: number,
     primaryCurrency?: string
   ) => ConversionResult | null;
-  /** Whether the secondary currency is enabled (non-null) */
+  /** Whether the secondary currency is enabled (non-null AND badge display toggled on) */
   isEnabled: boolean;
+  /** Whether the secondary currency badge display is toggled on globally */
+  showSecondaryBadge: boolean;
+  /** Toggle the secondary currency badge display globally (persisted to localStorage) */
+  setShowSecondaryBadge: (val: boolean) => void;
 }
 
 const SecondaryCurrencyContext = createContext<SecondaryCurrencyContextType | undefined>(
@@ -95,6 +99,10 @@ export function SecondaryCurrencyProvider({ children }: Readonly<{ children: Rea
 
   const [secondaryCurrency, setSecondaryCurrencyLocal] = useState<string | null>(
     user?.secondaryCurrency ?? null
+  );
+
+  const [showSecondaryBadge, setShowSecondaryBadgeLocal] = useState<boolean>(
+    () => localStorage.getItem('showSecondaryCurrencyBadge') === 'true'
   );
 
   // Sync with user profile changes
@@ -117,6 +125,11 @@ export function SecondaryCurrencyProvider({ children }: Readonly<{ children: Rea
     [refetchUser]
   );
 
+  const setShowSecondaryBadge = useCallback((val: boolean) => {
+    setShowSecondaryBadgeLocal(val);
+    localStorage.setItem('showSecondaryCurrencyBadge', String(val));
+  }, []);
+
   const convertToSecondary = useCallback(
     async (amount: number, primaryCurrency?: string): Promise<ConversionResult | null> => {
       if (!secondaryCurrency) return null;
@@ -138,7 +151,7 @@ export function SecondaryCurrencyProvider({ children }: Readonly<{ children: Rea
           rate,
           formatted: `${sym} ${convertedAmount.toLocaleString('en', {
             minimumFractionDigits: 2,
-            maximumFractionDigits: 4,
+            maximumFractionDigits: 2,
           })}`,
         };
         resultCache.set(cacheKey, result);
@@ -167,9 +180,11 @@ export function SecondaryCurrencyProvider({ children }: Readonly<{ children: Rea
       setSecondaryCurrency,
       convertToSecondary,
       getCachedConversion,
-      isEnabled: secondaryCurrency !== null && secondaryCurrency !== '',
+      isEnabled: showSecondaryBadge && secondaryCurrency !== null && secondaryCurrency !== '',
+      showSecondaryBadge,
+      setShowSecondaryBadge,
     }),
-    [secondaryCurrency, setSecondaryCurrency, convertToSecondary, getCachedConversion]
+    [secondaryCurrency, setSecondaryCurrency, convertToSecondary, getCachedConversion, showSecondaryBadge, setShowSecondaryBadge]
   );
 
   return (

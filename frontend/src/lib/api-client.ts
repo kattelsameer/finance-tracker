@@ -89,7 +89,9 @@ class ApiClient {
             });
           }
 
-          return Promise.reject(new Error(data.message || 'An error occurred'));
+          const apiError = new Error(data.message || 'An error occurred');
+          Object.assign(apiError, { fieldErrors: data.fieldErrors, code: data.code });
+          return Promise.reject(apiError);
         }
 
         // Network error

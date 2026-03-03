@@ -1,11 +1,27 @@
-import { X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, AlertCircle, Info } from 'lucide-react';
 import type { Account, Category, CreateRecurringTransactionRequest, Frequency } from '../../types';
+import { useAuth } from '../../hooks/useAuth';
+import { getCurrencySymbol } from '../../contexts/SecondaryCurrencyContext';
+import { exchangeRateService } from '../../services/exchange-rate.service';
+
+const SUPPORTED_CURRENCIES = [
+  { code: 'NPR', name: 'Nepalese Rupee', symbol: 'रू' },
+  { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
+  { code: 'USD', name: 'US Dollar', symbol: '$' },
+  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+  { code: 'EUR', name: 'Euro', symbol: '€' },
+  { code: 'GBP', name: 'British Pound', symbol: '£' },
+];
 
 interface RecurringTransactionFormProps {
   formData: CreateRecurringTransactionRequest;
   accounts: Account[];
   categories: Category[];
   isEditing: boolean;
+  serverError?: string | null;
+  inputCurrency: string;
+  onInputCurrencyChange: (currency: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onChange: (data: CreateRecurringTransactionRequest) => void;
   onClose: () => void;
@@ -35,10 +51,43 @@ export function RecurringTransactionForm({
   accounts, 
   categories, 
   isEditing, 
+  serverError,
+  inputCurrency,
+  onInputCurrencyChange,
   onSubmit, 
   onChange, 
   onClose 
 }: Readonly<RecurringTransactionFormProps>) {
+  const { user } = useAuth();
+  const primaryCurrency = user?.defaultCurrency || 'NPR';
+  const isForeignCurrency = inputCurrency !== primaryCurrency;
+
+  const [convertedPreview, setConvertedPreview] = useState<string | null>(null);
+  const [conversionLoading, setConversionLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isForeignCurrency || !formData.amount || formData.amount <= 0) {
+      setConvertedPreview(null);
+      return;
+    }
+    let cancelled = false;
+    setConversionLoading(true);
+    (async () => {
+      try {
+        const { convertedAmount } = await exchangeRateService.convert(formData.amount, inputCurrency, primaryCurrency);
+        if (!cancelled) {
+          const sym = getCurrencySymbol(primaryCurrency);
+          setConvertedPreview(`${sym} ${convertedAmount.toFixed(2)}`);
+        }
+      } catch {
+        if (!cancelled) setConvertedPreview(null);
+      } finally {
+        if (!cancelled) setConversionLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isForeignCurrency, formData.amount, inputCurrency, primaryCurrency]);
+
   const filteredCategories = categories.filter(cat => 
     formData.transactionType === 'TRANSFER' ? false : cat.categoryType === formData.transactionType
   );
@@ -57,7 +106,10 @@ export function RecurringTransactionForm({
           onKeyDown={(e) => e.key === 'Escape' && onClose()}
           aria-label="Close modal"
         />
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+        <div
+          className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden"
+          style={{ scrollbarWidth: 'none' }}
+        >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">
               {isEditing ? 'Edit Recurring Transaction' : 'Add Recurring Transaction'}
@@ -68,6 +120,12 @@ export function RecurringTransactionForm({
           </div>
 
           <form onSubmit={onSubmit} className="space-y-5">
+            {serverError && (
+              <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+                <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <span className="text-sm font-medium">{serverError}</span>
+              </div>
+            )}
             {/* Transaction Type */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Type</label>
@@ -145,15 +203,35 @@ export function RecurringTransactionForm({
                 <label htmlFor="amount" className="block text-sm font-semibold text-gray-700 mb-2">
                   Amount
                 </label>
-                <input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  value={formData.amount}
-                  onChange={(e) => onChange({ ...formData, amount: Number.parseFloat(e.target.value) || 0 })}
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
-                />
+                <div className="flex">
+                  <select
+                    value={inputCurrency}
+                    onChange={(e) => { onInputCurrencyChange(e.target.value); setConvertedPreview(null); }}
+                    className="px-2 py-3 bg-gray-50 border border-r-0 border-gray-200 rounded-l-xl text-xs font-semibold text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none focus:z-10"
+                    aria-label="Amount currency"
+                  >
+                    {SUPPORTED_CURRENCIES.map(c => (
+                      <option key={c.code} value={c.code}>{c.symbol} {c.code}</option>
+                    ))}
+                  </select>
+                  <input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    placeholder="0.00"
+                    onKeyDown={(e) => { if (e.key === '-' || e.key === 'e') e.preventDefault(); }}
+                    onFocus={(e) => e.target.select()}
+                    value={formData.amount === 0 ? '' : formData.amount}
+                    onChange={(e) => {
+                      const val = Number.parseFloat(e.target.value);
+                      if (!isNaN(val) && val >= 0) onChange({ ...formData, amount: val });
+                      else if (e.target.value === '') onChange({ ...formData, amount: 0 });
+                    }}
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-r-xl focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
               <div>
                 <label htmlFor="start-date" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -169,6 +247,29 @@ export function RecurringTransactionForm({
                 />
               </div>
             </div>
+
+            {/* Foreign currency conversion notice */}
+            {isForeignCurrency && (
+              <div className="flex items-start gap-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-800">
+                <Info className="h-4 w-4 flex-shrink-0 mt-0.5 text-amber-600" />
+                <div className="text-xs leading-relaxed space-y-1">
+                  <p className="font-semibold">Amount will be saved in {primaryCurrency}</p>
+                  {formData.amount > 0 ? (
+                    <p>
+                      {getCurrencySymbol(inputCurrency)} {formData.amount} {inputCurrency} →{' '}
+                      {conversionLoading
+                        ? <span className="italic text-amber-600">converting…</span>
+                        : convertedPreview
+                          ? <strong className="text-green-700">{convertedPreview} {primaryCurrency}</strong>
+                          : <span className="italic text-amber-600">rate unavailable</span>
+                      }
+                    </p>
+                  ) : (
+                    <p>Enter an amount above to see the {primaryCurrency} equivalent.</p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Category (for INCOME/EXPENSE only) */}
             {formData.transactionType !== 'TRANSFER' && (

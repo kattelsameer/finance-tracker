@@ -5,6 +5,9 @@ import type { Account, AccountType, CreateAccountRequest, UpdateAccountRequest }
 import { AccountList } from '../components/accounts/AccountList';
 import { AccountForm } from '../components/accounts/AccountForm';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { SecondaryCurrencyBadge } from '../components/ui/SecondaryCurrencyBadge';
+import { formatCurrency as formatCurrencyUtil } from '../utils/formatters';
+import { exchangeRateService } from '../services/exchange-rate.service';
 import {
   Wallet,
   Plus,
@@ -35,6 +38,7 @@ export function AccountsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<CreateAccountRequest>({
     accountTypeId: 1,
@@ -67,40 +71,80 @@ export function AccountsPage() {
         setFormData(prev => ({ ...prev, accountTypeId: typesData[0].id }));
       }
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to fetch accounts');
+      setError((err as Error).message || 'Failed to fetch accounts');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (data: CreateAccountRequest) => {
+    setModalError(null);
     try {
       setSaving(true);
+
+      // Convert initial balance to primary currency if account uses a foreign currency
+      let submitData = { ...data };
+      if (!editingAccount && data.currency && data.currency !== defaultCurrency && data.initialBalance > 0) {
+        try {
+          const { convertedAmount } = await exchangeRateService.convert(
+            data.initialBalance, data.currency, defaultCurrency
+          );
+          submitData = {
+            ...submitData,
+            initialBalance: Math.round(convertedAmount * 100) / 100,
+            currency: defaultCurrency,
+          };
+        } catch {
+          // If conversion fails, fall back to saving as-is
+        }
+      }
+
       if (editingAccount) {
         const updateData: UpdateAccountRequest = {
-          accountTypeId: formData.accountTypeId,
-          accountName: formData.accountName,
-          currency: formData.currency,
+          accountTypeId: submitData.accountTypeId,
+          accountName: submitData.accountName,
+          currency: submitData.currency,
           institutionName: formData.institutionName,
           accountNumberMasked: formData.accountNumberMasked,
-          colorCode: formData.colorCode,
+          colorCode: data.colorCode,
           icon: formData.icon,
           includeInNetWorth: formData.includeInNetWorth,
           notes: formData.notes
         };
         await accountService.update(editingAccount.id, updateData);
       } else {
-        await accountService.create(formData);
+        await accountService.create({
+          ...formData,
+          ...submitData,
+        });
       }
       setShowModal(false);
       setEditingAccount(null);
+      setModalError(null);
       resetForm();
       fetchData();
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to save account');
+      const apiErr = err as Error & { fieldErrors?: Array<{ field: string; message: string }> };
+      const fieldErrors = apiErr.fieldErrors;
+      if (fieldErrors && fieldErrors.length > 0) {
+        const fieldLabels: Record<string, string> = {
+          accountName: 'Account Name',
+          accountTypeId: 'Account Type',
+          currency: 'Currency',
+          initialBalance: 'Initial Balance',
+          colorCode: 'Color',
+          institutionName: 'Institution',
+          accountNumberMasked: 'Account Number',
+          icon: 'Icon',
+          notes: 'Notes',
+        };
+        const messages = fieldErrors
+          .map(fe => `${fieldLabels[fe.field] ?? fe.field}: ${fe.message}`)
+          .join(' • ');
+        setModalError(messages);
+      } else {
+        setModalError(apiErr.message || 'Failed to save account. Please check your inputs.');
+      }
     } finally {
       setSaving(false);
     }
@@ -118,8 +162,7 @@ export function AccountsPage() {
       await accountService.delete(deleteConfirm.id);
       fetchData();
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to delete account');
+      setError((err as Error).message || 'Failed to delete account');
     } finally {
       setDeleteConfirm({ open: false, id: null });
     }
@@ -127,12 +170,14 @@ export function AccountsPage() {
 
   const openCreateModal = () => {
     setEditingAccount(null);
+    setModalError(null);
     resetForm();
     setShowModal(true);
   };
 
   const openEditModal = (account: Account) => {
     setEditingAccount(account);
+    setModalError(null);
     setFormData({
       accountTypeId: account.accountType.id,
       accountName: account.accountName,
@@ -163,12 +208,7 @@ export function AccountsPage() {
     });
   };
 
-  const formatCurrency = (amount: number, currency: string = defaultCurrency) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number, currency: string = defaultCurrency) => formatCurrencyUtil(amount, currency);
 
   const filteredAccounts = accounts.filter(account => {
     const matchesSearch = account.accountName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -219,7 +259,10 @@ export function AccountsPage() {
               </div>
               <span className="text-sm font-medium text-gray-500">Total Assets</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalAssets)}</p>
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalAssets)}</p>
+              <SecondaryCurrencyBadge amount={totalAssets} className="flex-shrink-0" />
+            </div>
           </div>
           <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
             <div className="flex items-center gap-3 mb-2">
@@ -228,7 +271,10 @@ export function AccountsPage() {
               </div>
               <span className="text-sm font-medium text-gray-500">Total Liabilities</span>
             </div>
-            <p className="text-2xl font-bold text-red-600">-{formatCurrency(totalLiabilities)}</p>
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
+              <p className="text-2xl font-bold text-red-600">-{formatCurrency(totalLiabilities)}</p>
+              <SecondaryCurrencyBadge amount={-totalLiabilities} className="flex-shrink-0" />
+            </div>
           </div>
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-lg">
             <div className="flex items-center gap-3 mb-2">
@@ -237,7 +283,10 @@ export function AccountsPage() {
               </div>
               <span className="text-sm font-medium text-blue-100">Net Worth</span>
             </div>
-            <p className="text-2xl font-bold text-white">{formatCurrency(totalBalance)}</p>
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
+              <p className="text-2xl font-bold text-white">{formatCurrency(totalBalance)}</p>
+              <SecondaryCurrencyBadge amount={totalBalance} className="flex-shrink-0" />
+            </div>
           </div>
         </div>
 
@@ -322,9 +371,10 @@ export function AccountsPage() {
           accountTypes={accountTypes}
           isEditing={!!editingAccount}
           saving={saving}
+          serverError={modalError}
           onSubmit={handleSubmit}
           onChange={setFormData}
-          onClose={() => setShowModal(false)}
+          onClose={() => { setShowModal(false); setModalError(null); }}
         />
       )}
 

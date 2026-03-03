@@ -1,10 +1,57 @@
 /**
- * Format currency amount with symbol and proper decimal places
+ * Currency display symbol overrides.
+ * Intl.NumberFormat (en-US) outputs the ISO code (e.g. "NPR", "INR") for
+ * many non-USD/EUR currencies. This map replaces those codes with the
+ * preferred compact display symbol so the UI looks cleaner.
+ * Internal currency codes are NEVER changed — only the rendered string.
  */
-export function formatCurrency(amount: number, currency: string = 'NPR', locale: string = 'en-NP'): string {
+const CURRENCY_DISPLAY_SYMBOLS: Record<string, string> = {
+  NPR: 'रू',   // Nepalese Rupee
+  USD: '$',    // US Dollar
+  EUR: '€',    // Euro
+  GBP: '£',    // British Pound
+  INR: '₹',    // Indian Rupee
+  JPY: '¥',    // Japanese Yen
+  CNY: '¥',    // Chinese Yuan
+  AUD: 'A$',   // Australian Dollar
+  CAD: 'C$',   // Canadian Dollar
+  CHF: 'CHF',  // Swiss Franc
+  NZD: 'NZ$',  // New Zealand Dollar
+  SGD: 'S$',   // Singapore Dollar
+  HKD: 'HK$',  // Hong Kong Dollar
+  KRW: '₩',    // South Korean Won
+  BRL: 'R$',   // Brazilian Real
+  ZAR: 'R',    // South African Rand
+  AED: 'د.إ',  // UAE Dirham
+  THB: '฿',    // Thai Baht
+  IDR: 'Rp',   // Indonesian Rupiah
+  MXN: 'MX$',  // Mexican Peso
+};
+
+/**
+ * Format currency amount with symbol and proper decimal places.
+ * Uses Intl.NumberFormat for correct number formatting (thousands separator,
+ * decimal places) then substitutes the display symbol from the map above.
+ */
+export function formatCurrency(amount: number, currency: string = 'NPR', locale: string = 'en-US'): string {
+  const code = currency.toUpperCase();
+  const displaySymbol = CURRENCY_DISPLAY_SYMBOLS[code];
+
+  if (displaySymbol) {
+    // Format as decimal so we control the symbol ourselves
+    const formatted = new Intl.NumberFormat(locale, {
+      style: 'decimal',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Math.abs(amount));
+    const sign = amount < 0 ? '-' : '';
+    return `${sign}${displaySymbol} ${formatted}`;
+  }
+
+  // Fallback: let Intl handle currencies not in our map
   return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: currency,
+    currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);

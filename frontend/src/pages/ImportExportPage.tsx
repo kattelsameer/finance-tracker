@@ -34,8 +34,7 @@ export function ImportExportPage() {
       setImportResult(result);
       event.target.value = '';
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to import transactions');
+      setError((err as Error).message || 'Failed to import transactions');
     } finally {
       setImporting(false);
     }
@@ -50,8 +49,7 @@ export function ImportExportPage() {
       const filename = `transactions_${dateRange.startDate}_to_${dateRange.endDate}.csv`;
       importExportService.downloadCSV(blob, filename);
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to export transactions');
+      setError((err as Error).message || 'Failed to export transactions');
     } finally {
       setExporting(false);
     }

@@ -1,5 +1,6 @@
 import { Target } from 'lucide-react';
 import type { BudgetStatus } from '../../types';
+import { SecondaryCurrencyBadge } from '../ui/SecondaryCurrencyBadge';
 
 interface BudgetStatusListProps {
   budgets: BudgetStatus[];
@@ -54,7 +55,10 @@ export function BudgetStatusList({ budgets, formatCurrency }: Readonly<BudgetSta
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs text-gray-600">
-                    <span className="font-medium">{formatCurrency(budget.spentAmount)}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-medium">{formatCurrency(budget.spentAmount)}</span>
+                      <SecondaryCurrencyBadge amount={budget.spentAmount} />
+                    </div>
                     <span>of {formatCurrency(budget.budgetAmount)}</span>
                   </div>
                   <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">

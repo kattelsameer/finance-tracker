@@ -93,7 +93,7 @@ const NAVIGATION_FEATURE_CARDS = [
 export function SettingsPage() {
   const { user, refetchUser } = useAuth();
   const { dashboardFeatures, updateDashboardFeature, navigationFeatures, updateNavigationFeature, resetToDefaults } = useFeatureFlags();
-  const { secondaryCurrency, setSecondaryCurrency } = useSecondaryCurrency();
+  const { secondaryCurrency, setSecondaryCurrency, showSecondaryBadge, setShowSecondaryBadge } = useSecondaryCurrency();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<SettingsTab>(
     (searchParams.get('tab') as SettingsTab) || 'general'
@@ -415,7 +415,8 @@ export function SettingsPage() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
         {activeTab === 'general' && (
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">General Settings</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">General Settings</h3>
+            <p className="text-sm text-gray-500 mb-6">Manage your currency preferences and display settings</p>
             
             {/* Success/Error Messages */}
             {success && (
@@ -433,122 +434,150 @@ export function SettingsPage() {
             )}
 
             <div className="space-y-6">
-              {/* Default Currency Setting */}
-              <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-green-50 border border-green-100 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900">Default Currency</label>
-                    <p className="text-xs text-gray-500">Base currency for all transactions and balances</p>
+              {/* ── Currency Settings Group ── */}
+              <div className="border border-gray-200 rounded-xl overflow-hidden">
+                <div className="px-5 py-3 bg-green-50 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-green-600" />
+                    <h4 className="font-semibold text-gray-900 text-sm">Currency Settings</h4>
                   </div>
                 </div>
-                <select
-                  value={stagedCurrency}
-                  onChange={(e) => setStagedCurrency(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-colors"
-                >
-                  {SUPPORTED_CURRENCIES.map((currency) => (
-                    <option key={currency.code} value={currency.code}>
-                      {currency.symbol} {currency.code} - {currency.name}
-                    </option>
-                  ))}
-                </select>
-                {stagedCurrency !== (user?.defaultCurrency || 'NPR') && (
-                  <p className="mt-2 text-xs text-amber-600 flex items-center gap-1">
-                    <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
-                    Saving will prompt you to convert or reset existing data.
-                  </p>
-                )}
+                <div className="p-5 space-y-5">
+                  {/* Default Currency */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 rounded-lg bg-green-50 border border-green-100 flex items-center justify-center flex-shrink-0">
+                        <DollarSign className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-900">Default Currency</label>
+                        <p className="text-xs text-gray-500">Base currency for all transactions and balances</p>
+                      </div>
+                    </div>
+                    <select
+                      value={stagedCurrency}
+                      onChange={(e) => setStagedCurrency(e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-colors"
+                    >
+                      {SUPPORTED_CURRENCIES.map((currency) => (
+                        <option key={currency.code} value={currency.code}>
+                          {currency.symbol} {currency.code} - {currency.name}
+                        </option>
+                      ))}
+                    </select>
+                    {stagedCurrency !== (user?.defaultCurrency || 'NPR') && (
+                      <p className="mt-2 text-xs text-amber-600 flex items-center gap-1">
+                        <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                        Saving will prompt you to convert or reset existing data.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="border-t border-gray-100" />
+
+                  {/* Secondary Currency Display */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0">
+                          <ArrowDownUp className="w-4 h-4 text-indigo-600" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-900">Secondary Currency Badges</label>
+                          <p className="text-xs text-gray-500">Show converted amounts next to all currency values</p>
+                        </div>
+                      </div>
+                      <ToggleSwitch checked={showSecondaryBadge} onChange={setShowSecondaryBadge} />
+                    </div>
+                    {showSecondaryBadge && (
+                      <div className="mt-3 pl-11">
+                        <p className="text-xs font-medium text-gray-700 mb-2">Convert to:</p>
+                        <select
+                          value={secondaryCurrency ?? ''}
+                          onChange={(e) => setSecondaryCurrency(e.target.value || null)}
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-colors"
+                        >
+                          <option value="">— None (disable secondary display) —</option>
+                          {SUPPORTED_CURRENCIES.filter(c => c.code !== stagedCurrency).map((currency) => (
+                            <option key={currency.code} value={currency.code}>
+                              {currency.symbol} {currency.code} - {currency.name}
+                            </option>
+                          ))}
+                        </select>
+                        {secondaryCurrency && (
+                          <p className="mt-2 text-xs text-indigo-600 flex items-center gap-1.5">
+                            <CheckCircle className="h-3.5 w-3.5" />
+                            Amounts will show{' '}
+                            <span className="font-medium">{secondaryCurrency}</span>{' '}
+                            equivalents in real time across the app.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {/* Secondary Currency Setting */}
-              <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center">
-                    <ArrowDownUp className="w-5 h-5 text-indigo-600" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900">Secondary Currency</label>
-                    <p className="text-xs text-gray-500">Display converted amounts next to primary values</p>
+              {/* ── Time & Display Settings Group ── */}
+              <div className="border border-gray-200 rounded-xl overflow-hidden">
+                <div className="px-5 py-3 bg-blue-50 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-blue-600" />
+                    <h4 className="font-semibold text-gray-900 text-sm">Time & Display Settings</h4>
                   </div>
                 </div>
-                <select
-                  value={secondaryCurrency ?? ''}
-                  onChange={(e) => setSecondaryCurrency(e.target.value || null)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-colors"
-                >
-                  <option value="">— None (disable secondary display) —</option>
-                  {SUPPORTED_CURRENCIES.filter(c => c.code !== stagedCurrency).map((currency) => (
-                    <option key={currency.code} value={currency.code}>
-                      {currency.symbol} {currency.code} - {currency.name}
-                    </option>
-                  ))}
-                </select>
-                {secondaryCurrency && (
-                  <p className="mt-2 text-xs text-indigo-600 flex items-center gap-1.5">
-                    <CheckCircle className="h-3.5 w-3.5" />
-                    Amounts will show{' '}
-                    <span className="font-medium">{secondaryCurrency}</span>{' '}
-                    equivalents in real time across the app.
-                  </p>
-                )}
-              </div>
-
-              {/* Divider */}
-              <div className="border-t border-gray-100" />
-
-              {/* Timezone Setting */}
-              <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
-                    <Globe className="w-5 h-5 text-blue-600" />
-                  </div>
+                <div className="p-5 space-y-5">
+                  {/* Timezone */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-900">Timezone</label>
-                    <p className="text-xs text-gray-500">For date and time display</p>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
+                        <Globe className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-900">Timezone</label>
+                        <p className="text-xs text-gray-500">For date and time display</p>
+                      </div>
+                    </div>
+                    <select
+                      value={settings.timezone}
+                      onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-colors"
+                    >
+                      {timezones.map((tz) => (
+                        <option key={tz.value} value={tz.value}>
+                          {tz.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </div>
-                <select
-                  value={settings.timezone}
-                  onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-colors"
-                >
-                  {timezones.map((tz) => (
-                    <option key={tz.value} value={tz.value}>
-                      {tz.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
-              {/* Divider */}
-              <div className="border-t border-gray-100" />
+                  <div className="border-t border-gray-100" />
 
-              {/* Dashboard Date Range Filter */}
-              <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-purple-600" />
-                  </div>
+                  {/* Dashboard Date Range */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-900">Dashboard Date Range</label>
-                    <p className="text-xs text-gray-500">Set default date range for dashboard data</p>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center flex-shrink-0">
+                        <Calendar className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-900">Dashboard Date Range</label>
+                        <p className="text-xs text-gray-500">Set default date range for dashboard data</p>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <DateRangeFilter
+                        startDate={dashboardDateRange.startDate}
+                        endDate={dashboardDateRange.endDate}
+                        onStartDateChange={(date) => handleDateRangeChange(date, dashboardDateRange.endDate)}
+                        onEndDateChange={(date) => handleDateRangeChange(dashboardDateRange.startDate, date)}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <DateRangeFilter
-                    startDate={dashboardDateRange.startDate}
-                    endDate={dashboardDateRange.endDate}
-                    onStartDateChange={(date) => handleDateRangeChange(date, dashboardDateRange.endDate)}
-                    onEndDateChange={(date) => handleDateRangeChange(dashboardDateRange.startDate, date)}
-                  />
                 </div>
               </div>
 
               {/* Save Button */}
-              <div className="pt-4">
+              <div>
                 <button
                   onClick={handleSave}
                   disabled={saving}
@@ -854,328 +883,339 @@ export function SettingsPage() {
         )}
 
         {activeTab === 'features' && (
-          <div className="p-6 space-y-8">
-            {/* Dashboard Features Section */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Dashboard Features</h3>
-              <p className="text-sm text-gray-600 mb-6">
-                Customize which cards appear on your dashboard. Disabled cards will be hidden from view.
-              </p>
-              <div className="space-y-4">
-                {DASHBOARD_FEATURE_CARDS.map(({ key, label, icon: Icon, description }) => (
-                  <div key={key} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Icon className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-800 text-sm">{label}</div>
-                        <div className="text-xs text-gray-500">{description}</div>
-                      </div>
-                    </div>
-                    <ToggleSwitch
-                      checked={dashboardFeatures[key as keyof typeof dashboardFeatures]}
-                      onChange={(checked) => updateDashboardFeature(key as keyof typeof dashboardFeatures, checked)}
-                    />
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Feature Settings</h3>
+            <p className="text-sm text-gray-500 mb-6">Customize which features and widgets are visible in the app</p>
+            <div className="space-y-6">
+              {/* Dashboard Features Group */}
+              <div className="border border-gray-200 rounded-xl overflow-hidden">
+                <div className="px-5 py-3 bg-blue-50 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <LayoutDashboard className="h-4 w-4 text-blue-600" />
+                    <h4 className="font-semibold text-gray-900 text-sm">Dashboard Features</h4>
+                    <span className="ml-auto text-xs text-gray-500">Customize which cards appear on your dashboard</span>
                   </div>
-                ))}
-                
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={resetToDefaults}
-                    className="inline-flex items-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Reset to Defaults
-                  </button>
+                </div>
+                <div className="p-4 space-y-3">
+                  {DASHBOARD_FEATURE_CARDS.map(({ key, label, icon: Icon, description }) => (
+                    <div key={key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <Icon className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-800 text-sm">{label}</div>
+                          <div className="text-xs text-gray-500">{description}</div>
+                        </div>
+                      </div>
+                      <ToggleSwitch
+                        checked={dashboardFeatures[key as keyof typeof dashboardFeatures]}
+                        onChange={(checked) => updateDashboardFeature(key as keyof typeof dashboardFeatures, checked)}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
 
-            {/* Divider */}
-            <div className="border-t border-gray-200"></div>
-
-            {/* Navigation Features Section */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Navigation Features</h3>
-              <p className="text-sm text-gray-600 mb-6">
-                Control which menu items appear in the sidebar navigation. Required items cannot be disabled.
-              </p>
-              <div className="space-y-4">
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <strong>Note:</strong> Core navigation items (Dashboard, Accounts, Transactions, Settings) cannot be disabled as they are essential for the application.
-                  </p>
-                </div>
-                
-                {NAVIGATION_FEATURE_CARDS.map(({ key, label, icon: Icon, description }) => (
-                  <div key={key} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <Icon className="h-5 w-5 text-green-600" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-800 text-sm">{label}</div>
-                        <div className="text-xs text-gray-500">{description}</div>
-                      </div>
-                    </div>
-                    <ToggleSwitch
-                      checked={navigationFeatures[key as keyof typeof navigationFeatures]}
-                      onChange={(checked) => updateNavigationFeature(key as keyof typeof navigationFeatures, checked)}
-                    />
+              {/* Navigation Features Group */}
+              <div className="border border-gray-200 rounded-xl overflow-hidden">
+                <div className="px-5 py-3 bg-green-50 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <FolderTree className="h-4 w-4 text-green-600" />
+                    <h4 className="font-semibold text-gray-900 text-sm">Navigation Features</h4>
+                    <span className="ml-auto text-xs text-gray-500">Control which items appear in the sidebar</span>
                   </div>
-                ))}
-                
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={resetToDefaults}
-                    className="inline-flex items-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Reset to Defaults
-                  </button>
                 </div>
+                <div className="p-4 space-y-3">
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-800">
+                      <strong>Note:</strong> Core navigation items (Dashboard, Accounts, Transactions, Settings) cannot be disabled.
+                    </p>
+                  </div>
+                  {NAVIGATION_FEATURE_CARDS.map(({ key, label, icon: Icon, description }) => (
+                    <div key={key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <Icon className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-800 text-sm">{label}</div>
+                          <div className="text-xs text-gray-500">{description}</div>
+                        </div>
+                      </div>
+                      <ToggleSwitch
+                        checked={navigationFeatures[key as keyof typeof navigationFeatures]}
+                        onChange={(checked) => updateNavigationFeature(key as keyof typeof navigationFeatures, checked)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reset button */}
+              <div>
+                <button
+                  onClick={resetToDefaults}
+                  className="inline-flex items-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Reset to Defaults
+                </button>
               </div>
             </div>
           </div>
         )}
 
         {activeTab === 'user' && (
-          <div className="p-6 space-y-6">
-            {/* Profile Header */}
-            <div className="pb-6 border-b border-gray-200">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-                  {user?.displayName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">{user?.displayName || user?.username}</h3>
-                  <p className="text-gray-500">@{user?.username}</p>
-                </div>
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">User Settings</h3>
+            <p className="text-sm text-gray-500 mb-6">Manage your profile information and security settings</p>
+
+            {/* Success/Error messages */}
+            {success && (
+              <div className="flex items-center gap-3 p-4 mb-6 bg-green-50 border border-green-200 rounded-xl text-green-700">
+                <Check className="h-5 w-5 flex-shrink-0" />
+                <span className="font-medium">{success}</span>
               </div>
-            </div>
-
-            {/* Profile Information Section */}
-            <div>
-              <h4 className="text-base font-semibold text-gray-900 mb-4">Profile Information</h4>
-              
-              <div className="space-y-4">
-                {/* Display Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <UserCircle className="inline h-4 w-4 mr-1" />
-                    Display Name
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.displayName}
-                    onChange={(e) => setProfile({ ...profile, displayName: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Your display name"
-                  />
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Mail className="inline h-4 w-4 mr-1" />
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={profile.email}
-                    onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="your@email.com"
-                  />
-                </div>
-
-                {/* Username (read-only) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <User className="inline h-4 w-4 mr-1" />
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    value={user?.username || ''}
-                    disabled
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
-                  />
-                  <p className="mt-1 text-sm text-gray-500">Username cannot be changed</p>
-                </div>
-
-                {/* Member Since */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Calendar className="inline h-4 w-4 mr-1" />
-                    Member Since
-                  </label>
-                  <p className="text-gray-900 px-4 py-3 bg-gray-50 rounded-lg">{formatDate(user?.createdAt)}</p>
-                </div>
-
-                {/* Save Profile Button */}
-                <div className="pt-2">
-                  <button
-                    onClick={handleProfileSave}
-                    disabled={savingProfile}
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                  >
-                    {savingProfile ? (
-                      <>
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-5 w-5" />
-                        Save Profile
-                      </>
-                    )}
-                  </button>
-                </div>
+            )}
+            {error && (
+              <div className="flex items-center gap-3 p-4 mb-6 bg-red-50 border border-red-200 rounded-xl text-red-700">
+                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                <span className="font-medium">{error}</span>
               </div>
-            </div>
+            )}
 
-            {/* Security Section */}
-            <div className="pt-6 border-t border-gray-200">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <Shield className="h-5 w-5 text-red-600" />
+            <div className="space-y-6">
+              {/* Profile Information Group */}
+              <div className="border border-gray-200 rounded-xl overflow-hidden">
+                <div className="px-5 py-3 bg-blue-50 border-b border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-lg font-bold shadow">
+                      {user?.displayName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 text-sm">{user?.displayName || user?.username}</h4>
+                      <p className="text-xs text-gray-500">@{user?.username}</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-base font-semibold text-gray-900">Security</h4>
-                  <p className="text-sm text-gray-500">Manage your password and security settings</p>
-                </div>
-              </div>
-              
-              {showPasswordForm ? (
-                <form onSubmit={handlePasswordChange} className="space-y-4">
-                  {/* Current Password */}
+                <div className="p-5 space-y-4">
+                  {/* Display Name */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Current Password
+                      <UserCircle className="inline h-4 w-4 mr-1" />
+                      Display Name
                     </label>
-                    <div className="relative">
-                      <input
-                        type={showCurrentPassword ? 'text' : 'password'}
-                        value={passwords.currentPassword}
-                        onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
-                        className={`w-full px-4 py-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                          passwordErrors.currentPassword ? 'border-red-300' : 'border-gray-200'
-                        }`}
-                        placeholder="Enter current password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showCurrentPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                    </div>
-                    {passwordErrors.currentPassword && (
-                      <p className="mt-1 text-sm text-red-600">{passwordErrors.currentPassword}</p>
-                    )}
+                    <input
+                      type="text"
+                      value={profile.displayName}
+                      onChange={(e) => setProfile({ ...profile, displayName: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white"
+                      placeholder="Your display name"
+                    />
                   </div>
 
-                  {/* New Password */}
+                  {/* Email */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      New Password
+                      <Mail className="inline h-4 w-4 mr-1" />
+                      Email Address
                     </label>
-                    <div className="relative">
-                      <input
-                        type={showNewPassword ? 'text' : 'password'}
-                        value={passwords.newPassword}
-                        onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
-                        className={`w-full px-4 py-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                          passwordErrors.newPassword ? 'border-red-300' : 'border-gray-200'
-                        }`}
-                        placeholder="Enter new password (min 8 characters)"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                    </div>
-                    {passwordErrors.newPassword && (
-                      <p className="mt-1 text-sm text-red-600">{passwordErrors.newPassword}</p>
-                    )}
+                    <input
+                      type="email"
+                      value={profile.email}
+                      onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white"
+                      placeholder="your@email.com"
+                    />
                   </div>
 
-                  {/* Confirm Password */}
+                  {/* Username (read-only) */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Confirm New Password
+                      <User className="inline h-4 w-4 mr-1" />
+                      Username
                     </label>
-                    <div className="relative">
-                      <input
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        value={passwords.confirmPassword}
-                        onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-                        className={`w-full px-4 py-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                          passwordErrors.confirmPassword ? 'border-red-300' : 'border-gray-200'
-                        }`}
-                        placeholder="Confirm new password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                    </div>
-                    {passwordErrors.confirmPassword && (
-                      <p className="mt-1 text-sm text-red-600">{passwordErrors.confirmPassword}</p>
-                    )}
+                    <input
+                      type="text"
+                      value={user?.username || ''}
+                      disabled
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Username cannot be changed</p>
                   </div>
 
-                  {/* Password Change Buttons */}
-                  <div className="flex gap-3 pt-2">
+                  {/* Member Since */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <Calendar className="inline h-4 w-4 mr-1" />
+                      Member Since
+                    </label>
+                    <p className="text-gray-900 px-4 py-3 bg-gray-50 rounded-lg text-sm">{formatDate(user?.createdAt)}</p>
+                  </div>
+
+                  {/* Save Profile Button */}
+                  <div className="pt-1">
                     <button
-                      onClick={handlePasswordChange}
-                      disabled={changingPassword}
-                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={handleProfileSave}
+                      disabled={savingProfile}
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                     >
-                      {changingPassword ? (
+                      {savingProfile ? (
                         <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Changing...
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          Saving...
                         </>
                       ) : (
                         <>
-                          <Lock className="h-4 w-4" />
-                          Change Password
+                          <Save className="h-5 w-5" />
+                          Save Profile
                         </>
                       )}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowPasswordForm(false);
-                        setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                        setPasswordErrors({});
-                      }}
-                      className="px-6 py-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors font-medium"
-                    >
-                      Cancel
-                    </button>
                   </div>
-                </form>
-              ) : (
-                <button
-                  onClick={() => setShowPasswordForm(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-                >
-                  <Lock className="h-4 w-4" />
-                  Change Password
-                </button>
-              )}
+                </div>
+              </div>
+
+              {/* Security Group */}
+              <div className="border border-gray-200 rounded-xl overflow-hidden">
+                <div className="px-5 py-3 bg-red-50 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-red-600" />
+                    <h4 className="font-semibold text-gray-900 text-sm">Security</h4>
+                    <span className="ml-auto text-xs text-gray-500">Manage your password and security settings</span>
+                  </div>
+                </div>
+                <div className="p-5">
+                  {showPasswordForm ? (
+                    <form onSubmit={handlePasswordChange} className="space-y-4">
+                      {/* Current Password */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Current Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showCurrentPassword ? 'text' : 'password'}
+                            value={passwords.currentPassword}
+                            onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
+                            className={`w-full px-4 py-3 pr-12 border rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                              passwordErrors.currentPassword ? 'border-red-300' : 'border-gray-200'
+                            }`}
+                            placeholder="Enter current password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            {showCurrentPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          </button>
+                        </div>
+                        {passwordErrors.currentPassword && (
+                          <p className="mt-1 text-sm text-red-600">{passwordErrors.currentPassword}</p>
+                        )}
+                      </div>
+
+                      {/* New Password */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          New Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showNewPassword ? 'text' : 'password'}
+                            value={passwords.newPassword}
+                            onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
+                            className={`w-full px-4 py-3 pr-12 border rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                              passwordErrors.newPassword ? 'border-red-300' : 'border-gray-200'
+                            }`}
+                            placeholder="Enter new password (min 8 characters)"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          </button>
+                        </div>
+                        {passwordErrors.newPassword && (
+                          <p className="mt-1 text-sm text-red-600">{passwordErrors.newPassword}</p>
+                        )}
+                      </div>
+
+                      {/* Confirm Password */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Confirm New Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            value={passwords.confirmPassword}
+                            onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                            className={`w-full px-4 py-3 pr-12 border rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                              passwordErrors.confirmPassword ? 'border-red-300' : 'border-gray-200'
+                            }`}
+                            placeholder="Confirm new password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          </button>
+                        </div>
+                        {passwordErrors.confirmPassword && (
+                          <p className="mt-1 text-sm text-red-600">{passwordErrors.confirmPassword}</p>
+                        )}
+                      </div>
+
+                      {/* Password Change Buttons */}
+                      <div className="flex gap-3 pt-2">
+                        <button
+                          onClick={handlePasswordChange}
+                          disabled={changingPassword}
+                          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {changingPassword ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Changing...
+                            </>
+                          ) : (
+                            <>
+                              <Lock className="h-4 w-4" />
+                              Change Password
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowPasswordForm(false);
+                            setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                            setPasswordErrors({});
+                          }}
+                          className="px-6 py-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <button
+                      onClick={() => setShowPasswordForm(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                    >
+                      <Lock className="h-4 w-4" />
+                      Change Password
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )}

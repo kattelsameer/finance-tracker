@@ -1,4 +1,5 @@
 import { TrendingUp, TrendingDown, ArrowRightLeft, BarChart3 } from 'lucide-react';
+import { SecondaryCurrencyBadge } from '../ui/SecondaryCurrencyBadge';
 
 interface ReportSummaryProps {
   totalIncome: number;
@@ -19,6 +20,7 @@ export function ReportSummary({ totalIncome, totalExpenses, netAmount, transacti
           </div>
         </div>
         <p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalIncome)}</p>
+        <SecondaryCurrencyBadge amount={totalIncome} className="mt-1" />
       </div>
 
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
@@ -29,6 +31,7 @@ export function ReportSummary({ totalIncome, totalExpenses, netAmount, transacti
           </div>
         </div>
         <p className="text-2xl font-semibold text-gray-900">{formatCurrency(totalExpenses)}</p>
+        <SecondaryCurrencyBadge amount={totalExpenses} className="mt-1" />
       </div>
 
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
@@ -41,6 +44,7 @@ export function ReportSummary({ totalIncome, totalExpenses, netAmount, transacti
         <p className={`text-2xl font-semibold ${netAmount >= 0 ? 'text-teal-600' : 'text-orange-600'}`}>
           {formatCurrency(netAmount)}
         </p>
+        <SecondaryCurrencyBadge amount={Math.abs(netAmount)} className="mt-1" />
       </div>
 
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">

@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { reportService } from '../services/report.service';
 import { useAuth } from '../contexts/AuthContext';
+import { formatCurrency as formatCurrencyUtil } from '../utils/formatters';
 import type { TransactionReport } from '../types';
+import { SecondaryCurrencyBadge } from '../components/ui/SecondaryCurrencyBadge';
 import { ReportFilters, ReportSummary, CategoryBreakdownTable, AccountBreakdownTable } from '../components/reports';
 import {
   FileDown,
@@ -31,8 +33,7 @@ export function ReportsPage() {
       );
       setReport(data);
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to fetch report');
+      setError((err as Error).message || 'Failed to fetch report');
     } finally {
       setLoading(false);
     }
@@ -48,17 +49,11 @@ export function ReportsPage() {
       const filename = `transactions_${dateRange.startDate}_to_${dateRange.endDate}.csv`;
       reportService.downloadCSV(blob, filename);
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to export CSV');
+      setError((err as Error).message || 'Failed to export CSV');
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: defaultCurrency
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number) => formatCurrencyUtil(amount, defaultCurrency);
 
   if (loading) {
     return (
@@ -151,15 +146,24 @@ export function ReportsPage() {
                     <tr key={day.date} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{day.date}</td>
                       <td className="px-6 py-4 text-sm text-right">
-                        <span className="text-emerald-600 font-medium">{formatCurrency(day.income ?? 0)}</span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-emerald-600 font-medium">{formatCurrency(day.income ?? 0)}</span>
+                          <SecondaryCurrencyBadge amount={day.income ?? 0} />
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-right">
-                        <span className="text-red-600 font-medium">{formatCurrency(day.expenses ?? 0)}</span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-red-600 font-medium">{formatCurrency(day.expenses ?? 0)}</span>
+                          <SecondaryCurrencyBadge amount={day.expenses ?? 0} />
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-right">
-                        <span className={`font-semibold ${(day.netAmount ?? 0) >= 0 ? 'text-teal-600' : 'text-orange-600'}`}>
-                          {formatCurrency(day.netAmount ?? 0)}
-                        </span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className={`font-semibold ${(day.netAmount ?? 0) >= 0 ? 'text-teal-600' : 'text-orange-600'}`}>
+                            {formatCurrency(day.netAmount ?? 0)}
+                          </span>
+                          <SecondaryCurrencyBadge amount={Math.abs(day.netAmount ?? 0)} />
+                        </div>
                       </td>
                     </tr>
                   ))}

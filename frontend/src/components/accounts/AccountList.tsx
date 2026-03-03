@@ -15,6 +15,7 @@ import {
   type LucideIcon
 } from 'lucide-react';
 import type { Account } from '../../types';
+import { SecondaryCurrencyBadge } from '../ui/SecondaryCurrencyBadge';
 
 // Map icon names to Lucide icon components
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -53,7 +54,7 @@ export function AccountList({ accounts, formatCurrency, onEdit, onDelete, showIn
   const activeAccounts = showInactive ? accounts : accounts.filter(a => a.isActive);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {activeAccounts.map((account) => (
         <div
           key={account.id}
@@ -92,11 +93,18 @@ export function AccountList({ accounts, formatCurrency, onEdit, onDelete, showIn
             </div>
           </div>
           <div className="space-y-2">
-            <div className="flex justify-between items-baseline">
-              <span className="text-sm text-gray-600">Balance</span>
-              <span className="text-xl font-bold" style={{ color: account.colorCode }}>
-                {formatCurrency(account.currentBalance, account.currency)}
-              </span>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600 flex-shrink-0">Balance</span>
+              <div className="flex items-center gap-1.5 ml-auto min-w-0">
+                <span className="text-xl font-bold truncate" style={{ color: account.colorCode }}>
+                  {formatCurrency(account.currentBalance, account.currency)}
+                </span>
+                <SecondaryCurrencyBadge
+                  amount={account.currentBalance}
+                  primaryCurrency={account.currency}
+                  className="flex-shrink-0"
+                />
+              </div>
             </div>
             {account.institutionName && (
               <p className="text-xs text-gray-500">{account.institutionName}</p>

@@ -54,8 +54,7 @@ export function ProfilePage() {
       setSuccess('Profile updated successfully!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to update profile');
+      setError((err as Error).message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
@@ -97,8 +96,7 @@ export function ProfilePage() {
       setShowPasswordForm(false);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to change password');
+      setError((err as Error).message || 'Failed to change password');
     } finally {
       setChangingPassword(false);
     }

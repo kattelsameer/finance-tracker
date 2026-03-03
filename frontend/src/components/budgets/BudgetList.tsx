@@ -1,5 +1,6 @@
 import { Edit3, Trash2, TrendingUp, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import type { Budget } from '../../types';
+import { SecondaryCurrencyBadge } from '../ui/SecondaryCurrencyBadge';
 
 interface BudgetListProps {
   budgets: Budget[];
@@ -29,7 +30,7 @@ export function BudgetList({ budgets, formatCurrency, getPeriodLabel, onEdit, on
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {budgets.map((budget) => (
         <div key={budget.id} className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-all">
           <div className="flex items-start justify-between mb-4">
@@ -57,15 +58,21 @@ export function BudgetList({ budgets, formatCurrency, getPeriodLabel, onEdit, on
           </div>
 
           <div className="space-y-3">
-            <div className="flex justify-between items-baseline">
-              <span className="text-sm text-gray-600">Spent</span>
-              <span className={`text-xl font-bold ${getStatusColor(budget.percentUsed)}`}>
-                {formatCurrency(budget.spent)}
-              </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 flex-shrink-0">Spent</span>
+              <div className="flex items-center gap-1.5 ml-auto min-w-0">
+                <span className={`text-xl font-bold truncate ${getStatusColor(budget.percentUsed)}`}>
+                  {formatCurrency(budget.spent)}
+                </span>
+                <SecondaryCurrencyBadge amount={budget.spent} className="flex-shrink-0" />
+              </div>
             </div>
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>Budget</span>
-              <span>{formatCurrency(budget.amount)}</span>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span className="flex-shrink-0">Budget</span>
+              <div className="flex items-center gap-1.5 ml-auto min-w-0">
+                <span className="truncate">{formatCurrency(budget.amount)}</span>
+                <SecondaryCurrencyBadge amount={budget.amount} className="flex-shrink-0" />
+              </div>
             </div>
             <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
               <div
@@ -73,11 +80,14 @@ export function BudgetList({ budgets, formatCurrency, getPeriodLabel, onEdit, on
                 style={{ width: `${Math.min(budget.percentUsed, 100)}%` }}
               />
             </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-500">{budget.percentUsed.toFixed(1)}% used</span>
-              <span className={getStatusColor(budget.percentUsed)}>
-                {formatCurrency(budget.remaining)} left
-              </span>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-gray-500 flex-shrink-0">{budget.percentUsed.toFixed(1)}% used</span>
+              <div className="flex items-center gap-1.5 ml-auto min-w-0">
+                <span className={`truncate ${getStatusColor(budget.percentUsed)}`}>
+                  {formatCurrency(budget.remaining)} left
+                </span>
+                <SecondaryCurrencyBadge amount={budget.remaining} className="flex-shrink-0" />
+              </div>
             </div>
           </div>
         </div>

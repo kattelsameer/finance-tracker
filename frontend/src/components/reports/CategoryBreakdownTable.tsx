@@ -1,5 +1,6 @@
 import { PieChart, TrendingUp, TrendingDown } from 'lucide-react';
 import type { CategoryBreakdown } from '../../types';
+import { SecondaryCurrencyBadge } from '../ui/SecondaryCurrencyBadge';
 
 interface CategoryBreakdownTableProps {
   categories: CategoryBreakdown[];
@@ -40,7 +41,12 @@ export function CategoryBreakdownTable({ categories, formatCurrency }: CategoryB
                     {cat.transactionType}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-right font-medium text-gray-900">{formatCurrency(cat.amount ?? 0)}</td>
+                <td className="px-6 py-4 text-sm text-right font-medium text-gray-900">
+                  <div className="flex flex-col items-end gap-1">
+                    <span>{formatCurrency(cat.amount ?? 0)}</span>
+                    <SecondaryCurrencyBadge amount={cat.amount ?? 0} />
+                  </div>
+                </td>
                 <td className="px-6 py-4 text-sm text-right text-gray-600">{cat.count ?? 0}</td>
                 <td className="px-6 py-4 text-sm text-right">
                   <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded-lg text-gray-600 font-medium">

@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import type { Category, CreateCategoryRequest } from '../../types';
 
 interface CategoryFormProps {
@@ -6,6 +6,7 @@ interface CategoryFormProps {
   categories: Category[];
   isEditing: boolean;
   saving: boolean;
+  serverError?: string | null;
   onSubmit: (e: React.FormEvent) => void;
   onChange: (data: CreateCategoryRequest) => void;
   onClose: () => void;
@@ -18,7 +19,7 @@ const colorOptions = [
   '#EC4899', '#F43F5E', '#6B7280', '#374151', '#1F2937',
 ];
 
-export function CategoryForm({ formData, categories, isEditing, saving, onSubmit, onChange, onClose }: CategoryFormProps) {
+export function CategoryForm({ formData, categories, isEditing, saving, serverError, onSubmit, onChange, onClose }: CategoryFormProps) {
   const parentCategories = categories.filter(c => c.categoryType === formData.categoryType && !c.parentId);
 
   return (
@@ -36,6 +37,12 @@ export function CategoryForm({ formData, categories, isEditing, saving, onSubmit
           </div>
 
           <form onSubmit={onSubmit} className="space-y-5">
+            {serverError && (
+              <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+                <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <span className="text-sm font-medium">{serverError}</span>
+              </div>
+            )}
             <div>
               <label htmlFor="category-name" className="block text-sm font-semibold text-gray-700 mb-2">
                 Category Name

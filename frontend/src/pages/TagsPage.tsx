@@ -33,6 +33,7 @@ export function TagsPage() {
     colorCode: TAG_COLORS[0]
   });
   const [tagNameError, setTagNameError] = useState<string | null>(null);
+  const [modalError, setModalError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTags();
@@ -45,8 +46,7 @@ export function TagsPage() {
       const data = await tagService.getAll();
       setTags(data);
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to fetch tags');
+      setError((err as Error).message || 'Failed to fetch tags');
     } finally {
       setLoading(false);
     }
@@ -72,11 +72,17 @@ export function TagsPage() {
       setShowModal(false);
       setEditingTag(null);
       setTagNameError(null);
+      setModalError(null);
       resetForm();
       fetchTags();
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to save tag');
+      const apiErr = err as Error & { fieldErrors?: Array<{ field: string; message: string }> };
+      const fieldErrors = apiErr.fieldErrors;
+      if (fieldErrors && fieldErrors.length > 0) {
+        setModalError(fieldErrors.map(fe => `${fe.field === 'tagName' ? 'Tag Name' : fe.field}: ${fe.message}`).join(' • '));
+      } else {
+        setModalError(apiErr.message || 'Failed to save tag. Please check your inputs.');
+      }
     } finally {
       setSaving(false);
     }
@@ -88,14 +94,14 @@ export function TagsPage() {
       setDeleteConfirm(null);
       fetchTags();
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to delete tag');
+      setError((err as Error).message || 'Failed to delete tag');
     }
   };
 
   const openCreateModal = () => {
     setEditingTag(null);
     setTagNameError(null);
+    setModalError(null);
     resetForm();
     setShowModal(true);
   };
@@ -103,6 +109,7 @@ export function TagsPage() {
   const openEditModal = (tag: Tag) => {
     setEditingTag(tag);
     setTagNameError(null);
+    setModalError(null);
     setFormData({
       tagName: tag.tagName,
       colorCode: tag.colorCode
@@ -287,8 +294,8 @@ export function TagsPage() {
           <div className="flex min-h-screen items-center justify-center p-4">
             <div 
               className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" 
-              onClick={() => { setShowModal(false); setTagNameError(null); }}
-              onKeyDown={(e) => e.key === 'Escape' && (setShowModal(false), setTagNameError(null))}
+              onClick={() => { setShowModal(false); setTagNameError(null); setModalError(null); }}
+              onKeyDown={(e) => e.key === 'Escape' && (setShowModal(false), setTagNameError(null), setModalError(null))}
               role="button"
               tabIndex={-1}
               aria-label="Close modal"
@@ -299,7 +306,7 @@ export function TagsPage() {
                   {editingTag ? 'Edit Tag' : 'Create Tag'}
                 </h2>
                 <button
-                  onClick={() => { setShowModal(false); setTagNameError(null); }}
+                  onClick={() => { setShowModal(false); setTagNameError(null); setModalError(null); }}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <X className="h-5 w-5" />
@@ -307,6 +314,12 @@ export function TagsPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                {modalError && (
+                  <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+                    <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                    <span className="text-sm font-medium">{modalError}</span>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Tag Name</label>
                   <input
@@ -374,7 +387,7 @@ export function TagsPage() {
                 <div className="flex gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => { setShowModal(false); setTagNameError(null); }}
+                    onClick={() => { setShowModal(false); setTagNameError(null); setModalError(null); }}
                     className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
                   >
                     Cancel

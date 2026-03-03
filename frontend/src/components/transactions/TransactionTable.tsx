@@ -7,13 +7,15 @@ interface TransactionTableProps {
   formatCurrency: (amount: number, currency?: string) => string;
   onEdit: (transaction: Transaction) => void;
   onDelete: (id: number) => void;
+  defaultCurrency?: string;
 }
 
 export function TransactionTable({ 
   transactions, 
   formatCurrency, 
   onEdit, 
-  onDelete 
+  onDelete,
+  defaultCurrency = 'NPR',
 }: Readonly<TransactionTableProps>) {
   const getTransactionIcon = (type: string) => {
     switch (type) {
@@ -83,11 +85,11 @@ export function TransactionTable({
                 <div className="flex flex-col items-end gap-1">
                   <span>
                     {transaction.transactionType === 'EXPENSE' ? '-' : ''}
-                    {formatCurrency(transaction.amount, transaction.currency)}
+                    {formatCurrency(transaction.amount, transaction.currency || defaultCurrency)}
                   </span>
                   <SecondaryCurrencyBadge
                     amount={Math.abs(transaction.amount)}
-                    primaryCurrency={transaction.currency}
+                    primaryCurrency={transaction.currency || defaultCurrency}
                   />
                 </div>
               </td>

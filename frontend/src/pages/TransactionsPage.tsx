@@ -6,6 +6,7 @@ import { categoryService } from '../services/category.service';
 import { useAuth } from '../contexts/AuthContext';
 import type { Transaction, Account, Category, TransactionFilter, CreateTransactionRequest, PageResponse } from '../types';
 import { logger } from '../utils/logger';
+import { formatCurrency as formatCurrencyUtil } from '../utils/formatters';
 import {
   Plus,
   Search,
@@ -34,6 +35,7 @@ export function TransactionsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [modalError, setModalError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({ page: 0, totalPages: 0, totalElements: 0 });
   
   const [filter, setFilter] = useState<TransactionFilter>({
@@ -74,8 +76,7 @@ export function TransactionsPage() {
         totalElements: response.totalElements
       });
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to fetch transactions');
+      setError((err as Error).message || 'Failed to fetch transactions');
     } finally {
       setLoading(false);
     }
@@ -98,30 +99,35 @@ export function TransactionsPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (data: CreateTransactionRequest) => {
+    setModalError(null);
     try {
       if (editingTransaction) {
-        await transactionService.update(editingTransaction.id, formData);
+        await transactionService.update(editingTransaction.id, data);
       } else {
-        await transactionService.create(formData);
+        await transactionService.create(data);
       }
       setShowModal(false);
       setEditingTransaction(null);
       resetForm();
       fetchTransactions();
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to save transaction');
+      const apiErr = err as Error & { fieldErrors?: Array<{ field: string; message: string }> };
+      const fieldErrors = apiErr.fieldErrors;
+      if (fieldErrors && fieldErrors.length > 0) {
+        const fieldLabels: Record<string, string> = {
+          accountId: 'Account', transactionType: 'Transaction Type', amount: 'Amount',
+          transactionDate: 'Date', description: 'Description', categoryId: 'Category',
+          notes: 'Notes', referenceNumber: 'Reference Number', transferToAccountId: 'Transfer To Account',
+        };
+        setModalError(fieldErrors.map(fe => `${fieldLabels[fe.field] ?? fe.field}: ${fe.message}`).join(' • '));
+      } else {
+        setModalError(apiErr.message || 'Failed to save transaction. Please check your inputs.');
+      }
     }
   };
 
-  const formatCurrency = (amount: number, currency: string = defaultCurrency) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number, currency: string = defaultCurrency) => formatCurrencyUtil(amount, currency);
 
   // Delete confirmation state
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number | null }>({ open: false, id: null });
@@ -136,8 +142,7 @@ export function TransactionsPage() {
       await transactionService.delete(deleteConfirm.id);
       fetchTransactions();
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to delete transaction');
+      setError((err as Error).message || 'Failed to delete transaction');
     } finally {
       setDeleteConfirm({ open: false, id: null });
     }
@@ -173,6 +178,7 @@ export function TransactionsPage() {
 
   const openNewModal = () => {
     setEditingTransaction(null);
+    setModalError(null);
     resetForm();
     if (accounts.length > 0) {
       setFormData(prev => ({ ...prev, accountId: accounts[0].id }));
@@ -267,6 +273,7 @@ export function TransactionsPage() {
                 formatCurrency={formatCurrency}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                defaultCurrency={defaultCurrency}
               />
 
               {/* Pagination */}
@@ -289,9 +296,10 @@ export function TransactionsPage() {
           accounts={accounts}
           categories={categories}
           isEditing={!!editingTransaction}
+          serverError={modalError}
           onSubmit={handleSubmit}
           onChange={setFormData}
-          onClose={() => setShowModal(false)}
+          onClose={() => { setShowModal(false); setModalError(null); }}
         />
       )}
 

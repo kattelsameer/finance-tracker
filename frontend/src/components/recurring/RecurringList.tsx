@@ -1,5 +1,6 @@
 import { Repeat, TrendingUp, TrendingDown, ArrowRightLeft, ToggleLeft, ToggleRight, Edit3, Trash2 } from 'lucide-react';
 import type { RecurringTransaction, TransactionType } from '../../types';
+import { SecondaryCurrencyBadge } from '../ui/SecondaryCurrencyBadge';
 
 interface RecurringListProps {
   transactions: RecurringTransaction[];
@@ -97,6 +98,11 @@ export function RecurringList({
                   <p className={`text-xl font-bold ${typeConfig.amountColor}`}>
                     {formatCurrency(transaction.amount)}
                   </p>
+                  <SecondaryCurrencyBadge
+                    amount={transaction.amount}
+                    primaryCurrency={transaction.currency}
+                    className="mt-0.5"
+                  />
                   <p className="text-xs text-gray-500 mt-1">
                     Next: {formatDate(transaction.nextOccurrence)}
                   </p>

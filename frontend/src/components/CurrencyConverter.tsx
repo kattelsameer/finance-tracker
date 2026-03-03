@@ -139,47 +139,50 @@ export function CurrencyConverter() {
           </div>
         </div>
 
-        {/* From Currency */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">From</label>
-          <select
-            value={fromCurrency}
-            onChange={(e) => setFromCurrency(e.target.value)}
-            className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white"
-          >
-            {currencies.map((currency) => (
-              <option key={currency.code} value={currency.code}>
-                {currency.code} - {currency.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* From / Swap / To — grouped together with tight spacing */}
+        <div className="border border-gray-200 rounded-xl overflow-hidden">
+          <div className="p-3 bg-gray-50 space-y-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">From</label>
+              <select
+                value={fromCurrency}
+                onChange={(e) => setFromCurrency(e.target.value)}
+                className="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {currencies.map((currency) => (
+                  <option key={currency.code} value={currency.code}>
+                    {currency.code} - {currency.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        {/* Swap Button */}
-        <div className="flex justify-center">
-          <button
-            onClick={handleSwapCurrencies}
-            className="p-2.5 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-            title="Swap currencies"
-          >
-            <ArrowDownUp className="h-5 w-5" />
-          </button>
-        </div>
+            {/* Swap Button */}
+            <div className="flex justify-center">
+              <button
+                onClick={handleSwapCurrencies}
+                className="p-2 text-blue-600 hover:text-blue-700 bg-white hover:bg-blue-50 border border-gray-200 rounded-lg transition-colors"
+                title="Swap currencies"
+              >
+                <ArrowDownUp className="h-4 w-4" />
+              </button>
+            </div>
 
-        {/* To Currency */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">To</label>
-          <select
-            value={toCurrency}
-            onChange={(e) => setToCurrency(e.target.value)}
-            className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white"
-          >
-            {currencies.map((currency) => (
-              <option key={currency.code} value={currency.code}>
-                {currency.code} - {currency.name}
-              </option>
-            ))}
-          </select>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">To</label>
+              <select
+                value={toCurrency}
+                onChange={(e) => setToCurrency(e.target.value)}
+                className="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {currencies.map((currency) => (
+                  <option key={currency.code} value={currency.code}>
+                    {currency.code} - {currency.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* Result */}

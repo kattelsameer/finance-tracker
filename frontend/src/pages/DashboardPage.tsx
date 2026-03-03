@@ -5,6 +5,7 @@ import { CurrencyConverterCompact } from '../components/CurrencyConverterCompact
 import { useAuth } from '../contexts/AuthContext';
 import { useFeatureFlags, type DashboardCardId } from '../contexts/FeatureFlagsContext';
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { formatCurrency as formatCurrencyUtil } from '../utils/formatters';
 import {
   SummaryCards,
   MonthlyTrendsChartNew,
@@ -46,8 +47,7 @@ export function DashboardPage() {
       const data = await dashboardService.getDashboardStats(dateRange.startDate, dateRange.endDate);
       setStats(data);
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to fetch dashboard stats');
+      setError((err as Error).message || 'Failed to fetch dashboard stats');
     } finally {
       setLoading(false);
     }
@@ -57,13 +57,7 @@ export function DashboardPage() {
     fetchDashboardStats();
   }, [fetchDashboardStats]);
 
-  const formatCurrency = (amount: number) => {
-    const currency = user?.defaultCurrency || 'NPR';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number) => formatCurrencyUtil(amount, user?.defaultCurrency || 'NPR');
 
   if (loading) {
     return (

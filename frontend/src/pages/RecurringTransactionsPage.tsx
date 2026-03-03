@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { recurringTransactionService } from '../services/recurring-transaction.service';
+import { exchangeRateService } from '../services/exchange-rate.service';
 import { accountService } from '../services/account.service';
 import { categoryService } from '../services/category.service';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,6 +8,7 @@ import type { RecurringTransaction, Frequency, CreateRecurringTransactionRequest
 import { RecurringList, RecurringTransactionForm } from '../components/recurring';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { logger } from '../utils/logger';
+import { formatCurrency as formatCurrencyUtil } from '../utils/formatters';
 import {
   Plus,
   Repeat,
@@ -26,6 +28,8 @@ export function RecurringTransactionsPage() {
   const [activeOnly, setActiveOnly] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<RecurringTransaction | null>(null);
+  const [modalError, setModalError] = useState<string | null>(null);
+  const [recurringInputCurrency, setRecurringInputCurrency] = useState(defaultCurrency);
   const [formData, setFormData] = useState<CreateRecurringTransactionRequest>({
     accountId: 0,
     transactionType: 'EXPENSE',
@@ -49,8 +53,7 @@ export function RecurringTransactionsPage() {
       setAccounts(accountsData);
       setCategories(categoriesData);
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to fetch recurring transactions');
+      setError((err as Error).message || 'Failed to fetch recurring transactions');
       logger.error('Failed to fetch recurring transactions:', err);
     } finally {
       setLoading(false);
@@ -66,8 +69,7 @@ export function RecurringTransactionsPage() {
       await recurringTransactionService.update(id, { isActive: !currentStatus });
       fetchRecurringTransactions();
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to update recurring transaction');
+      setError((err as Error).message || 'Failed to update recurring transaction');
     }
   };
 
@@ -83,8 +85,7 @@ export function RecurringTransactionsPage() {
       await recurringTransactionService.delete(deleteConfirm.id);
       fetchRecurringTransactions();
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to delete recurring transaction');
+      setError((err as Error).message || 'Failed to delete recurring transaction');
     } finally {
       setDeleteConfirm({ open: false, id: null });
     }
@@ -120,37 +121,55 @@ export function RecurringTransactionsPage() {
       startDate: new Date().toISOString().split('T')[0],
       autoPost: false,
     });
+    setRecurringInputCurrency(defaultCurrency);
     setShowForm(true);
   };
 
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingTransaction(null);
+    setModalError(null);
+    setRecurringInputCurrency(defaultCurrency);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setModalError(null);
     try {
       if (editingTransaction) {
         await recurringTransactionService.update(editingTransaction.id, formData);
       } else {
-        await recurringTransactionService.create(formData);
+        let submitData = { ...formData };
+        if (recurringInputCurrency !== defaultCurrency && formData.amount > 0) {
+          try {
+            const { convertedAmount } = await exchangeRateService.convert(formData.amount, recurringInputCurrency, defaultCurrency);
+            submitData = { ...submitData, amount: Math.round(convertedAmount * 100) / 100 };
+          } catch {
+            // fallback: save original amount
+          }
+        }
+        await recurringTransactionService.create(submitData);
       }
       handleCloseForm();
       fetchRecurringTransactions();
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to save recurring transaction');
+      const apiErr = err as Error & { fieldErrors?: Array<{ field: string; message: string }> };
+      const fieldErrors = apiErr.fieldErrors;
+      if (fieldErrors && fieldErrors.length > 0) {
+        const fieldLabels: Record<string, string> = {
+          accountId: 'Account', transactionType: 'Transaction Type', amount: 'Amount',
+          description: 'Description', frequency: 'Frequency', startDate: 'Start Date',
+          dayOfMonth: 'Day of Month', dayOfWeek: 'Day of Week', transferToAccountId: 'Transfer To Account',
+        };
+        setModalError(fieldErrors.map(fe => `${fieldLabels[fe.field] ?? fe.field}: ${fe.message}`).join(' • '));
+      } else {
+        setModalError(apiErr.message || 'Failed to save recurring transaction. Please check your inputs.');
+      }
       logger.error('Failed to save recurring transaction:', err);
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: defaultCurrency
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number) => formatCurrencyUtil(amount, defaultCurrency);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -246,6 +265,9 @@ export function RecurringTransactionsPage() {
           accounts={accounts}
           categories={categories}
           isEditing={!!editingTransaction}
+          serverError={modalError}
+          inputCurrency={recurringInputCurrency}
+          onInputCurrencyChange={setRecurringInputCurrency}
           onSubmit={handleSubmit}
           onChange={setFormData}
           onClose={handleCloseForm}

@@ -122,7 +122,7 @@ export const CHART_COLORS = [
 
 // Supported Currencies
 export const CURRENCIES = [
-  { code: 'NPR', symbol: '₨', name: 'Nepalese Rupee' },
+  { code: 'NPR', symbol: 'रू', name: 'Nepalese Rupee' },
   { code: 'USD', symbol: '$', name: 'US Dollar' },
   { code: 'EUR', symbol: '€', name: 'Euro' },
   { code: 'GBP', symbol: '£', name: 'British Pound' },

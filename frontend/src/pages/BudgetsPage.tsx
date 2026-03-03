@@ -6,6 +6,9 @@ import type { Budget, Category, CreateBudgetRequest, UpdateBudgetRequest, Period
 import { BudgetList } from '../components/budgets/BudgetList';
 import { BudgetForm } from '../components/budgets/BudgetForm';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { SecondaryCurrencyBadge } from '../components/ui/SecondaryCurrencyBadge';
+import { formatCurrency as formatCurrencyUtil } from '../utils/formatters';
+import { exchangeRateService } from '../services/exchange-rate.service';
 import {
   Target,
   Plus,
@@ -36,7 +39,9 @@ export function BudgetsPage() {
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'over'>('all');
+  const [budgetInputCurrency, setBudgetInputCurrency] = useState(defaultCurrency);
 
   const [formData, setFormData] = useState<CreateBudgetRequest>({
     categoryId: undefined,
@@ -63,8 +68,7 @@ export function BudgetsPage() {
       setBudgets(budgetsData);
       setCategories(categoriesData.filter(c => c.categoryType === 'EXPENSE'));
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to fetch budgets');
+      setError((err as Error).message || 'Failed to fetch budgets');
     } finally {
       setLoading(false);
     }
@@ -72,29 +76,54 @@ export function BudgetsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setModalError(null);
     try {
       setSaving(true);
+
+      // Convert budget amount to primary currency if a foreign currency was used
+      let submitData = { ...formData };
+      if (!editingBudget && budgetInputCurrency !== defaultCurrency && formData.amount > 0) {
+        try {
+          const { convertedAmount } = await exchangeRateService.convert(
+            formData.amount, budgetInputCurrency, defaultCurrency
+          );
+          submitData = { ...submitData, amount: Math.round(convertedAmount * 100) / 100 };
+        } catch {
+          // fallback: save original amount if conversion fails
+        }
+      }
+
       if (editingBudget) {
         const updateData: UpdateBudgetRequest = {
-          categoryId: formData.categoryId,
-          budgetName: formData.budgetName,
-          amount: formData.amount,
-          periodType: formData.periodType,
-          startDate: formData.startDate,
-          alertThreshold: formData.alertThreshold,
-          alertEnabled: formData.alertEnabled
+          categoryId: submitData.categoryId,
+          budgetName: submitData.budgetName,
+          amount: submitData.amount,
+          periodType: submitData.periodType,
+          startDate: submitData.startDate,
+          alertThreshold: submitData.alertThreshold,
+          alertEnabled: submitData.alertEnabled
         };
         await budgetService.update(editingBudget.id, updateData);
       } else {
-        await budgetService.create(formData);
+        await budgetService.create(submitData);
       }
       setShowModal(false);
       setEditingBudget(null);
+      setModalError(null);
       resetForm();
       fetchData();
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to save budget');
+      const apiErr = err as Error & { fieldErrors?: Array<{ field: string; message: string }> };
+      const fieldErrors = apiErr.fieldErrors;
+      if (fieldErrors && fieldErrors.length > 0) {
+        const fieldLabels: Record<string, string> = {
+          budgetName: 'Budget Name', categoryId: 'Category', amount: 'Budget Amount',
+          periodType: 'Period', startDate: 'Start Date', alertThreshold: 'Alert Threshold',
+        };
+        setModalError(fieldErrors.map(fe => `${fieldLabels[fe.field] ?? fe.field}: ${fe.message}`).join(' • '));
+      } else {
+        setModalError(apiErr.message || 'Failed to save budget. Please check your inputs.');
+      }
     } finally {
       setSaving(false);
     }
@@ -112,8 +141,7 @@ export function BudgetsPage() {
       await budgetService.delete(deleteConfirm.id);
       fetchData();
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to delete budget');
+      setError((err as Error).message || 'Failed to delete budget');
     } finally {
       setDeleteConfirm({ open: false, id: null });
     }
@@ -121,12 +149,15 @@ export function BudgetsPage() {
 
   const openCreateModal = () => {
     setEditingBudget(null);
+    setModalError(null);
     resetForm();
+    setBudgetInputCurrency(defaultCurrency);
     setShowModal(true);
   };
 
   const openEditModal = (budget: Budget) => {
     setEditingBudget(budget);
+    setModalError(null);
     setFormData({
       categoryId: budget.category?.id,
       budgetName: budget.budgetName,
@@ -151,12 +182,7 @@ export function BudgetsPage() {
     });
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: defaultCurrency
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number) => formatCurrencyUtil(amount, defaultCurrency);
 
   const getPeriodLabel = (period: string): string => {
     return PERIOD_LABELS[period as PeriodType] || period;
@@ -196,7 +222,10 @@ export function BudgetsPage() {
               </div>
               <span className="text-sm font-medium text-gray-500">Total Budgeted</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalBudgeted)}</p>
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalBudgeted)}</p>
+              <SecondaryCurrencyBadge amount={totalBudgeted} className="flex-shrink-0" />
+            </div>
           </div>
           <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
             <div className="flex items-center gap-3 mb-2">
@@ -205,7 +234,10 @@ export function BudgetsPage() {
               </div>
               <span className="text-sm font-medium text-gray-500">Total Spent</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalSpent)}</p>
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalSpent)}</p>
+              <SecondaryCurrencyBadge amount={totalSpent} className="flex-shrink-0" />
+            </div>
             <p className="text-sm text-gray-500 mt-1">
               {totalBudgeted > 0 ? `${Math.round((totalSpent / totalBudgeted) * 100)}% of budget` : 'No budget set'}
             </p>
@@ -308,9 +340,12 @@ export function BudgetsPage() {
           categories={categories}
           isEditing={!!editingBudget}
           saving={saving}
+          serverError={modalError}
+          inputCurrency={budgetInputCurrency}
+          onInputCurrencyChange={setBudgetInputCurrency}
           onSubmit={handleSubmit}
           onChange={setFormData}
-          onClose={() => setShowModal(false)}
+          onClose={() => { setShowModal(false); setModalError(null); setBudgetInputCurrency(defaultCurrency); }}
         />
       )}
 

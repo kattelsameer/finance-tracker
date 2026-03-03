@@ -1,5 +1,6 @@
 import { Wallet } from 'lucide-react';
 import type { AccountBreakdown } from '../../types';
+import { SecondaryCurrencyBadge } from '../ui/SecondaryCurrencyBadge';
 
 interface AccountBreakdownTableProps {
   accounts: AccountBreakdown[];
@@ -30,12 +31,25 @@ export function AccountBreakdownTable({ accounts, formatCurrency }: AccountBreak
             {accounts.map((account) => (
               <tr key={account.accountId} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 text-sm font-medium text-gray-900">{account.accountName}</td>
-                <td className="px-6 py-4 text-sm text-right text-emerald-600 font-medium">{formatCurrency(account.income)}</td>
-                <td className="px-6 py-4 text-sm text-right text-red-600 font-medium">{formatCurrency(account.expenses)}</td>
+                <td className="px-6 py-4 text-sm text-right text-emerald-600 font-medium">
+                  <div className="flex flex-col items-end gap-1">
+                    <span>{formatCurrency(account.income)}</span>
+                    <SecondaryCurrencyBadge amount={account.income} />
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-sm text-right text-red-600 font-medium">
+                  <div className="flex flex-col items-end gap-1">
+                    <span>{formatCurrency(account.expenses)}</span>
+                    <SecondaryCurrencyBadge amount={account.expenses} />
+                  </div>
+                </td>
                 <td className="px-6 py-4 text-sm text-right">
-                  <span className={`font-medium ${account.netAmount >= 0 ? 'text-teal-600' : 'text-orange-600'}`}>
-                    {formatCurrency(account.netAmount)}
-                  </span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`font-medium ${account.netAmount >= 0 ? 'text-teal-600' : 'text-orange-600'}`}>
+                      {formatCurrency(account.netAmount)}
+                    </span>
+                    <SecondaryCurrencyBadge amount={Math.abs(account.netAmount)} />
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-right text-gray-600">{account.transactionCount}</td>
               </tr>
