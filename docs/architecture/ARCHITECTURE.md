@@ -43,9 +43,9 @@ The Finance Tracker is a full-stack personal finance application built with:
 | Vite | 7.2.4 | Build tool & dev server |
 | TailwindCSS | 4.1.17 | Utility-first CSS framework |
 | React Router | 7.9.6 | Client-side routing |
-| TanStack Query | 5.90.11 | Server state management |
-| React Hook Form | 7.66.1 | Form handling with validation |
-| Zod | 4.1.13 | Schema validation |
+| TanStack Query | 5.90.16 | Server state management |
+| React Hook Form | 7.70.0 | Form handling with validation |
+| Zod | 4.3.4 | Schema validation |
 | Recharts | 3.5.0 | Chart library for data visualization |
 | Lucide React | 0.555.0 | Icon library |
 | Axios | 1.13.2 | HTTP client |
@@ -72,7 +72,7 @@ The Finance Tracker is a full-stack personal finance application built with:
 | JUnit 5 | 5.x | Backend unit testing |
 | Mockito | 5.x | Mocking framework |
 | AssertJ | 3.x | Fluent assertions |
-| Vitest | 3.2.4 | Frontend unit testing |
+| Vitest | 4.0.16 | Frontend unit testing |
 | React Testing Library | 16.3.0 | Component testing |
 | Playwright | 1.57.0 | End-to-end testing |
 
@@ -188,7 +188,7 @@ frontend/src/
 │   ├── AdvancedSearchPage.tsx
 │   ├── SettingsPage.tsx
 │   └── ProfilePage.tsx
-├── services/                  # 13 API service files
+├── services/                  # 15 API service files
 │   ├── auth.service.ts
 │   ├── account.service.ts
 │   ├── transaction.service.ts
@@ -196,11 +196,13 @@ frontend/src/
 │   ├── budget.service.ts
 │   ├── recurring-transaction.service.ts
 │   ├── dashboard.service.ts
+│   ├── exchange-rate.service.ts
 │   ├── report.service.ts
 │   ├── tag.service.ts
 │   ├── currency.service.ts
 │   ├── notification.service.ts
 │   ├── search.service.ts
+│   ├── settings.service.ts
 │   └── import-export.service.ts
 ├── hooks/                     # Custom React hooks
 │   ├── useAuth.ts
@@ -208,6 +210,7 @@ frontend/src/
 │   ├── useTransactions.ts
 │   ├── useCategories.ts
 │   ├── useBudgets.ts
+│   ├── useDebounce.ts
 │   └── useDashboard.ts
 ├── contexts/                  # React contexts
 │   └── AuthContext.tsx
@@ -298,7 +301,7 @@ export function useCreateTransaction() {
 
 ```
 backend/src/main/java/com/financetracker/
-├── controller/                # 13 REST controllers
+├── controller/                # 14 REST controllers
 │   ├── AuthController.java
 │   ├── AccountController.java
 │   ├── TransactionController.java
@@ -311,21 +314,26 @@ backend/src/main/java/com/financetracker/
 │   ├── CurrencyController.java
 │   ├── NotificationController.java
 │   ├── SearchController.java
-│   └── ImportExportController.java
+│   ├── ImportExportController.java
+│   └── UserSettingsController.java
 ├── service/                   # Business logic layer
-│   ├── UserService.java
 │   ├── AccountService.java
-│   ├── TransactionService.java
-│   ├── CategoryService.java
+│   ├── AuthService.java
+│   ├── AuditLogCleanupService.java
 │   ├── BudgetService.java
-│   ├── RecurringTransactionService.java
-│   ├── DashboardService.java
-│   ├── ReportService.java
-│   ├── TagService.java
+│   ├── CategoryService.java
 │   ├── CurrencyService.java
+│   ├── DashboardService.java
+│   ├── DemoDataService.java
+│   ├── ImportExportService.java
 │   ├── NotificationService.java
-│   ├── SearchService.java
-│   └── ImportExportService.java
+│   ├── RecurringTransactionService.java
+│   ├── ReportService.java
+│   ├── SavedSearchService.java
+│   ├── TagService.java
+│   ├── TokenCleanupService.java
+│   ├── TransactionService.java
+│   └── UserCurrencyService.java
 ├── repository/                # Data access layer
 │   ├── UserRepository.java
 │   ├── AccountRepository.java

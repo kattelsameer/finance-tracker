@@ -90,7 +90,7 @@ Expected containers and ports (from `docker-compose.yml`):
 
 - `finance-tracker-mysql` → `3306:3306`
 - `finance-tracker-backend` → `8080:8080`
-- `finance-tracker-frontend` → `80:80`
+- `finance-tracker-frontend` → `80:8080`
 
 Health checks configured:
 
@@ -108,12 +108,12 @@ Health checks configured:
 Use the UI Register page at `http://localhost/register`. Alternatively:
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/register \
+curl -X POST http://localhost:8080/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "username": "admin",
     "email": "admin@example.com",
-    "password": "Admin123!",
+    "password": "Admin@Secure123!",
     "displayName": "Admin User"
   }'
 ```

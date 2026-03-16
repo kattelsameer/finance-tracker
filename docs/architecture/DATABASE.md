@@ -31,7 +31,7 @@ The Finance Tracker database uses **MySQL 8.0** with **Flyway** for version-cont
 - **Primary Keys**: BIGINT AUTO_INCREMENT
 - **Timestamps**: Automatic created_at/updated_at
 
-**Total Migrations**: 17 (V1-V17)  
+**Total Migrations**: 20 (V1-V20)  
 **Total Tables**: 14 core tables + 1 junction table + Flyway metadata
 
 ---
@@ -57,8 +57,11 @@ The Finance Tracker database uses **MySQL 8.0** with **Flyway** for version-cont
 | V15 | `V15__create_saved_searches_table.sql` | User-saved search filters | Enhancement |
 | V16 | `V16__create_notifications_table.sql` | In-app notifications | Enhancement |
 | V17 | `V17__create_notification_preferences_table.sql` | User notification settings | Enhancement |
+| V18 | `V18__add_additional_currencies.sql` | Additional currency support | Enhancement |
+| V19 | `V19__set_npr_as_default_currency.sql` | Set NPR as system default currency | Enhancement |
+| V20 | `V20__set_npr_as_default_account_transaction_currency.sql` | Set NPR default for accounts and transactions | Enhancement |
 
-**Deviation from Plan**: Original README.md planned 12 migrations (V1-V12), but 5 additional migrations were added for enhanced features (currencies, saved searches, notifications).
+**Deviation from Plan**: Original README.md planned 12 migrations (V1-V12), but 8 additional migrations were added for enhanced features (currencies, saved searches, notifications, NPR default currency).
 
 ---
 
@@ -95,7 +98,7 @@ CREATE TABLE users (
 - `password_hash`: BCrypt hashed password (cost factor 12)
 - `failed_login_attempts`: Account lockout tracking (max 5 attempts)
 - `locked_until`: Temporary account lock (15 minutes)
-- `default_currency`: User's preferred currency (3-letter ISO code)
+- `default_currency`: User's preferred currency (3-letter ISO code); defaults to `NPR` (Nepalese Rupee) after migration V19
 
 ---
 
@@ -672,5 +675,5 @@ VALUES
 
 **Deviations from Plan:**
 
-- Added V13-V17 for currencies, saved searches, notifications
+- Added V13-V20 for currencies, saved searches, notifications, and NPR default currency
 - No changes to original V1-V12 structure

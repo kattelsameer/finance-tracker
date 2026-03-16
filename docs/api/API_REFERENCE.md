@@ -39,7 +39,7 @@
 - **CSRF**: `XSRF-TOKEN` exposed via response headers; axios client injects `X-XSRF-TOKEN`
 - **Content Type**: `application/json`
 - **Date Format**: ISO 8601 (`yyyy-MM-dd` for dates, `yyyy-MM-dd'T'HH:mm:ss` for timestamps)
-- **Password Policy**: min 8 chars with at least 1 uppercase, 1 lowercase, 1 number, and 1 special from `@$!%*?&`
+- **Password Policy**: min 12 chars with at least 1 uppercase, 1 lowercase, 1 number, and 1 special from `@$!%*?&`
 
 ---
 
@@ -56,11 +56,13 @@ Create a new user account.
 ```json
 {
   "username": "johndoe",
-  "password": "SecurePass123!"
+  "email": "john@example.com",
+  "password": "SecurePass123!XY",
+  "displayName": "John Doe"
 }
 ```
 
-**Response:** `200 OK`
+**Response:** `201 Created`
 
 ```json
 {
@@ -1483,8 +1485,8 @@ All error responses follow this structure:
 
 - **JWT Tokens**: Stored in HttpOnly cookies (`auth_token`) to prevent XSS attacks
 - **Cookie Attributes**: `HttpOnly`, `Secure` (HTTPS only in production), `SameSite=Strict`
-- **Token Expiration**: 24 hours from login
-- **Password Requirements**: Minimum 8 characters with complexity requirements
+- **Token Expiration**: 1 hour from login (configurable; 24 hours in demo mode)
+- **Password Requirements**: Minimum 12 characters with complexity requirements
 
 ### CSRF Protection
 
