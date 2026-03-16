@@ -40,11 +40,11 @@ The Finance Tracker project has been **successfully implemented** with **97% ali
 
 | Category | Planned | Actual | Deviation |
 |----------|---------|--------|-----------|
-| **Database Migrations** | 12 (V1-V12) | 17 (V1-V17) | +5 (42% more) |
-| **Backend Controllers** | 10 estimated | 13 implemented | +3 (30% more) |
-| **Frontend Pages** | 12 planned | 13 implemented | +1 (8% more) |
+| **Database Migrations** | 12 (V1-V12) | 20 (V1-V20) | +8 (67% more) |
+| **Backend Controllers** | 10 estimated | 14 implemented | +4 (40% more) |
+| **Frontend Pages** | 12 planned | 14 implemented | +2 (17% more) |
 | **React Version** | 18.x | 19.2.0 | +1 major version |
-| **Test Coverage** | Basic | Comprehensive | 157 total tests |
+| **Test Coverage** | Basic | Comprehensive | 168 total tests |
 
 ---
 
@@ -99,9 +99,9 @@ The Finance Tracker project has been **successfully implemented** with **97% ali
 
 | Planned Migrations | Actual Migrations | Deviation |
 |--------------------|-------------------|-----------|
-| V1-V12 (12 total) | **V1-V17 (17 total)** | **+5 migrations** |
+| V1-V12 (12 total) | **V1-V20 (20 total)** | **+8 migrations** |
 
-### Added Migrations (V13-V17)
+### Added Migrations (V13-V20)
 
 | Migration | Purpose | Rationale |
 |-----------|---------|-----------|
@@ -110,8 +110,11 @@ The Finance Tracker project has been **successfully implemented** with **97% ali
 | **V15__create_saved_searches_table.sql** | Save complex search filters | ⭐ Power user feature |
 | **V16__create_notifications_table.sql** | In-app notification system | ⭐ User engagement enhancement |
 | **V17__create_notification_preferences_table.sql** | User notification settings | ⭐ Personalization feature |
+| **V18__add_additional_currencies.sql** | Additional currency support | ⭐ Expanded currency coverage |
+| **V19__set_npr_as_default_currency.sql** | Set NPR as system default currency | ⭐ Regional default |
+| **V20__set_npr_as_default_account_transaction_currency.sql** | Set NPR default for accounts and transactions | ⭐ Consistent NPR defaults |
 
-**Impact**: **5 enhancement tables** added for improved functionality.
+**Impact**: **8 enhancement migrations** added for improved functionality (5 new tables + 3 data/configuration changes).
 
 ---
 
@@ -132,7 +135,7 @@ All 12 originally planned migrations were implemented exactly as specified:
 ✅ V11: revoked_tokens  
 ✅ V12: seed_default_categories  
 
-**Conclusion**: Original schema fully delivered + 5 enhancements.
+**Conclusion**: Original schema fully delivered + 8 enhancements.
 
 ---
 
@@ -182,19 +185,20 @@ All 12 originally planned migrations were implemented exactly as specified:
 
 | Category | Planned (README.md) | Actual Implementation | Deviation |
 |----------|---------------------|----------------------|-----------|
-| Pages | 12 pages | **13 pages** | +1 page |
+| Pages | 12 pages | **14 pages** | +2 pages |
 | Components | "Reusable components" | **35+ components** | ✅ Modular |
-| Services | Not specified | **13 service files** | ✅ Clean architecture |
-| Custom Hooks | Not specified | **6 data hooks** | ⭐ React Query integration |
+| Services | Not specified | **15 service files** | ✅ Clean architecture |
+| Custom Hooks | Not specified | **7 data hooks** | ⭐ React Query integration |
 
-### Additional Page
+### Additional Pages
 
 | Page | Route | Purpose | Status |
 |------|-------|---------|--------|
 | **ProfilePage.tsx** | `/profile` | User profile management | ⭐ Enhancement |
+| **SettingsPage.tsx** | `/settings` | Application settings | ⭐ Enhancement |
 
 **Original 12 Pages** (All Delivered):
-✅ LoginPage, RegisterPage, DashboardPage, TransactionsPage, AccountsPage, CategoriesPage, TagsPage, BudgetsPage, RecurringTransactionsPage, ReportsPage, ImportExportPage, AdvancedSearchPage, SettingsPage
+✅ LoginPage, RegisterPage, DashboardPage, TransactionsPage, AccountsPage, CategoriesPage, TagsPage, BudgetsPage, RecurringTransactionsPage, ReportsPage, ImportExportPage, AdvancedSearchPage
 
 ---
 
@@ -206,7 +210,7 @@ The original README.md mentioned "reusable components" but didn't specify count 
 
 ```
 components/
-├── ui/                    # 11 reusable UI primitives
+├── ui/                    # 14 reusable UI primitives
 │   ├── Button.tsx
 │   ├── Input.tsx
 │   ├── Select.tsx
@@ -217,6 +221,10 @@ components/
 │   ├── Spinner.tsx
 │   ├── Table.tsx
 │   ├── Textarea.tsx
+│   ├── ConfirmDialog.tsx
+│   ├── CurrencyChangeModal.tsx
+│   ├── CurrencyConversionBadge.tsx
+│   ├── SecondaryCurrencyBadge.tsx
 │   └── index.ts
 ├── layout/                # 4 layout components
 │   ├── AppLayout.tsx
@@ -256,10 +264,12 @@ services/
 ├── currency.service.ts         # ⭐ Enhancement
 ├── notification.service.ts     # ⭐ Enhancement
 ├── search.service.ts           # ⭐ Enhancement
+├── exchange-rate.service.ts    # ⭐ Enhancement
+├── settings.service.ts         # ⭐ Enhancement
 └── import-export.service.ts
 ```
 
-**Total**: **13 service files** (10 original + 3 enhancements)
+**Total**: **15 service files** (10 original + 5 enhancements)
 
 ---
 
@@ -490,7 +500,7 @@ All features mentioned in README.md were implemented. No planned features were r
 | Large CSV import failures | Chunked processing, validation | ✅ Implemented | ✅ Mitigated |
 | Performance with large datasets | Indexed queries, pagination | ✅ 50+ indexes, pagination | ✅ Mitigated |
 | JWT token theft | HttpOnly cookies, short expiration | ✅ + SameSite=Strict | ✅ Enhanced |
-| Database migration errors | Flyway versioning, backups | ✅ 17 migrations successful | ✅ Mitigated |
+| Database migration errors | Flyway versioning, backups | ✅ 20 migrations successful | ✅ Mitigated |
 | Frontend state inconsistency | React Query cache invalidation | ✅ Implemented | ✅ Mitigated |
 | Docker deployment issues | Health checks, graceful shutdown | ✅ Implemented | ✅ Mitigated |
 
@@ -502,13 +512,13 @@ All features mentioned in README.md were implemented. No planned features were r
 
 ### Positive Deviations (Enhancements)
 
-1. ✅ **5 additional database migrations** (currencies, saved searches, notifications)
-2. ✅ **3 additional controllers** (Currency, Notification, Search)
-3. ✅ **1 additional page** (ProfilePage)
-4. ✅ **Comprehensive testing** (157 tests vs basic testing)
+1. ✅ **8 additional database migrations** (currencies, saved searches, notifications, NPR defaults)
+2. ✅ **4 additional controllers** (Currency, Notification, Search, UserSettings)
+3. ✅ **2 additional pages** (ProfilePage, SettingsPage)
+4. ✅ **Comprehensive testing** (168 tests vs basic testing)
 5. ✅ **35+ modular components** vs unspecified count
-6. ✅ **13 service files** with clean architecture
-7. ✅ **6 custom React Query hooks** for data fetching
+6. ✅ **15 service files** with clean architecture
+7. ✅ **7 custom React Query hooks** for data fetching
 8. ✅ **Latest framework versions** (React 19, Vite 7, TailwindCSS 4)
 9. ✅ **Production-ready security** (JWT validation, CORS config)
 10. ✅ **Comprehensive documentation** (10 docs vs basic docs)

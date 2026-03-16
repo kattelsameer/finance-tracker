@@ -164,7 +164,8 @@ npm run test:coverage
 
 ### Auth Test Notes
 
-- **Demo credentials**: `admin` / `Admin@123`
+- **E2E test credentials**: Dynamically generated usernames (`e2euser<sessionId>`) with password `Admin@12345678` (see `frontend/e2e/fixtures/auth.ts`)
+- **Demo mode credentials**: `demo@example.com` / `Demo123!` (seeded via `V100__seed_demo_user_and_accounts.sql`)
 - **Registration in tests** uses Backend API (`POST /api/v1/auth/register`) due to frontend redirect behavior
 - **Login page selectors** use `input#username` and `input#password`
 - After login, expect navigation to protected routes (e.g., dashboard)

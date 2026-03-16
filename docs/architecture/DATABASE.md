@@ -80,7 +80,8 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     display_name VARCHAR(100),
-    default_currency CHAR(3) DEFAULT 'USD',
+    default_currency CHAR(3) DEFAULT 'NPR',
+    secondary_currency CHAR(3) DEFAULT NULL,
     timezone VARCHAR(50) DEFAULT 'UTC',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -99,6 +100,7 @@ CREATE TABLE users (
 - `failed_login_attempts`: Account lockout tracking (max 5 attempts)
 - `locked_until`: Temporary account lock (15 minutes)
 - `default_currency`: User's preferred currency (3-letter ISO code); defaults to `NPR` (Nepalese Rupee) after migration V19
+- `secondary_currency`: Optional secondary display currency (added by V19); display-only, no data stored in this currency
 
 ---
 
@@ -159,7 +161,7 @@ CREATE TABLE accounts (
 **Key Fields**:
 
 - `balance`: Current account balance (calculated from transactions)
-- `currency`: Account currency (defaults to USD)
+- `currency`: Account currency (originally defaults to USD; changed to `NPR` by migration V20)
 - `account_number_last4`: Last 4 digits for identification (optional)
 
 ---

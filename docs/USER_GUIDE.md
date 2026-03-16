@@ -34,7 +34,7 @@ Welcome to Finance Tracker! This guide documents implemented features and how to
 3. Fill in your details:
    - **Username**: Your unique username (3-20 characters)
    - **Email**: Your email address
-   - **Password**: Must be at least 8 characters
+   - **Password**: Must be at least 12 characters (with uppercase, lowercase, digit, and special character)
    - **Display Name**: How you want to be addressed
 4. Click **"Create Account"**
 5. You'll be automatically logged in

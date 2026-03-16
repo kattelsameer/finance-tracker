@@ -47,7 +47,7 @@ The Finance Tracker is a full-stack personal finance application built with:
 | React Hook Form | 7.70.0 | Form handling with validation |
 | Zod | 4.3.4 | Schema validation |
 | Recharts | 3.5.0 | Chart library for data visualization |
-| Lucide React | 0.555.0 | Icon library |
+| Lucide React | 0.562.0 | Icon library |
 | Axios | 1.13.2 | HTTP client |
 | date-fns | 4.1.0 | Date manipulation |
 
@@ -153,7 +153,7 @@ frontend/src/
 │   ├── budgets/               # Budget components
 │   ├── recurring/             # Recurring transaction components
 │   └── reports/               # Report components
-├── pages/                     # 13 page components
+├── pages/                     # 14 page components
 │   ├── auth/
 │   │   ├── LoginPage.tsx
 │   │   └── RegisterPage.tsx
@@ -207,8 +207,8 @@ frontend/src/
 │   ├── currency.ts
 │   └── ...
 ├── utils/                     # Utility functions
-│   ├── formatters.ts          # 9 formatting functions
-│   ├── validators.ts          # 15 validation functions
+│   ├── formatters.ts          # 8 formatting functions
+│   ├── validators.ts          # 13 validation functions
 │   └── logger.ts              # Environment-aware logging
 ├── config/                    # Configuration
 │   └── api.ts                 # API endpoints
@@ -271,7 +271,7 @@ export function useCreateTransaction() {
 #### 4. Type Safety
 
 - **All DTOs match backend** for end-to-end type safety
-- **Modular type files** organized by domain (11 type files)
+- **Modular type files** organized by domain (12 type files)
 - **Zod schemas** for runtime validation
 
 ---

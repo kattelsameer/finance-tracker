@@ -160,7 +160,7 @@ For complete feature documentation, see [User Guide](USER_GUIDE.md).
 | **REST API Endpoints** | 73+ |
 | **Database Tables** | 15 |
 | **Flyway Migrations** | 20 |
-| **Frontend Pages** | 13 |
+| **Frontend Pages** | 14 |
 | **React Components** | 35+ |
 | **Service Files** | 15 |
 | **Custom Hooks** | 7 |

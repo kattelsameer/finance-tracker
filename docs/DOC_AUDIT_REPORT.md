@@ -18,13 +18,15 @@ A full documentation audit was performed across all Markdown files in the reposi
 |------|-------------|
 | `docs/api/API_REFERENCE.md` | Fixed password policy (min 12), added `email` to Register request, fixed Register response code (200 → 201), fixed token expiration description, fixed Security section password note |
 | `docs/deployment/DEPLOYMENT.md` | Fixed frontend port mapping (`80:80` → `80:8080`), corrected registration API path (`/api/auth/register` → `/api/v1/auth/register`), updated example password to meet 12-char policy, **added Mermaid deployment topology diagram** |
-| `docs/architecture/DATABASE.md` | Updated migration count (17 → 20), added V18-V20 to migration history table, updated Deviation note, added note about NPR default currency, updated notes reference for V13-V20, updated summary migration count (17 → 20), **replaced ASCII table relationship diagram with Mermaid ER diagram** |
-| `docs/architecture/ARCHITECTURE.md` | Updated controller count (13 → 14), added `UserSettingsController.java` to directory tree, updated services list (13 → 17), updated frontend services list (13 → 15) with `exchange-rate.service.ts` and `settings.service.ts`, added `useDebounce.ts` to hooks list, corrected Vitest version (3.2.4 → 4.0.16), TanStack Query version (5.90.11 → 5.90.16), React Hook Form version (7.66.1 → 7.70.0), Zod version (4.1.13 → 4.3.4), fixed password minimum (8 → 12), updated test counts in summary (103+18+47), fixed UI primitives count (11 → 14), **converted 5 ASCII art diagrams to Mermaid** (high-level architecture, login flow, request/response cycle, CSRF flow, Docker compose) |
+| `docs/architecture/DATABASE.md` | Updated migration count (17 → 20), added V18-V20 to migration history table, updated Deviation note, added note about NPR default currency, added `secondary_currency` column to users table schema, added V20 currency default note to accounts, updated notes reference for V13-V20, updated summary migration count (17 → 20), **replaced ASCII table relationship diagram with Mermaid ER diagram** |
+| `docs/architecture/ARCHITECTURE.md` | Updated controller count (13 → 14), added `UserSettingsController.java` to directory tree, updated services list (13 → 17), updated frontend services list (13 → 15) with `exchange-rate.service.ts` and `settings.service.ts`, added `useDebounce.ts` to hooks list, corrected Vitest version (3.2.4 → 4.0.16), TanStack Query version (5.90.11 → 5.90.16), React Hook Form version (7.66.1 → 7.70.0), Zod version (4.1.13 → 4.3.4), Lucide React version (0.555.0 → 0.562.0), fixed password minimum (8 → 12), updated test counts in summary (103+18+47), fixed UI primitives count (11 → 14), fixed page count (13 → 14), fixed type files count (11 → 12), fixed formatters count (9 → 8) and validators count (15 → 13), **converted 5 ASCII art diagrams to Mermaid** (high-level architecture, login flow, request/response cycle, CSRF flow, Docker compose) |
 | `docs/development/BACKEND_GUIDE.md` | Updated controller count (13 → 14), added `UserSettingsController.java` to controller list, updated migration count (17 → 20), fixed test password example to meet 12-char policy, **added Mermaid layered architecture diagram** |
 | `docs/development/FRONTEND_GUIDE.md` | Fixed password policy (min 8 → min 12), updated service count (13 → 15) with missing services, added `useDebounce.ts` to hooks list, updated page count (13 → 14), **added Mermaid routing structure diagram** |
-| `docs/development/DEVELOPMENT_GUIDE.md` | Updated Flyway migration range references (V1-V17 → V1-V20) |
-| `docs/testing/TESTING_GUIDE.md` | Fixed test password example, updated Playwright CI worker count (2 → 1), fixed CI workflow file reference (`playwright.yml` → `ci.yml`), added missing `demo.spec.ts` to E2E spec list, updated E2E test count (45 → 47 and 6 → 7 spec files), updated backend test count (93 → 103), updated total test count (156 → 168), updated header total, **added Mermaid CI pipeline overview diagram** |
-| `docs/README.md` | Updated Vitest version (3.2.4 → 4.0.16), updated controller count (13 → 14), migration count (17 → 20), service count (13 → 15), custom hooks count (6 → 7), backend test count (93 → 103), E2E test count (46 → 47), total test count (157 → 168), updated directory tree test/page/controller/migration count descriptions |
+| `docs/development/DEVELOPMENT_GUIDE.md` | Updated Flyway migration range references (V1-V17 → V1-V20), added V18-V20 to migration file listing |
+| `docs/testing/TESTING_GUIDE.md` | Fixed test password example, updated Playwright CI worker count (2 → 1), fixed CI workflow file reference (`playwright.yml` → `ci.yml`), added missing `demo.spec.ts` to E2E spec list, updated E2E test count (45 → 47 and 6 → 7 spec files), updated backend test count (93 → 103), updated total test count (156 → 168), updated header total, fixed demo credentials (replaced `admin`/`Admin@123` with actual E2E test and demo mode credentials), **added Mermaid CI pipeline overview diagram** |
+| `docs/README.md` | Updated Vitest version (3.2.4 → 4.0.16), updated controller count (13 → 14), migration count (17 → 20), service count (13 → 15), custom hooks count (6 → 7), backend test count (93 → 103), E2E test count (46 → 47), total test count (157 → 168), frontend pages (13 → 14), updated directory tree test/page/controller/migration count descriptions |
+| `docs/USER_GUIDE.md` | Fixed password requirement from "at least 8 characters" to "at least 12 characters" with complexity requirements |
+| `docs/PROJECT_DEVIATION_REPORT.md` | Updated migration count (V1-V17 → V1-V20), controller count (13 → 14), page count (13 → 14), service count (13 → 15), hooks count (6 → 7), test total (157 → 168), UI primitives count (11 → 14) with 4 missing components, added V18-V20 migration entries, updated summary deviations |
 
 ---
 
@@ -184,7 +186,73 @@ All legacy ASCII art diagrams were converted to Mermaid for consistent rendering
 - `docs/deployment/DEPLOYMENT.md` — Environment variables, backup/restore commands, health check endpoints.
 - `docs/development/DEVELOPMENT_GUIDE.md` — Prerequisites, Docker Compose commands, IDE setup.
 - `docs/architecture/ARCHITECTURE.md` — High-level architecture diagram, security patterns, data flow.
-- `docs/architecture/DATABASE.md` — Core table schemas (V1–V17), indexes, relationships.
+- `docs/architecture/DATABASE.md` — Core table schemas (V1–V20), indexes, relationships.
 - `docs/development/BACKEND_GUIDE.md` — Security section (JWT + CSRF), error handling codes, data isolation patterns.
 - `docs/development/FRONTEND_GUIDE.md` — API client pattern, React Query patterns, routing.
 - `docs/api/API_REFERENCE.md` — All documented endpoints (paths, methods, request/response formats for accounts, transactions, categories, budgets, etc.).
+
+---
+
+## Final Cross-Verification Pass
+
+A final cross-verification was performed to catch any remaining inconsistencies across all documents. The following additional issues were identified and corrected:
+
+### 16. Password Policy in USER_GUIDE.md
+**File**: `docs/USER_GUIDE.md`
+
+**Issue**: Getting Started section stated password must be "at least 8 characters".  
+**Reality**: Backend enforces minimum 12 characters.  
+**Fix**: Updated to "at least 12 characters" with complexity requirements.
+
+### 17. Page Count Inconsistencies (13 → 14)
+**Files**: `docs/architecture/ARCHITECTURE.md`, `docs/README.md`, `docs/PROJECT_DEVIATION_REPORT.md`
+
+**Issue**: Frontend page count listed as 13 in multiple places.  
+**Reality**: 14 page components exist (LoginPage, RegisterPage, DashboardPage, TransactionsPage, AccountsPage, CategoriesPage, BudgetsPage, RecurringTransactionsPage, ReportsPage, TagsPage, ImportExportPage, AdvancedSearchPage, SettingsPage, ProfilePage).  
+**Fix**: Updated to 14 in all locations.
+
+### 18. Type File Count (11 → 12)
+**File**: `docs/architecture/ARCHITECTURE.md`
+
+**Issue**: Type files documented as "11 type files".  
+**Reality**: `frontend/src/types/` contains 12 TypeScript files.  
+**Fix**: Updated count to 12.
+
+### 19. Utility Function Counts
+**File**: `docs/architecture/ARCHITECTURE.md`
+
+**Issue**: `formatters.ts` documented as "9 formatting functions" and `validators.ts` as "15 validation functions".  
+**Reality**: `formatters.ts` contains 8 exported functions; `validators.ts` contains 13 exported functions.  
+**Fix**: Corrected to 8 and 13 respectively.
+
+### 20. Lucide React Version
+**File**: `docs/architecture/ARCHITECTURE.md`
+
+**Issue**: Lucide React version listed as `0.555.0`.  
+**Reality**: `package.json` specifies `^0.562.0`.  
+**Fix**: Updated to `0.562.0`.
+
+### 21. E2E Test Credentials
+**File**: `docs/testing/TESTING_GUIDE.md`
+
+**Issue**: Auth test notes listed "Demo credentials: `admin` / `Admin@123`".  
+**Reality**: E2E tests use dynamically generated usernames with password `Admin@12345678` (see `frontend/e2e/fixtures/auth.ts`). Demo mode uses `demo@example.com` / `Demo123!`.  
+**Fix**: Updated to reflect actual E2E test and demo mode credentials.
+
+### 22. Missing V18-V20 in Migration Listing
+**File**: `docs/development/DEVELOPMENT_GUIDE.md`
+
+**Issue**: Migration file listing showed V1-V17 despite header saying "V1-V20".  
+**Fix**: Added V18, V19, and V20 migration files to the listing.
+
+### 23. PROJECT_DEVIATION_REPORT Stale Counts
+**File**: `docs/PROJECT_DEVIATION_REPORT.md`
+
+**Issue**: Multiple stale counts — migrations "V1-V17" (actually V1-V20), controllers "13" (actually 14), pages "13" (actually 14), services "13" (actually 15 frontend), test total "157" (actually 168).  
+**Fix**: Updated all counts to reflect current codebase state.
+
+### 24. DATABASE.md Missing `secondary_currency` Column
+**File**: `docs/architecture/DATABASE.md`
+
+**Issue**: Users table schema did not include `secondary_currency` column added by V19.  
+**Fix**: Added column and description to the users table documentation.

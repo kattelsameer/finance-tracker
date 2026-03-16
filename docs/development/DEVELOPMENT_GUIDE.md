@@ -780,6 +780,9 @@ V14__add_currency_relationships.sql
 V15__create_saved_searches_table.sql
 V16__create_notifications_table.sql
 V17__create_notification_preferences_table.sql
+V18__add_additional_currencies.sql
+V19__set_npr_as_default_currency.sql
+V20__set_npr_as_default_account_transaction_currency.sql
 ```
 
 ### 8.3 Running Migrations
