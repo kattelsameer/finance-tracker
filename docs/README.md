@@ -35,15 +35,15 @@ docs/
 │
 ├── architecture/                          # System architecture
 │   ├── ARCHITECTURE.md                    # High-level architecture
-│   └── DATABASE.md                        # Database schema (17 migrations)
+│   └── DATABASE.md                        # Database schema (20 migrations)
 │
 ├── api/                                   # API documentation
 │   └── API_REFERENCE.md                   # All 73+ REST endpoints
 │
 ├── development/                           # Development guides
 │   ├── DEVELOPMENT_GUIDE.md               # Local setup and workflow
-│   ├── FRONTEND_GUIDE.md                  # React development (13 pages, 35+ components)
-│   └── BACKEND_GUIDE.md                   # Spring Boot development (13 controllers)
+│   ├── FRONTEND_GUIDE.md                  # React development (14 pages, 35+ components)
+│   └── BACKEND_GUIDE.md                   # Spring Boot development (14 controllers)
 │
 ├── testing/                               # Testing documentation
 │   └── TESTING_GUIDE.md                   # 168 tests (103 backend + 18 frontend + 47 E2E)

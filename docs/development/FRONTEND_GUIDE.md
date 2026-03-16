@@ -31,7 +31,7 @@ This document describes the React/TypeScript frontend of Finance Tracker, reflec
 
 ### Pages
 
-There are 13 pages:
+There are 14 pages (12 main + 2 auth):
 
 - `pages/AccountsPage.tsx`
 - `pages/AdvancedSearchPage.tsx`
@@ -46,6 +46,44 @@ There are 13 pages:
 - `pages/TagsPage.tsx`
 - `pages/TransactionsPage.tsx`
 - `pages/auth/LoginPage.tsx`, `pages/auth/RegisterPage.tsx` (auth group)
+
+### Routing Structure
+
+```mermaid
+graph TD
+    Root["/"]
+    Login["/login → LoginPage"]
+    Register["/register → RegisterPage"]
+    PR["ProtectedRoute wrapper"]
+    Dash["/ → DashboardPage"]
+    Acct["/accounts → AccountsPage"]
+    Txn["/transactions → TransactionsPage"]
+    Search["/search → AdvancedSearchPage"]
+    Recur["/recurring-transactions"]
+    IE["/import-export"]
+    Cat["/categories"]
+    Tags["/tags"]
+    Budgets["/budgets"]
+    Reports["/reports"]
+    Settings["/settings"]
+    Wildcard["/* → Navigate to /"]
+
+    Root --> Login
+    Root --> Register
+    Root --> PR
+    PR --> Dash
+    PR --> Acct
+    PR --> Txn
+    PR --> Search
+    PR --> Recur
+    PR --> IE
+    PR --> Cat
+    PR --> Tags
+    PR --> Budgets
+    PR --> Reports
+    PR --> Settings
+    Root --> Wildcard
+```
 
 ### Components
 

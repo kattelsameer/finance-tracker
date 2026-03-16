@@ -314,7 +314,7 @@ backend/
     │   │   └── util/               # Utilities
     │   └── resources/
     │       ├── application.yml     # Application config
-    │       └── db/migration/       # Flyway migrations (V1-V17)
+    │       └── db/migration/       # Flyway migrations (V1-V20)
     └── test/                       # Test files
 ```
 
@@ -760,7 +760,7 @@ The Finance Tracker uses **MySQL 8.0** with the following schema:
 
 Database schema is managed via **Flyway** migrations in `backend/src/main/resources/db/migration/`.
 
-**Migration Files (V1-V17):**
+**Migration Files (V1-V20):**
 
 ```
 V1__create_users_table.sql

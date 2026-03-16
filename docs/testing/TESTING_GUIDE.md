@@ -227,6 +227,24 @@ npx playwright show-report
 - **Workers** reduced to 1 for stability in CI
 - **Uploads** HTML report and artifacts for failures
 
+### CI Pipeline Overview
+
+```mermaid
+graph TD
+    Trigger["Push / PR to main or develop"]
+    Build["docker-build<br/>Build backend + frontend Docker images"]
+    BTest["backend-test<br/>Java 21 + H2 in-memory<br/>./gradlew test"]
+    FTest["frontend-test<br/>Node 20<br/>npm run test:run + lint + tsc"]
+    E2E["e2e-test<br/>Docker Compose + Playwright<br/>1 worker, headless"]
+    Sec["security-scan<br/>CodeQL + dependency review"]
+
+    Trigger --> Build
+    Build --> BTest
+    Build --> FTest
+    Build --> E2E
+    Build --> Sec
+```
+
 ---
 
 ## 6. Test Coverage Summary

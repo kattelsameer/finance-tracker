@@ -35,6 +35,17 @@ This document describes the Spring Boot 3.2.x + Java 21 backend of Finance Track
 - Spring Boot 3.2.x, Java 21
 - JPA/Hibernate with MySQL (dev/test profiles as in `copilot-instructions.md`)
 - Layered architecture: Controller → Service → Repository → Entity
+
+```mermaid
+graph TD
+    Client["HTTP Client"] -->|REST Request| Ctrl["Controller Layer<br/>14 controllers<br/>Validation, Auth"]
+    Ctrl --> Svc["Service Layer<br/>17 services<br/>Business logic, @Transactional"]
+    Svc --> Repo["Repository Layer<br/>JPA interfaces<br/>User-scoped queries"]
+    Repo --> DB["MySQL / H2<br/>15 tables, 20 migrations"]
+    Ctrl -.->|DTO mapping| DTO["DTOs<br/>Request / Response objects"]
+    Svc -.->|Entity| Entity["JPA Entities<br/>13 entity classes"]
+```
+
 - Package layout:
   - `controller/` (14 controllers)
   - `service/` (business logic)

@@ -563,24 +563,68 @@ CREATE TABLE notification_preferences (
 
 ## Table Relationships
 
-```
-users (1) ───── (M) accounts
-  │                 │
-  │                 └── (M) transactions ── (M) tags (via transaction_tags)
-  │                           │
-  ├─── (M) categories ────────┘
-  │         │
-  │         └── (M) budgets
-  │
-  ├─── (M) recurring_transactions
-  ├─── (M) tags
-  ├─── (M) saved_searches
-  ├─── (M) notifications
-  └─── (1) notification_preferences
+```mermaid
+erDiagram
+    users ||--o{ accounts : "has many"
+    users ||--o{ categories : "has many"
+    users ||--o{ tags : "has many"
+    users ||--o{ recurring_transactions : "has many"
+    users ||--o{ saved_searches : "has many"
+    users ||--o{ notifications : "has many"
+    users ||--|| notification_preferences : "has one"
 
-account_types (1) ───── (M) accounts
+    accounts ||--o{ transactions : "has many"
+    categories ||--o{ transactions : "categorizes"
+    categories ||--o{ budgets : "tracked by"
+    categories ||--o{ categories : "parent/child"
 
-currencies (referenced by accounts.currency, transactions.currency)
+    transactions }o--o{ tags : "tagged via transaction_tags"
+    accounts ||--o{ recurring_transactions : "source"
+
+    account_types ||--o{ accounts : "defines type"
+    currencies ||--o{ accounts : "currency"
+    currencies ||--o{ transactions : "currency"
+
+    users {
+        bigint id PK
+        varchar username
+        varchar email
+        varchar password_hash
+    }
+    accounts {
+        bigint id PK
+        bigint user_id FK
+        bigint account_type_id FK
+        varchar currency FK
+        decimal balance
+    }
+    transactions {
+        bigint id PK
+        bigint account_id FK
+        bigint category_id FK
+        varchar currency FK
+        decimal amount
+        date transaction_date
+        enum type
+    }
+    categories {
+        bigint id PK
+        bigint user_id FK
+        bigint parent_category_id FK
+        enum category_type
+        boolean is_system
+    }
+    budgets {
+        bigint id PK
+        bigint category_id FK
+        decimal amount
+        enum period_type
+    }
+    tags {
+        bigint id PK
+        bigint user_id FK
+        varchar tag_name
+    }
 ```
 
 ---
@@ -661,7 +705,7 @@ VALUES
 
 **Database Highlights:**
 
-- ✅ **17 Flyway migrations** (5 more than originally planned)
+- ✅ **20 Flyway migrations** (8 more than originally planned)
 - ✅ **15 tables** (14 core + 1 junction table)
 - ✅ **Full user data isolation** via foreign keys
 - ✅ **Hierarchical categories** with parent/child relationships

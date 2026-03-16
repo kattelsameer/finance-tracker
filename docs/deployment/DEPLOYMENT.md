@@ -92,6 +92,15 @@ Expected containers and ports (from `docker-compose.yml`):
 - `finance-tracker-backend` → `8080:8080`
 - `finance-tracker-frontend` → `80:8080`
 
+```mermaid
+graph LR
+    User["User Browser<br/>:80"] -->|HTTP| FE["finance-tracker-frontend<br/>(Nginx :8080)"]
+    FE -->|/api/*| BE["finance-tracker-backend<br/>(Spring Boot :8080)"]
+    BE -->|JDBC :3306| DB["finance-tracker-mysql<br/>(MySQL 8.0)"]
+    DB --- V["mysql_data volume"]
+    BE --- L["backend_logs volume"]
+```
+
 Health checks configured:
 
 - Backend: `http://localhost:8080/actuator/health`

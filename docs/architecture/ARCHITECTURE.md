@@ -91,57 +91,38 @@ The Finance Tracker is a full-stack personal finance application built with:
 
 ### High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        User Browser                          │
-│                     (React SPA - Port 5173)                  │
-└──────────────────────────┬──────────────────────────────────┘
-                           │ HTTPS
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Nginx Reverse Proxy                       │
-│                        (Port 80/443)                         │
-│  • Serves React static files                                │
-│  • Proxies /api/* to backend                                │
-│  • Handles HTTPS termination                                │
-└──────────────┬──────────────────────────┬───────────────────┘
-               │                          │
-               │ Static Files             │ API Requests
-               ▼                          ▼
-┌──────────────────────┐    ┌────────────────────────────────┐
-│   React Frontend     │    │   Spring Boot Backend          │
-│   (Vite Dev Server)  │    │       (Port 8080)              │
-│                      │    │  • REST API                    │
-│  • UI Components     │    │  • JWT Authentication          │
-│  • Services Layer    │    │  • Business Logic              │
-│  • State Management  │    │  • Database Access             │
-└──────────────────────┘    └────────────┬───────────────────┘
-                                         │ JDBC
-                                         ▼
-                            ┌────────────────────────────────┐
-                            │      MySQL Database            │
-                            │         (Port 3306)            │
-                            │  • User data                   │
-                            │  • Transactions                │
-                            │  • Accounts                    │
-                            │  • Categories, Budgets, etc.   │
-                            └────────────────────────────────┘
+```mermaid
+graph TD
+    Browser["User Browser<br/>(React SPA)"]
+    Nginx["Nginx Reverse Proxy<br/>(Port 80/443)<br/>• Serves React static files<br/>• Proxies /api/* to backend<br/>• Handles HTTPS termination"]
+    Frontend["React Frontend<br/>(Vite Dev Server)<br/>• UI Components<br/>• Services Layer<br/>• State Management"]
+    Backend["Spring Boot Backend<br/>(Port 8080)<br/>• REST API<br/>• JWT Authentication<br/>• Business Logic<br/>• Database Access"]
+    DB["MySQL Database<br/>(Port 3306)<br/>• User data<br/>• Transactions<br/>• Accounts<br/>• Categories, Budgets, etc."]
+
+    Browser -->|HTTPS| Nginx
+    Nginx -->|Static Files| Frontend
+    Nginx -->|API Requests /api/*| Backend
+    Backend -->|JDBC| DB
 ```
 
-### Component Interaction Flow
+### Component Interaction Flow (Login)
 
-```
-User Browser → Nginx → React App (Login) → Nginx → Spring Boot API
-                                                         ↓
-                                                    Validate Credentials
-                                                         ↓
-                                                    MySQL Database
-                                                         ↓
-                                                    Generate JWT
-                                                         ↓
-                                            Set HttpOnly Cookie + CSRF Token
-                                                         ↓
-User Browser ← Nginx ← React App ← Spring Boot API ← JWT Response
+```mermaid
+sequenceDiagram
+    participant B as User Browser
+    participant N as Nginx
+    participant R as React App
+    participant S as Spring Boot API
+    participant DB as MySQL Database
+
+    B->>N: POST /api/v1/auth/login
+    N->>S: Proxy request
+    S->>DB: Validate credentials
+    DB-->>S: User record
+    S->>S: Generate JWT
+    S->>S: Generate CSRF Token
+    S-->>N: Set HttpOnly Cookie + X-XSRF-TOKEN header
+    N-->>B: Login response + cookies
 ```
 
 ---
@@ -153,7 +134,7 @@ User Browser ← Nginx ← React App ← Spring Boot API ← JWT Response
 ```
 frontend/src/
 ├── components/
-│   ├── ui/                    # 11 reusable UI primitives
+│   ├── ui/                    # 14 reusable UI primitives
 │   │   ├── Button.tsx
 │   │   ├── Input.tsx
 │   │   ├── Select.tsx
@@ -479,14 +460,16 @@ public enum ErrorCode {
 
 1. **Login Flow**:
 
-   ```
-   User → POST /api/v1/auth/login → Validate credentials → Generate JWT
-                                                              ↓
-                                                    Set HttpOnly Cookie
-                                                              ↓
-                                                    Generate CSRF Token
-                                                              ↓
-   User ← Return user info + CSRF token ← Set X-XSRF-TOKEN header
+   ```mermaid
+   sequenceDiagram
+       participant U as User
+       participant API as Spring Boot API
+       U->>API: POST /api/v1/auth/login
+       API->>API: Validate credentials
+       API->>API: Generate JWT
+       API->>API: Set HttpOnly Cookie
+       API->>API: Generate CSRF Token
+       API-->>U: Return user info + CSRF token (X-XSRF-TOKEN header)
    ```
 
 2. **JWT Token**:
@@ -504,7 +487,7 @@ public enum ErrorCode {
 
 - **BCrypt hashing** with cost factor 12
 - **Password requirements**:
-  - Minimum 8 characters
+  - Minimum 12 characters
   - At least one uppercase letter
   - At least one lowercase letter
   - At least one number
@@ -573,102 +556,62 @@ cors:
 
 ### Request/Response Cycle
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                    User Interaction                          │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│              React Component (e.g., TransactionsPage)        │
-│  • Calls custom hook: useTransactions()                      │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│                Custom Hook (useTransactions)                 │
-│  • Uses React Query                                          │
-│  • Calls service method                                      │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│          Service Layer (transactionService.getAll)           │
-│  • Calls apiClient.get()                                     │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│                  API Client (Axios)                          │
-│  • Adds CSRF token from cookie to X-XSRF-TOKEN header       │
-│  • Sends JWT automatically via HttpOnly cookie              │
-│  • Handles 401 → redirect to login                          │
-└────────────────────────┬─────────────────────────────────────┘
-                         │ HTTP Request
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│                    Nginx Reverse Proxy                       │
-│  • Proxies /api/* to backend:8080                           │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│          Spring Boot (TransactionController)                 │
-│  • JwtAuthenticationFilter validates JWT                     │
-│  • @Valid validates request body                            │
-│  • Injects @AuthenticationPrincipal UserPrincipal           │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│             Service Layer (TransactionService)               │
-│  • Business logic                                            │
-│  • @Transactional annotation                                │
-│  • Calls repository                                          │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│       Repository Layer (TransactionRepository)               │
-│  • Spring Data JPA                                           │
-│  • Queries with user ID filtering                           │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│                    MySQL Database                            │
-│  • Execute query                                             │
-│  • Return results                                            │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         │ (Return path is reverse)
-                         ▼
-                   Response flows back through
-             Repository → Service → Controller → Nginx →
-                   API Client → Service → Hook → Component
+```mermaid
+sequenceDiagram
+    participant User as User Interaction
+    participant Comp as React Component<br/>(TransactionsPage)
+    participant Hook as Custom Hook<br/>(useTransactions / React Query)
+    participant Svc as Service Layer<br/>(transactionService.getAll)
+    participant Axios as API Client (Axios)<br/>CSRF + JWT auto-attached
+    participant Nginx as Nginx Reverse Proxy
+    participant Ctrl as Spring Boot Controller<br/>(TransactionController)
+    participant BSvc as Service Layer<br/>(TransactionService)
+    participant Repo as Repository Layer<br/>(TransactionRepository)
+    participant DB as MySQL Database
+
+    User->>Comp: User action
+    Comp->>Hook: useTransactions()
+    Hook->>Svc: transactionService.getAll()
+    Svc->>Axios: apiClient.get()
+    Axios->>Nginx: HTTP Request<br/>Cookie: jwt=... / X-XSRF-TOKEN: ...
+    Nginx->>Ctrl: Proxy /api/* → backend:8080
+    Ctrl->>Ctrl: JwtAuthenticationFilter validates JWT
+    Ctrl->>BSvc: Call service
+    BSvc->>Repo: Query with userId filter
+    Repo->>DB: Execute query
+    DB-->>Repo: Result set
+    Repo-->>BSvc: Entity list
+    BSvc-->>Ctrl: DTO response
+    Ctrl-->>Nginx: JSON response
+    Nginx-->>Axios: HTTP response
+    Axios-->>Svc: Parsed data
+    Svc-->>Hook: Data
+    Hook-->>Comp: Render data
 ```
 
 ### CSRF Token Flow
 
-```
-1. Login Request:
-   POST /api/v1/auth/login
-   → Backend generates JWT + CSRF token
-   → Returns JWT in HttpOnly cookie + CSRF token in response body
+```mermaid
+sequenceDiagram
+    participant B as Browser
+    participant F as Frontend (Axios)
+    participant S as Spring Boot Backend
 
-2. Frontend stores CSRF token:
-   → apiClient interceptor stores token in memory
-   → Token automatically added to all mutating requests
+    Note over B,S: 1. Login Request
+    B->>S: POST /api/v1/auth/login
+    S->>S: Generate JWT + CSRF token
+    S-->>B: HttpOnly Cookie (jwt) + CSRF token in response body
 
-3. Subsequent Requests:
-   POST /api/v1/transactions
-   Headers:
-     Cookie: jwt=eyJhbGci...  (automatic)
-     X-XSRF-TOKEN: abc123...  (added by interceptor)
-   
-4. Backend validates:
-   → JWT from cookie (authentication)
-   → CSRF token from header (CSRF protection)
+    Note over B,F: 2. Frontend stores CSRF token
+    F->>F: apiClient interceptor stores token in memory
+
+    Note over B,S: 3. Subsequent Requests
+    F->>S: POST /api/v1/transactions<br/>Cookie: jwt=eyJhbGci... (automatic)<br/>X-XSRF-TOKEN: abc123... (interceptor)
+
+    Note over S: 4. Backend validates
+    S->>S: Validate JWT from cookie (authentication)
+    S->>S: Validate CSRF token from header (protection)
+    S-->>F: Response
 ```
 
 ---
@@ -677,40 +620,20 @@ cors:
 
 ### Docker Compose Setup
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Host Machine                          │
-│                                                              │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │              Docker Network: finance-network          │  │
-│  │                                                        │  │
-│  │  ┌──────────────────────────────────────────────┐    │  │
-│  │  │   Frontend Container (Nginx)                 │    │  │
-│  │  │   • Port 80:80, 443:443                      │    │  │
-│  │  │   • Serves React static files                │    │  │
-│  │  │   • Proxies /api/* to backend                │    │  │
-│  │  └──────────────┬───────────────────────────────┘    │  │
-│  │                 │                                     │  │
-│  │  ┌──────────────▼───────────────────────────────┐    │  │
-│  │  │   Backend Container (Spring Boot)            │    │  │
-│  │  │   • Port 8080:8080                           │    │  │
-│  │  │   • REST API                                 │    │  │
-│  │  │   • JWT + CSRF security                      │    │  │
-│  │  └──────────────┬───────────────────────────────┘    │  │
-│  │                 │                                     │  │
-│  │  ┌──────────────▼───────────────────────────────┐    │  │
-│  │  │   MySQL Container                            │    │  │
-│  │  │   • Port 3306:3306 (dev only)               │    │  │
-│  │  │   • Persistent volume: mysql_data            │    │  │
-│  │  │   • Flyway migrations on startup             │    │  │
-│  │  └──────────────────────────────────────────────┘    │  │
-│  │                                                        │  │
-│  └────────────────────────────────────────────────────────┘  │
-│                                                              │
-│  Volumes:                                                    │
-│  • mysql_data → /var/lib/mysql                              │
-│  • backend logs → /app/logs                                 │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph Host["Host Machine"]
+        subgraph Network["Docker Network: finance-network"]
+            FE["Frontend Container (Nginx)<br/>Port 80:8080<br/>• Serves React static files<br/>• Proxies /api/* to backend"]
+            BE["Backend Container (Spring Boot)<br/>Port 8080:8080<br/>• REST API<br/>• JWT + CSRF security"]
+            MySQL["MySQL Container<br/>Port 3306:3306 (dev only)<br/>• Persistent volume: mysql_data<br/>• Flyway migrations on startup"]
+
+            FE -->|/api/*| BE
+            BE -->|JDBC| MySQL
+        end
+        V1["mysql_data → /var/lib/mysql"]
+        V2["backend_logs → /app/logs"]
+    end
 ```
 
 ### Environment Profiles
@@ -742,6 +665,6 @@ cors:
 7. **React Query**: Caching and optimistic updates
 8. **Docker Deployment**: Multi-container orchestration with health checks
 9. **Database Migrations**: Flyway for version-controlled schema changes
-10. **Comprehensive Testing**: 93 backend tests, 18 frontend unit tests, 46 E2E tests
+10. **Comprehensive Testing**: 103 backend tests, 18 frontend unit tests, 47 E2E tests
 
 This architecture ensures maintainability, security, and scalability for the Finance Tracker application.
