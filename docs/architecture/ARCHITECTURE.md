@@ -602,17 +602,17 @@ sequenceDiagram
     Note over B,S: 1. Login Request (CSRF-exempt)
     B->>S: POST /api/v1/auth/login<br/>(no CSRF token required by SecurityConfig)
     S->>S: Authenticate user and generate JWT
-    S-->>B: Set-Cookie: jwt=eyJhbGci...; HttpOnly; Secure; SameSite=Lax
+    S-->>B: Set-Cookie: {AUTH_COOKIE_NAME}=eyJhbGci...; HttpOnly; [Secure/SameSite per profile]<br/>(AUTH_COOKIE_NAME from app.jwt.cookie-name)
 
     Note over B,S: 2. Obtain CSRF token via CookieCsrfTokenRepository
     F->>S: GET /api/v1/auth/csrf-token
     S->>S: CookieCsrfTokenRepository creates or loads CSRF token
-    S-->>B: Set-Cookie: XSRF-TOKEN=abc123...; Path=/; SameSite=Lax<br/>Optional JSON body: { "token": "abc123..." }
+    S-->>B: Set-Cookie: XSRF-TOKEN=abc123...; Path=/;<br/>Optional JSON body: { "token": "abc123..." }
 
     Note over F: apiClient reads CSRF token (from XSRF-TOKEN cookie or /csrf-token response)<br/>and will send it as X-XSRF-TOKEN on state-changing requests
 
     Note over B,S: 3. Subsequent State-Changing Requests
-    F->>S: POST /api/v1/transactions<br/>Cookie: jwt=eyJhbGci...; XSRF-TOKEN=abc123...<br/>Header: X-XSRF-TOKEN: abc123...
+    F->>S: POST /api/v1/transactions<br/>Cookie: {AUTH_COOKIE_NAME}=eyJhbGci...; XSRF-TOKEN=abc123...<br/>Header: X-XSRF-TOKEN: abc123...
 
     Note over S: 4. Backend validation and CSRF exemptions
     S->>S: Permit /api/v1/auth/login and /api/v1/auth/register without CSRF
