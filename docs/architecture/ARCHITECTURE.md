@@ -573,7 +573,7 @@ sequenceDiagram
     Comp->>Hook: useTransactions()
     Hook->>Svc: transactionService.getAll()
     Svc->>Axios: apiClient.get()
-    Axios->>Nginx: HTTP Request<br/>Cookie: jwt=... / X-XSRF-TOKEN: ...
+    Axios->>Nginx: HTTP Request<br/>Cookie: auth_token=... (configurable) / X-XSRF-TOKEN: ...
     Nginx->>Ctrl: Proxy /api/* → backend:8080
     Ctrl->>Ctrl: JwtAuthenticationFilter validates JWT
     Ctrl->>BSvc: Call service
