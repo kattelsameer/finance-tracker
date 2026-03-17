@@ -467,9 +467,11 @@ public enum ErrorCode {
        U->>API: POST /api/v1/auth/login
        API->>API: Validate credentials
        API->>API: Generate JWT
-       API->>API: Set HttpOnly Cookie
-       API->>API: Generate CSRF Token
-       API-->>U: Return user info + CSRF token (X-XSRF-TOKEN header)
+       API->>API: Set HttpOnly auth cookie
+       API-->>U: Return AuthResponse (user info, flags, etc.)
+       U->>API: GET /api/v1/auth/csrf-token
+       API->>API: Generate CSRF token
+       API-->>U: Return CSRF token (X-XSRF-TOKEN header)
    ```
 
 2. **JWT Token**:
@@ -479,9 +481,9 @@ public enum ErrorCode {
    - **Secret**: Validated for production (min 32 characters)
 
 3. **CSRF Protection**:
-   - CSRF token returned on login
-   - Frontend sends token in `X-XSRF-TOKEN` header
-   - Backend validates token for all mutating operations (POST/PUT/DELETE)
+   - CSRF token fetched via `GET /api/v1/auth/csrf-token` after successful login
+   - Frontend (`api-client.ts`) sends the token in `X-XSRF-TOKEN` header for mutating requests
+   - Backend validates the CSRF token for all authenticated mutating operations (POST/PUT/DELETE)
 
 #### Password Security
 
