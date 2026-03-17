@@ -66,7 +66,7 @@ graph TD
     Budgets["/budgets"]
     Reports["/reports"]
     Settings["/settings"]
-    Wildcard["/* → Navigate to /"]
+    Wildcard["* → Navigate to /"]
 
     Root --> Login
     Root --> Register
