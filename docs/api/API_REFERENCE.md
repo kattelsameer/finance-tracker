@@ -1483,8 +1483,12 @@ All error responses follow this structure:
 
 ### Authentication
 
-- **JWT Tokens**: Stored in HttpOnly cookies (`auth_token`) to prevent XSS attacks
-- **Cookie Attributes**: `HttpOnly`, `Secure` (HTTPS only in production), `SameSite=Strict`
+- **JWT Tokens**: Stored in HttpOnly cookies to prevent XSS attacks  
+  - **Cookie name (dev/demo)**: `auth_token`  
+  - **Cookie name (production)**: `finance_tracker_token`
+- **Cookie Attributes**:  
+  - **Dev/demo**: `HttpOnly`, `Secure=false` (allows HTTP for local/demo usage), `SameSite=Lax`  
+  - **Production**: `HttpOnly`, `Secure` (HTTPS only), `SameSite=Strict`
 - **Token Expiration**: 1 hour from login (configurable; 24 hours in demo mode)
 - **Password Requirements**: Minimum 12 characters with complexity requirements
 
