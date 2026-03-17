@@ -145,7 +145,7 @@ npm run test:coverage
 - **Artifacts**: `frontend/playwright-report/` and `frontend/test-results/` (screenshots, videos)
 - **Runner**: Playwright
 - **Base URL**: `http://localhost:5173`
-- **Dev server**: `npm run dev` started automatically by Playwright
+- **Dev server**: Playwright starts `npm run dev` automatically when `PLAYWRIGHT_START_DEV_SERVER=true`; otherwise start `npm run dev` manually before running E2E tests.
 - **Parallel execution enabled** (`fullyParallel: true`)
 - **Workers**: `4` local, `1` in CI
 - **Reporters**: html
