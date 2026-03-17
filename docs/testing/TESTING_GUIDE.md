@@ -1,7 +1,7 @@
 # Finance Tracker – Testing Guide
 
 > **Version**: 1.0.0  
-> **Last Updated**: December 4, 2025  
+> **Last Updated**: March 17, 2026  
 > **Total Tests**: 168 (103 backend + 18 frontend + 47 E2E)
 
 ---
