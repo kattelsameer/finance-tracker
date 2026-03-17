@@ -594,23 +594,28 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant B as Browser
-    participant F as Frontend (Axios)
+    participant F as Frontend (Axios / apiClient)
     participant S as Spring Boot Backend
 
-    Note over B,S: 1. Login Request
-    B->>S: POST /api/v1/auth/login
-    S->>S: Generate JWT + CSRF token
-    S-->>B: HttpOnly Cookie (jwt) + CSRF token in response body
+    Note over B,S: 1. Login Request (CSRF-exempt)
+    B->>S: POST /api/v1/auth/login<br/>(no CSRF token required by SecurityConfig)
+    S->>S: Authenticate user and generate JWT
+    S-->>B: Set-Cookie: jwt=eyJhbGci...; HttpOnly; Secure; SameSite=Lax
 
-    Note over B,F: 2. Frontend stores CSRF token
-    F->>F: apiClient interceptor stores token in memory
+    Note over B,S: 2. Obtain CSRF token via CookieCsrfTokenRepository
+    F->>S: GET /api/v1/auth/csrf-token
+    S->>S: CookieCsrfTokenRepository creates or loads CSRF token
+    S-->>B: Set-Cookie: XSRF-TOKEN=abc123...; Path=/; SameSite=Lax<br/>Optional JSON body: { "token": "abc123..." }
 
-    Note over B,S: 3. Subsequent Requests
-    F->>S: POST /api/v1/transactions<br/>Cookie: jwt=eyJhbGci... (automatic)<br/>X-XSRF-TOKEN: abc123... (interceptor)
+    Note over F: apiClient reads CSRF token (from XSRF-TOKEN cookie or /csrf-token response)<br/>and will send it as X-XSRF-TOKEN on state-changing requests
 
-    Note over S: 4. Backend validates
-    S->>S: Validate JWT from cookie (authentication)
-    S->>S: Validate CSRF token from header (protection)
+    Note over B,S: 3. Subsequent State-Changing Requests
+    F->>S: POST /api/v1/transactions<br/>Cookie: jwt=eyJhbGci...; XSRF-TOKEN=abc123...<br/>Header: X-XSRF-TOKEN: abc123...
+
+    Note over S: 4. Backend validation and CSRF exemptions
+    S->>S: Permit /api/v1/auth/login and /api/v1/auth/register without CSRF
+    S->>S: Validate JWT from cookie (authentication) for protected endpoints
+    S->>S: Validate CSRF token using CookieCsrfTokenRepository<br/>(compare X-XSRF-TOKEN header with XSRF-TOKEN cookie)
     S-->>F: Response
 ```
 
