@@ -1487,9 +1487,10 @@ All error responses follow this structure:
   - **Cookie name (dev/demo)**: `auth_token`  
   - **Cookie name (production)**: `finance_tracker_token`
 - **Cookie Attributes**:  
-  - **Dev/demo**: `HttpOnly`, `Secure=false` (allows HTTP for local/demo usage), `SameSite=Lax`  
-  - **Production**: `HttpOnly`, `Secure` (HTTPS only), `SameSite=Strict`
-- **Token Expiration**: 1 hour from login (configurable; 24 hours in demo mode)
+  - **Dev/docker**: `HttpOnly`, `Secure=true` (HTTPS only), `SameSite=Strict` (defaults from `JwtProperties`)  
+  - **Demo**: `HttpOnly`, `Secure=false` (allows HTTP for demo usage), `SameSite=Lax` (overridden in `application-demo.yml`)  
+  - **Production**: `HttpOnly`, `Secure=true` (HTTPS only), `SameSite=Strict`
+- **Token Expiration**: By default, access tokens expire 1 hour after login (configurable). If the user selects **remember me**, the expiration is extended to 30 days (all profiles).
 - **Password Requirements**: Minimum 12 characters with complexity requirements
 
 ### CSRF Protection
