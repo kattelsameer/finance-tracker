@@ -35,8 +35,8 @@
 
 - **Base URL**: `http://localhost:8080` (local development) or empty string when proxied by nginx in Docker
 - **API Prefix**: `/api/v1`
-- **Auth Cookie**: `auth_token` (HttpOnly, SameSite=Strict) set on successful login
-- **CSRF**: `XSRF-TOKEN` exposed via response headers; axios client injects `X-XSRF-TOKEN`
+- **Auth Cookie**: profile-dependent JWT cookie (e.g., `finance_tracker_token` in production), HttpOnly and SameSite=Strict, set on successful login
+- **CSRF**: CSRF token fetched from `GET /api/v1/auth/csrf-token` (JSON) and sent as `X-XSRF-TOKEN` on mutating requests
 - **Content Type**: `application/json`
 - **Date Format**: ISO 8601 (`yyyy-MM-dd` for dates, `yyyy-MM-dd'T'HH:mm:ss` for timestamps)
 - **Password Policy**: min 12 chars with at least 1 uppercase, 1 lowercase, 1 number, and 1 special from `@$!%*?&`
