@@ -115,21 +115,29 @@ sequenceDiagram
     participant S as Spring Boot API
     participant DB as MySQL Database
 
-    Note over B,N,S: Step 1 — Obtain CSRF token
-    B->>N: GET /api/v1/auth/csrf-token
-    N->>S: Proxy request
-    S->>S: Generate CSRF token
-    S-->>N: 200 OK + X-XSRF-TOKEN header
-    N-->>B: Forward response + X-XSRF-TOKEN header
-
-    Note over B,N,S,DB: Step 2 — Perform login using CSRF token
-    B->>N: POST /api/v1/auth/login (with X-XSRF-TOKEN header)
+    Note over B,N,S,DB: Step 1 — Perform login (CSRF-exempt)
+    B->>N: POST /api/v1/auth/login (credentials)
     N->>S: Proxy request
     S->>DB: Validate credentials
     DB-->>S: User record
     S->>S: Generate JWT
-    S-->>N: Set HttpOnly auth cookie
+    S-->>N: 200 OK + Set HttpOnly auth cookie
     N-->>B: Login response + auth cookie
+
+    Note over B,N,S: Step 2 — Obtain CSRF token for subsequent requests
+    B->>N: GET /api/v1/auth/csrf-token (with auth cookie)
+    N->>S: Proxy request
+    S->>S: Generate CSRF token
+    S-->>N: 200 OK + JSON body { token, headerName }
+    N-->>B: Forward response body { token, headerName }
+
+    Note over B,N,S,DB: Step 3 — Authenticated mutating request with CSRF
+    B->>N: POST /api/v1/transactions (with headerName: token, auth cookie)
+    N->>S: Proxy request
+    S->>DB: Persist transaction
+    DB-->>S: Success
+    S-->>N: 201 Created
+    N-->>B: Response
 ```
 
 ---
