@@ -486,7 +486,7 @@ public enum ErrorCode {
        API-->>U: Return AuthResponse (user info, flags, etc.)
        U->>API: GET /api/v1/auth/csrf-token
        API->>API: Generate CSRF token
-       API-->>U: Return CSRF token (X-XSRF-TOKEN header)
+       API-->>U: Return CSRF token JSON { token, headerName } (+ optional XSRF-TOKEN cookie)
    ```
 
 2. **JWT Token**:
