@@ -95,7 +95,7 @@ The Finance Tracker is a full-stack personal finance application built with:
 graph TD
     Browser["User Browser<br/>(React SPA)"]
     Nginx["Nginx Reverse Proxy<br/>(Port 80/443)<br/>• Serves React static files<br/>• Proxies /api/* to backend<br/>• Handles HTTPS termination"]
-    Frontend["React Frontend<br/>(Vite Dev Server)<br/>• UI Components<br/>• Services Layer<br/>• State Management"]
+    Frontend["React Frontend<br/>(SPA static build served by Nginx)<br/>• UI Components<br/>• Services Layer<br/>• State Management"]
     Backend["Spring Boot Backend<br/>(Port 8080)<br/>• REST API<br/>• JWT Authentication<br/>• Business Logic<br/>• Database Access"]
     DB["MySQL Database<br/>(Port 3306)<br/>• User data<br/>• Transactions<br/>• Accounts<br/>• Categories, Budgets, etc."]
 
