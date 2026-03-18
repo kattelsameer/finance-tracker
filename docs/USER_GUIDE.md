@@ -1,7 +1,7 @@
 # Finance Tracker User Guide
 
 > **Version**: 1.0.0  
-> **Last Updated**: December 4, 2025
+> **Last Updated**: March 18, 2026
 
 Welcome to Finance Tracker! This guide documents implemented features and how to navigate them.
 
@@ -619,5 +619,5 @@ Need assistance?
 
 ---
 
-**Last Updated**: December 4, 2025  
+**Last Updated**: March 18, 2026  
 **Document Version**: 1.0.0

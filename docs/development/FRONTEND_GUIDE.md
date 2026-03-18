@@ -1,7 +1,7 @@
 # Frontend Development Guide
 
 > **Version**: 1.0.0  
-> **Last Updated**: December 4, 2025  
+> **Last Updated**: March 18, 2026  
 > **Audience**: Frontend Developers
 
 ---
@@ -49,13 +49,15 @@ There are 14 pages (12 main + 2 auth):
 
 ### Routing Structure
 
+Routes are defined as top-level siblings in `App.tsx`. `/login` and `/register` are public, while `/` wraps all protected pages via `ProtectedRoute`:
+
 ```mermaid
 graph TD
-    Root["/"]
-    Login["/login → LoginPage"]
-    Register["/register → RegisterPage"]
-    PR["ProtectedRoute wrapper"]
-    Dash["/ → DashboardPage"]
+    Routes["&lt;Routes&gt;"]
+    Login["/login → LoginPage<br/>(public)"]
+    Register["/register → RegisterPage<br/>(public)"]
+    Protected["/ → ProtectedRoute + AppLayout"]
+    Dash["index → DashboardPage"]
     Acct["/accounts → AccountsPage"]
     Txn["/transactions → TransactionsPage"]
     Search["/search → AdvancedSearchPage"]
@@ -66,23 +68,23 @@ graph TD
     Budgets["/budgets"]
     Reports["/reports"]
     Settings["/settings"]
-    Wildcard["* → Navigate to /"]
+    Wildcard["path='*' → Navigate to /"]
 
-    Root --> Login
-    Root --> Register
-    Root --> PR
-    PR --> Dash
-    PR --> Acct
-    PR --> Txn
-    PR --> Search
-    PR --> Recur
-    PR --> IE
-    PR --> Cat
-    PR --> Tags
-    PR --> Budgets
-    PR --> Reports
-    PR --> Settings
-    Root --> Wildcard
+    Routes --> Login
+    Routes --> Register
+    Routes --> Protected
+    Routes --> Wildcard
+    Protected --> Dash
+    Protected --> Acct
+    Protected --> Txn
+    Protected --> Search
+    Protected --> Recur
+    Protected --> IE
+    Protected --> Cat
+    Protected --> Tags
+    Protected --> Budgets
+    Protected --> Reports
+    Protected --> Settings
 ```
 
 ### Components

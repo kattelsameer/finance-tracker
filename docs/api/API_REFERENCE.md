@@ -1,7 +1,7 @@
 # Finance Tracker API Reference
 
 > **Version**: 1.0.0  
-> **Last Updated**: December 4, 2025  
+> **Last Updated**: March 18, 2026  
 > **Base URL**: `/api/v1`
 
 ---
@@ -72,6 +72,45 @@ Create a new user account.
   "displayName": "John Doe",
   "message": "Success",
   "expiresAt": "2025-12-05T10:30:00"
+}
+```
+
+**Set-Cookie:** `auth_token=<JWT>; HttpOnly; Secure; SameSite=Strict`
+
+---
+
+### Login
+
+**POST** `/api/v1/auth/login`
+
+Authenticate a user and receive a JWT cookie. This endpoint is CSRF-exempt.
+
+**Request Body:**
+
+```json
+{
+  "username": "johndoe",
+  "password": "SecurePass123!XY",
+  "rememberMe": false
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `username` | string | Yes | Username or email |
+| `password` | string | Yes | User password |
+| `rememberMe` | boolean | No | If `true`, token expires in 30 days instead of 1 hour (default: `false`) |
+
+**Response:** `200 OK`
+
+```json
+{
+  "userId": 1,
+  "username": "johndoe",
+  "email": "john@example.com",
+  "displayName": "John Doe",
+  "message": "Success",
+  "expiresAt": "2025-12-05T11:30:00"
 }
 ```
 
@@ -152,7 +191,7 @@ Change user password.
 
 ```json
 {
-  "currentPassword": "OldPass123!",
+  "currentPassword": "OldSecurePass1!",
   "newPassword": "NewSecurePass456!"
 }
 ```
@@ -1495,9 +1534,9 @@ All error responses follow this structure:
 
 ### CSRF Protection
 
-- **CSRF Token**: Exposed via `XSRF-TOKEN` cookie
-- **Header Required**: All state-changing requests (POST, PUT, DELETE) require `X-XSRF-TOKEN` header
-- **Frontend Integration**: Axios automatically includes CSRF token from cookie
+- **CSRF Token**: Obtained via `GET /api/v1/auth/csrf-token`, which returns JSON `{ token, headerName }` and also sets an `XSRF-TOKEN` cookie via `CookieCsrfTokenRepository`
+- **Header Required**: All state-changing requests (POST, PUT, DELETE) require `X-XSRF-TOKEN` header (except login and register, which are CSRF-exempt)
+- **Frontend Integration**: `apiClient` fetches the CSRF token from the `/csrf-token` JSON response and attaches it as `X-XSRF-TOKEN` on mutating requests; on 403 responses, it automatically re-fetches and retries
 
 ### CORS
 
@@ -1604,7 +1643,7 @@ Always include:
 
 ```
 Content-Type: application/json
-X-XSRF-TOKEN: <token-from-cookie>
+X-XSRF-TOKEN: <token-from-csrf-endpoint>
 ```
 
 ### Error Handling
@@ -1663,5 +1702,5 @@ For API issues or questions:
 
 ---
 
-**Last Updated:** December 4, 2025  
+**Last Updated:** March 18, 2026  
 **API Version:** 1.0.0

@@ -1,7 +1,7 @@
 # Finance Tracker - Database Documentation
 
 > **Version**: 1.0.0  
-> **Last Updated**: December 3, 2025  
+> **Last Updated**: March 18, 2026  
 > **Database**: MySQL 8.0  
 > **Migration Tool**: Flyway 10.x
 

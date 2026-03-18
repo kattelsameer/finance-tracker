@@ -1,7 +1,7 @@
 # Finance Tracker - System Architecture
 
 > **Version**: 1.0.0  
-> **Last Updated**: December 3, 2025  
+> **Last Updated**: March 18, 2026  
 > **Status**: Production
 
 ---
@@ -491,8 +491,10 @@ public enum ErrorCode {
 
 2. **JWT Token**:
    - Stored in **HttpOnly** cookie (not accessible by JavaScript)
-   - **SameSite=Strict** to prevent CSRF
-   - **Expiration**: 1 hour (configurable)
+   - Cookie name: `auth_token` (default); `finance_tracker_token` in production
+   - **SameSite**: `Strict` by default; `Lax` in demo profile
+   - **Secure**: `true` by default; `false` in demo profile (allows HTTP)
+   - **Expiration**: 1 hour by default (configurable); 24 hours in demo profile; 30 days with rememberMe
    - **Secret**: Validated for production (min 32 characters)
 
 3. **CSRF Protection**:

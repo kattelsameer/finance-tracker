@@ -1,7 +1,7 @@
 # Finance Tracker – Testing Guide
 
 > **Version**: 1.0.0  
-> **Last Updated**: March 17, 2026  
+> **Last Updated**: March 18, 2026  
 > **Total Tests**: 168 (103 backend + 18 frontend + 47 E2E)
 
 ---
@@ -242,8 +242,9 @@ graph TD
     Trigger --> Build
     Build --> BTest
     Build --> FTest
-    Build --> E2E
-    Build --> Sec
+    BTest --> E2E
+    FTest --> E2E
+    E2E --> Sec
 ```
 
 ---
