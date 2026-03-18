@@ -1490,7 +1490,7 @@ All error responses follow this structure:
   - **Dev/docker**: `HttpOnly`, `Secure=true` (HTTPS only), `SameSite=Strict` (defaults from `JwtProperties`)  
   - **Demo**: `HttpOnly`, `Secure=false` (allows HTTP for demo usage), `SameSite=Lax` (overridden in `application-demo.yml`)  
   - **Production**: `HttpOnly`, `Secure=true` (HTTPS only), `SameSite=Strict`
-- **Token Expiration**: By default, access tokens expire 1 hour after login (configurable). If the user selects **remember me**, the expiration is extended to 30 days (all profiles).
+- **Token Expiration**: In dev/production profiles, access tokens expire 1 hour after login by default (configurable). In the demo profile, the default expiration is 24 hours (from `application-demo.yml`). If the user selects **remember me**, the expiration is extended to 30 days (all profiles).
 - **Password Requirements**: Minimum 12 characters with complexity requirements
 
 ### CSRF Protection
