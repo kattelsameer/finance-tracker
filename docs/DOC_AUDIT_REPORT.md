@@ -256,3 +256,75 @@ A final cross-verification was performed to catch any remaining inconsistencies 
 
 **Issue**: Users table schema did not include `secondary_currency` column added by V19.  
 **Fix**: Added column and description to the users table documentation.
+
+---
+
+## Final Verification Pass (March 18, 2026)
+
+Addressed remaining reviewer feedback and performed comprehensive cross-verification:
+
+### 25. CI Pipeline Diagram Wrong Dependencies
+**File**: `docs/testing/TESTING_GUIDE.md`
+
+**Issue**: CI pipeline Mermaid diagram showed `docker-build` connecting directly to all jobs (`BTest`, `FTest`, `E2E`, `Sec`), implying they run in parallel after the build.  
+**Reality**: In `.github/workflows/ci.yml`, `e2e-test` depends on both `backend-test` and `frontend-test` (not `docker-build`), and `security-scan` depends on `e2e-test`.  
+**Fix**: Updated diagram edges to reflect the actual `needs` chain: `Build → BTest/FTest → E2E → Sec`.
+
+### 26. Routing Diagram Structure
+**File**: `docs/development/FRONTEND_GUIDE.md`
+
+**Issue**: Routing diagram showed `/login` and `/register` as children of the `/` root node. The wildcard was labeled `/* → Navigate to /`.  
+**Reality**: In `App.tsx`, `/login` and `/register` are top-level sibling routes under `<Routes>`. The `/` route is a protected layout route (ProtectedRoute + AppLayout) with nested children. The wildcard route uses `path="*"` (not `"/*"`).  
+**Fix**: Restructured diagram to show `<Routes>` as the root, with `/login`, `/register`, `/` (ProtectedRoute), and `*` as top-level siblings.
+
+### 27. ProfilePage Route Doesn't Exist
+**File**: `docs/PROJECT_DEVIATION_REPORT.md`
+
+**Issue**: ProfilePage.tsx was listed as served at `/profile`.  
+**Reality**: `ProfilePage.tsx` exists as a component file but is not imported or routed in `App.tsx`. No `/profile` route is defined.  
+**Fix**: Changed route column to "*(not routed)*" with note that the component exists but is not yet added to the router.
+
+### 28. CSRF Protection Section Inaccurate
+**File**: `docs/api/API_REFERENCE.md`
+
+**Issue**: CSRF section said "Exposed via `XSRF-TOKEN` cookie" and "Axios automatically includes CSRF token from cookie".  
+**Reality**: Frontend `apiClient` fetches the CSRF token from `GET /api/v1/auth/csrf-token` (JSON response `{ token, headerName }`). The `XSRF-TOKEN` cookie is also set by `CookieCsrfTokenRepository`, but the primary mechanism is the JSON endpoint. Login and register are CSRF-exempt.  
+**Fix**: Rewrote section to describe the actual `/csrf-token` endpoint, note CSRF exemptions, and describe the retry-on-403 behavior.
+
+### 29. Request Header Example Misleading
+**File**: `docs/api/API_REFERENCE.md`
+
+**Issue**: Request headers example said `X-XSRF-TOKEN: <token-from-cookie>`.  
+**Fix**: Changed to `<token-from-csrf-endpoint>` to avoid implying the cookie is the primary source.
+
+### 30. JWT Token Attributes Missing Profile Details
+**File**: `docs/architecture/ARCHITECTURE.md`
+
+**Issue**: JWT Token bullet only stated "SameSite=Strict" and "Expiration: 1 hour" without noting profile-dependent behavior.  
+**Reality**: Cookie name, SameSite, Secure, and expiration all vary by profile. `rememberMe` extends expiration to 30 days.  
+**Fix**: Expanded to document cookie name (auth_token default, finance_tracker_token in prod), SameSite/Secure per profile, and expiration variants.
+
+### 31. Missing Login Endpoint in API Reference
+**File**: `docs/api/API_REFERENCE.md`
+
+**Issue**: The Login endpoint (`POST /api/v1/auth/login`) was not documented. The API reference jumped from Register directly to Logout.  
+**Fix**: Added full Login endpoint documentation including request body (username, password, rememberMe), response format, and Set-Cookie header.
+
+### 32. Change Password Example Invalid
+**File**: `docs/api/API_REFERENCE.md`
+
+**Issue**: Change password example used `OldPass123!` (11 chars) which doesn't meet the 12-char minimum.  
+**Fix**: Changed to `OldSecurePass1!` (15 chars).
+
+### 33. Test Example Password Invalid
+**File**: `docs/development/DEVELOPMENT_GUIDE.md`
+
+**Issue**: `registerAndLogin()` example used `password123` (11 chars, no uppercase, no special char).  
+**Reality**: Actual tests use `SecureP@ssw0rd!` (matches BaseIntegrationTest default).  
+**Fix**: Updated to `SecureP@ssw0rd!`.
+
+### 34. Last Updated Dates Stale
+**Files**: All 10 documentation files
+
+**Issue**: Most documents still showed "December 2025" Last Updated dates despite being modified in this audit.  
+**Fix**: Updated all Last Updated dates to March 18, 2026 (header and footer where applicable).

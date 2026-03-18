@@ -1212,7 +1212,7 @@ public class TransactionControllerIntegrationTest extends BaseIntegrationTest {
     
     @Test
     void testCreateTransaction() throws Exception {
-        Cookie authCookie = registerAndLogin("user", "user@test.com", "password123");
+        Cookie authCookie = registerAndLogin("user", "user@test.com", "SecureP@ssw0rd!");
         
         mockMvc.perform(post("/api/v1/transactions")
                 .cookie(authCookie)
