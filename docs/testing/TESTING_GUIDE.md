@@ -237,7 +237,7 @@ graph TD
     BTest["backend-test<br/>Java 21 + H2 in-memory<br/>./gradlew test"]
     FTest["frontend-test<br/>Node 20<br/>npm run test:run + lint + tsc"]
     E2E["e2e-test<br/>Docker Compose + Playwright<br/>1 worker, headless"]
-    Sec["security-scan<br/>CodeQL + dependency review"]
+    Sec["security-scan<br/>Trivy filesystem scan<br/>SARIF upload"]
 
     Trigger --> Build
     Build --> BTest
