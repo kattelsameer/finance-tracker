@@ -622,9 +622,9 @@ sequenceDiagram
     Note over B,S: 2. Obtain CSRF token via CookieCsrfTokenRepository
     F->>S: GET /api/v1/auth/csrf-token
     S->>S: CookieCsrfTokenRepository creates or loads CSRF token
-    S-->>B: Set-Cookie: XSRF-TOKEN=abc123...; Path=/;<br/>Optional JSON body: { "token": "abc123..." }
+    S-->>B: Set-Cookie: XSRF-TOKEN=abc123...; Path=/;<br/>JSON body: { "token": "abc123...", "headerName": "X-XSRF-TOKEN" }
 
-    Note over F: apiClient reads CSRF token (from XSRF-TOKEN cookie or /csrf-token response)<br/>and will send it as X-XSRF-TOKEN on state-changing requests
+    Note over F: apiClient reads CSRF token and header name from /csrf-token response<br/>(and XSRF-TOKEN cookie) and will send the token using the configured header name
 
     Note over B,S: 3. Subsequent State-Changing Requests
     F->>S: POST /api/v1/transactions<br/>Cookie: {AUTH_COOKIE_NAME}=eyJhbGci...; XSRF-TOKEN=abc123...<br/>Header: X-XSRF-TOKEN: abc123...
