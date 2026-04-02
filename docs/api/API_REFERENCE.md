@@ -1,7 +1,7 @@
 # Finance Tracker API Reference
 
 > **Version**: 1.0.0  
-> **Last Updated**: December 4, 2025  
+> **Last Updated**: March 18, 2026  
 > **Base URL**: `/api/v1`
 
 ---
@@ -35,11 +35,11 @@
 
 - **Base URL**: `http://localhost:8080` (local development) or empty string when proxied by nginx in Docker
 - **API Prefix**: `/api/v1`
-- **Auth Cookie**: `auth_token` (HttpOnly, SameSite=Strict) set on successful login
-- **CSRF**: `XSRF-TOKEN` exposed via response headers; axios client injects `X-XSRF-TOKEN`
+- **Auth Cookie**: profile-dependent JWT cookie (e.g., `finance_tracker_token` in production), HttpOnly; SameSite varies by profile (default Strict; demo Lax), set on successful login
+- **CSRF**: CSRF token fetched from `GET /api/v1/auth/csrf-token` (JSON) and sent as `X-XSRF-TOKEN` on mutating requests
 - **Content Type**: `application/json`
 - **Date Format**: ISO 8601 (`yyyy-MM-dd` for dates, `yyyy-MM-dd'T'HH:mm:ss` for timestamps)
-- **Password Policy**: min 8 chars with at least 1 uppercase, 1 lowercase, 1 number, and 1 special from `@$!%*?&`
+- **Password Policy**: min 12 chars with at least 1 uppercase, 1 lowercase, 1 number, and 1 special from `@$!%*?&`
 
 ---
 
@@ -56,9 +56,50 @@ Create a new user account.
 ```json
 {
   "username": "johndoe",
-  "password": "SecurePass123!"
+  "email": "john@example.com",
+  "password": "SecurePass123!XY",
+  "displayName": "John Doe"
 }
 ```
+
+**Response:** `201 Created`
+
+```json
+{
+  "userId": 1,
+  "username": "johndoe",
+  "email": "john@example.com",
+  "displayName": "John Doe",
+  "message": "Success",
+  "expiresAt": "2025-12-05T10:30:00"
+}
+```
+
+**Set-Cookie:** `auth_token=<JWT>; HttpOnly; Secure; SameSite=Strict`
+
+---
+
+### Login
+
+**POST** `/api/v1/auth/login`
+
+Authenticate a user and receive a JWT cookie. This endpoint is CSRF-exempt.
+
+**Request Body:**
+
+```json
+{
+  "username": "johndoe",
+  "password": "SecurePass123!XY",
+  "rememberMe": false
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `username` | string | Yes | Username or email |
+| `password` | string | Yes | User password |
+| `rememberMe` | boolean | No | If `true`, token expires in 30 days instead of 1 hour (default: `false`) |
 
 **Response:** `200 OK`
 
@@ -69,7 +110,7 @@ Create a new user account.
   "email": "john@example.com",
   "displayName": "John Doe",
   "message": "Success",
-  "expiresAt": "2025-12-05T10:30:00"
+  "expiresAt": "2025-12-05T11:30:00"
 }
 ```
 
@@ -150,7 +191,7 @@ Change user password.
 
 ```json
 {
-  "currentPassword": "OldPass123!",
+  "currentPassword": "OldSecurePass1!",
   "newPassword": "NewSecurePass456!"
 }
 ```
@@ -1481,16 +1522,21 @@ All error responses follow this structure:
 
 ### Authentication
 
-- **JWT Tokens**: Stored in HttpOnly cookies (`auth_token`) to prevent XSS attacks
-- **Cookie Attributes**: `HttpOnly`, `Secure` (HTTPS only in production), `SameSite=Strict`
-- **Token Expiration**: 24 hours from login
-- **Password Requirements**: Minimum 8 characters with complexity requirements
+- **JWT Tokens**: Stored in HttpOnly cookies to prevent XSS attacks  
+  - **Cookie name (dev/demo)**: `auth_token`  
+  - **Cookie name (production)**: `finance_tracker_token`
+- **Cookie Attributes**:  
+  - **Dev/docker**: `HttpOnly`, `Secure=true` (HTTPS only), `SameSite=Strict` (defaults from `JwtProperties`)  
+  - **Demo**: `HttpOnly`, `Secure=false` (allows HTTP for demo usage), `SameSite=Lax` (overridden in `application-demo.yml`)  
+  - **Production**: `HttpOnly`, `Secure=true` (HTTPS only), `SameSite=Strict`
+- **Token Expiration**: In dev/production profiles, access tokens expire 1 hour after login by default (configurable). In the demo profile, the default expiration is 24 hours (from `application-demo.yml`). If the user selects **remember me**, the expiration is extended to 30 days (all profiles).
+- **Password Requirements**: Minimum 12 characters with complexity requirements
 
 ### CSRF Protection
 
-- **CSRF Token**: Exposed via `XSRF-TOKEN` cookie
-- **Header Required**: All state-changing requests (POST, PUT, DELETE) require `X-XSRF-TOKEN` header
-- **Frontend Integration**: Axios automatically includes CSRF token from cookie
+- **CSRF Token**: Obtained via `GET /api/v1/auth/csrf-token`, which returns JSON `{ token, headerName }` and also sets an `XSRF-TOKEN` cookie via `CookieCsrfTokenRepository`
+- **Header Required**: All state-changing requests (POST, PUT, DELETE) require `X-XSRF-TOKEN` header (except login and register, which are CSRF-exempt)
+- **Frontend Integration**: `apiClient` fetches the CSRF token from the `/csrf-token` JSON response and attaches it as `X-XSRF-TOKEN` on mutating requests; on 403 responses, it automatically re-fetches and retries
 
 ### CORS
 
@@ -1597,7 +1643,7 @@ Always include:
 
 ```
 Content-Type: application/json
-X-XSRF-TOKEN: <token-from-cookie>
+X-XSRF-TOKEN: <token-from-csrf-endpoint>
 ```
 
 ### Error Handling
@@ -1656,5 +1702,5 @@ For API issues or questions:
 
 ---
 
-**Last Updated:** December 4, 2025  
+**Last Updated:** March 18, 2026  
 **API Version:** 1.0.0

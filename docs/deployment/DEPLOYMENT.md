@@ -1,7 +1,7 @@
 # Finance Tracker Deployment Guide
 
 > Version: 1.0.0  
-> Last Updated: December 4, 2025  
+> Last Updated: March 18, 2026  
 > Supported Platforms: Linux, macOS, Windows (with Docker)
 
 ---
@@ -90,7 +90,16 @@ Expected containers and ports (from `docker-compose.yml`):
 
 - `finance-tracker-mysql` → `3306:3306`
 - `finance-tracker-backend` → `8080:8080`
-- `finance-tracker-frontend` → `80:80`
+- `finance-tracker-frontend` → `80:8080`
+
+```mermaid
+graph LR
+    User["User Browser<br/>:80"] -->|HTTP| FE["finance-tracker-frontend<br/>(Nginx :8080)"]
+    FE -->|/api/*| BE["finance-tracker-backend<br/>(Spring Boot :8080)"]
+    BE -->|JDBC :3306| DB["finance-tracker-mysql<br/>(MySQL 8.0)"]
+    DB --- V["mysql_data volume"]
+    BE --- L["backend_logs volume"]
+```
 
 Health checks configured:
 
@@ -108,12 +117,12 @@ Health checks configured:
 Use the UI Register page at `http://localhost/register`. Alternatively:
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/register \
+curl -X POST http://localhost:8080/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "username": "admin",
     "email": "admin@example.com",
-    "password": "Admin123!",
+    "password": "Admin@Secure123!",
     "displayName": "Admin User"
   }'
 ```

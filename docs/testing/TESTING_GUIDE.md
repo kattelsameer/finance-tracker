@@ -1,8 +1,8 @@
 # Finance Tracker – Testing Guide
 
 > **Version**: 1.0.0  
-> **Last Updated**: December 4, 2025  
-> **Total Tests**: 156 (93 backend + 18 frontend + 45 E2E)
+> **Last Updated**: March 18, 2026  
+> **Total Tests**: 168 (103 backend + 18 frontend + 47 E2E)
 
 ---
 
@@ -55,7 +55,7 @@
 public class MyControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void testEndpoint() throws Exception {
-        Cookie authCookie = registerAndLogin("user", "user@test.com", "password");
+        Cookie authCookie = registerAndLogin("user", "user@test.com", "SecureP@ssw0rd!");
         mockMvc.perform(get("/api/v1/endpoint").cookie(authCookie))
               .andExpect(status().isOk());
     }
@@ -130,24 +130,25 @@ npm run test:coverage
 
 ## 4. End-to-End Testing (Playwright)
 
-- **Test count**: 45 tests across 6 spec files:
+- **Test count**: 47 tests across 7 spec files:
   - `frontend/e2e/smoke.spec.ts`
   - `frontend/e2e/auth.spec.ts`
   - `frontend/e2e/transactions.spec.ts`
   - `frontend/e2e/accounts.spec.ts`
   - `frontend/e2e/recurring-transactions.spec.ts`
   - `frontend/e2e/additional-features.spec.ts`
+  - `frontend/e2e/demo.spec.ts`
 - **Config**: `frontend/playwright.config.ts`
   - Local workers: 4
   - Parallel execution enabled
-  - Reporters for CI (HTML/JSON) and retry settings configured.
+  - Reporters for CI (HTML) and retry settings configured.
 - **Artifacts**: `frontend/playwright-report/` and `frontend/test-results/` (screenshots, videos)
 - **Runner**: Playwright
 - **Base URL**: `http://localhost:5173`
-- **Dev server**: `npm run dev` started automatically by Playwright
+- **Dev server**: Playwright starts `npm run dev` automatically when `PLAYWRIGHT_START_DEV_SERVER=true`; otherwise start `npm run dev` manually before running E2E tests.
 - **Parallel execution enabled** (`fullyParallel: true`)
-- **Workers**: `4` local, `2` in CI
-- **Reporters**: line + html
+- **Workers**: `4` local, `1` in CI
+- **Reporters**: html
 
 ### Key Files
 
@@ -163,7 +164,8 @@ npm run test:coverage
 
 ### Auth Test Notes
 
-- **Demo credentials**: `admin` / `Admin@123`
+- **E2E test credentials**: Dynamically generated usernames (`e2euser<sessionId>`) with password `Admin@12345678` (see `frontend/e2e/fixtures/auth.ts`)
+- **Demo mode credentials**: `demo@example.com` / `Demo123!` (seeded via `V100__seed_demo_user_and_accounts.sql`)
 - **Registration in tests** uses Backend API (`POST /api/v1/auth/register`) due to frontend redirect behavior
 - **Login page selectors** use `input#username` and `input#password`
 - After login, expect navigation to protected routes (e.g., dashboard)
@@ -208,7 +210,7 @@ npx playwright show-report
 
 ### GitHub Actions CI
 
-- Workflow executes Playwright in headless mode with 4 workers.
+- Workflow executes Playwright in headless mode with 1 worker in CI.
 - Uploads Playwright report and failure artifacts.
 - Runs on pushes and PRs targeting `main` and `develop`.
 
@@ -222,9 +224,28 @@ npx playwright show-report
 
 ## 5. CI Integration
 
-- **Workflow**: `.github/workflows/playwright.yml`
-- **Workers** reduced to 2 for stability
+- **Workflow**: `.github/workflows/ci.yml`
+- **Workers** reduced to 1 for stability in CI
 - **Uploads** HTML report and artifacts for failures
+
+### CI Pipeline Overview
+
+```mermaid
+graph TD
+    Trigger["Push / PR to main or develop"]
+    Build["docker-build<br/>Build backend + frontend Docker images"]
+    BTest["backend-test<br/>Java 21 + H2 in-memory<br/>./gradlew test"]
+    FTest["frontend-test<br/>Node 20<br/>npm run test:run + lint + tsc"]
+    E2E["e2e-test<br/>Docker Compose + Playwright<br/>1 worker, headless"]
+    Sec["security-scan<br/>Trivy filesystem scan<br/>SARIF upload"]
+
+    Trigger --> Build
+    Build --> BTest
+    Build --> FTest
+    BTest --> E2E
+    FTest --> E2E
+    E2E --> Sec
+```
 
 ---
 
@@ -232,10 +253,10 @@ npx playwright show-report
 
 | Type | Count | Status |
 |------|-------|--------|
-| Backend Unit/Integration | 93 | ✅ Passing |
+| Backend Unit/Integration | 103 | ✅ Passing |
 | Frontend Unit | 18 | ✅ Passing |
-| E2E (Playwright) | 45 | ⚠️ Partial (smoke/auth pass) |
-| **Total** | **156** | ✅ Core coverage complete |
+| E2E (Playwright) | 47 | ⚠️ Partial (smoke/auth pass) |
+| **Total** | **168** | ✅ Core coverage complete |
 
 Reports:
 
