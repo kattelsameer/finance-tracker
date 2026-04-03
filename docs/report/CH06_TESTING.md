@@ -218,29 +218,25 @@ npm run test:coverage
 
 ### 6.5.1 Framework and Setup
 
-- **Playwright** (v1.57.0) — cross-browser E2E testing
-- **Chromium + Firefox** — browsers tested in CI
+- **Playwright** (v1.57.0) — E2E testing framework
+- **Chromium** — browser tested in CI
 - **Workers:** 1 in CI, 4 locally (for speed)
 - **Dev server:** Started automatically when `PLAYWRIGHT_START_DEV_SERVER=true`
 
 ### 6.5.2 E2E Test Structure
 
 ```
-tests/                              ← Root E2E directory
+tests/                              ← Root example Playwright spec
 └── example.spec.ts
-frontend/tests/e2e/
-├── auth.spec.ts                    ← Registration, login, logout, lockout
-├── accounts.spec.ts                ← Account CRUD
-├── transactions.spec.ts            ← Transaction creation, edit, delete, filters
-├── categories.spec.ts              ← Category management
-├── budgets.spec.ts                 ← Budget creation, progress display
-├── recurring.spec.ts               ← Recurring template CRUD
-├── reports.spec.ts                 ← Dashboard, chart rendering
-├── import-export.spec.ts           ← CSV upload and download
-├── notifications.spec.ts           ← Notification bell, read/unread
-└── helpers/
-    ├── auth.helper.ts              ← Login helper shared across tests
-    └── test-data.ts                ← Shared test fixtures
+frontend/e2e/                      ← Main E2E directory used by Playwright
+├── auth.spec.ts                   ← Registration, login, logout, lockout
+├── accounts.spec.ts               ← Account CRUD
+├── transactions.spec.ts           ← Transaction creation, edit, delete, filters
+├── additional-features.spec.ts    ← Advanced features
+├── demo.spec.ts                   ← Demo mode tests
+├── recurring-transactions.spec.ts ← Recurring template CRUD
+├── smoke.spec.ts                  ← Smoke tests
+└── fixtures/                      ← Shared test fixtures
 ```
 
 ### 6.5.3 Sample E2E Test — Transaction Flow
@@ -313,14 +309,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker compose -f docker-compose.ci.yml up -d
-      - run: cd frontend && npm ci && npx playwright install --with-deps
-      - run: npm run test:e2e
+      - name: Build Docker images
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          load: true
+          tags: finance-tracker-backend:ci
+      - name: Start services
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+      - name: Install Playwright Browsers
+        working-directory: ./frontend
+        run: npx playwright install --with-deps chromium
+      - name: Run Playwright tests
+        working-directory: ./frontend
+        run: npx playwright test
+        env:
+          PLAYWRIGHT_BASE_URL: 'http://localhost'
+          PLAYWRIGHT_API_V1_BASE_URL: 'http://localhost:8080/api/v1'
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: ${{ !cancelled() }}
         with:
           name: playwright-report
-          path: playwright-report/
+          path: frontend/playwright-report/
 ```
 
 ---

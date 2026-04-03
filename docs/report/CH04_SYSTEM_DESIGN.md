@@ -46,7 +46,7 @@ This chapter documents the architectural decisions, system diagrams, database de
 | **Flyway** | 10.x | Version-controlled schema evolution |
 | **Lombok** | 1.18.30 | Reduces boilerplate; `@Getter`, `@Setter`, `@Builder` |
 | **MapStruct** | 1.5.x | Compile-time DTO ↔ entity mapping; zero-runtime overhead |
-| **jjwt (Auth0)** | 0.12.x | JWT generation and validation |
+| **JJWT (io.jsonwebtoken)** | 0.12.x | JWT generation and validation |
 | **BCrypt** | Spring Security built-in | Password hashing at strength 10 |
 | **Gradle** | 8.x | Dependency management; faster than Maven |
 
@@ -84,7 +84,7 @@ This chapter documents the architectural decisions, system diagrams, database de
 ┌──────────────────────────────────────────────────────────────────────┐
 │                   MySQL 8.0 (port 3306)                              │
 │                  finance_tracker database                            │
-│              20 tables, Flyway-managed migrations                    │
+│              15 tables, Flyway-managed migrations                    │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -272,8 +272,6 @@ users ────────────────────────�
   ├──< saved_searches                                                    │
   │                                                                      │
   ├──< revoked_tokens                                                    │
-  │                                                                      │
-  └──── user_settings (1:1)                                             │
                                                                          │
 currencies (independent reference table, linked to accounts/transactions)│
 account_types (lookup table: CHECKING, SAVINGS, CREDIT_CARD, CASH…)    │
@@ -308,8 +306,8 @@ account_types (lookup table: CHECKING, SAVINGS, CREDIT_CARD, CASH…)    │
 
 ### 4.6.3 Transactions Table Key Design Decisions
 
-- **`type ENUM('INCOME','EXPENSE','TRANSFER')`** — three-value discriminator column.
-- **`transfer_account_id`** and **`transfer_transaction_id`** — self-reference to link the two halves of a transfer.
+- **`transaction_type ENUM('INCOME','EXPENSE','TRANSFER')`** — three-value discriminator column.
+- **`transfer_to_account_id`** and **`transfer_transaction_id`** — self-reference to link the two halves of a transfer.
 - **`recurring_transaction_id`** — links auto-created transactions back to their template.
 - **`DECIMAL(15,2)`** for all monetary columns — no floating-point precision loss.
 - **`is_pending`, `is_reconciled`, `is_void`** — lifecycle flags for transaction state.
@@ -367,11 +365,11 @@ This design supports a two-level hierarchy: **Category → Subcategory**, enabli
 
 Nginx serves two roles:
 1. **Static file server:** Serves React build artifacts from `/usr/share/nginx/html`.
-2. **Reverse proxy:** Forwards `/api/*` requests to the Spring Boot backend, stripping the `/api` prefix.
+2. **Reverse proxy:** Forwards `/api/*` requests to the Spring Boot backend while preserving the `/api` prefix in the upstream request path.
 
 ```nginx
 location /api/ {
-    proxy_pass http://backend:8080/;
+    proxy_pass http://backend:8080;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
 }

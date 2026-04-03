@@ -1,5 +1,8 @@
 # Finance Tracker — Comprehensive Project Report
 
+> **Version:** 1.0  
+> **Last Updated:** April 2026
+
 > **Academic Project Report**  
 > Department of Computer Science & Information Technology  
 > Submitted in partial fulfillment of the requirements for the degree of  

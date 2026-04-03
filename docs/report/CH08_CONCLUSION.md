@@ -13,7 +13,7 @@ This project set out to design and implement a full-stack personal finance manag
 **Technical achievements:**
 - A production-ready REST API with **82 endpoints** across 14 controllers, built with Spring Boot 3.2 / Java 21, secured with JWT + CSRF, and containerised via Docker.
 - A modern single-page application built with React 19 / TypeScript / Vite, employing TanStack Query, React Hook Form + Zod, and Recharts for interactive financial visualisations.
-- A version-controlled relational database with **20 Flyway migrations** creating 16 tables, with NPR as the default currency.
+- A version-controlled relational database with **20 Flyway migrations** creating 15 tables, with NPR as the default currency.
 - **168 automated tests** across three layers (103 backend integration, 18 frontend unit, 47 E2E) running in GitHub Actions CI.
 
 **Feature achievements:**

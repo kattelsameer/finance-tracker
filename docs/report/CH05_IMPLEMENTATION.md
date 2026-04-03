@@ -222,14 +222,18 @@ protected void doFilterInternal(HttpServletRequest request,
         HttpServletResponse response, FilterChain filterChain) {
 
     String token = extractTokenFromCookie(request);  // reads "auth_token" cookie
-    if (token != null && tokenProvider.validateToken(token)
-            && !revokedTokenRepository.existsByToken(token)) {
+    if (token != null && tokenProvider.validateToken(token)) {
+        String tokenHash = hashToken(token);
 
-        String username = tokenProvider.getUsernameFromToken(token);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        UsernamePasswordAuthenticationToken auth =
-            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(auth);
+        if (!revokedTokenRepository.existsByTokenHash(tokenHash)) {
+            String username = tokenProvider.getUsernameFromToken(token);
+            Long userId = tokenProvider.getUserIdFromToken(token);
+            UserPrincipal userPrincipal = new UserPrincipal(userId, username, "", Collections.emptyList());
+            UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken(
+                    userPrincipal, null, userPrincipal.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(auth);
+        }
     }
     filterChain.doFilter(request, response);
 }
