@@ -101,7 +101,7 @@ All endpoints are prefixed with `/api/v1`. Authentication required (JWT cookie) 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | POST | `/import-export/import/csv` | ✅ | Import transactions from CSV file |
-| GET | `/import-export/export/csv` | ✅ | Export transactions to CSV (with filters) |
+| GET | `/import-export/export/csv` | ✅ | Export transactions to CSV (date range via `startDate` and `endDate`) |
 
 ### A.10 Currency Endpoints
 

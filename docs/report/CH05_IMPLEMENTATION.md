@@ -223,12 +223,18 @@ protected void doFilterInternal(HttpServletRequest request,
 
     String token = extractTokenFromCookie(request);  // reads "auth_token" cookie
     if (token != null && tokenProvider.validateToken(token)) {
-        String tokenHash = hashToken(token);
+        String tokenHash = tokenProvider.hashToken(token);
 
         if (!revokedTokenRepository.existsByTokenHash(tokenHash)) {
             String username = tokenProvider.getUsernameFromToken(token);
             Long userId = tokenProvider.getUserIdFromToken(token);
-            UserPrincipal userPrincipal = new UserPrincipal(userId, username, "", Collections.emptyList());
+            UserPrincipal userPrincipal = new UserPrincipal(
+                userId,
+                username,
+                null,
+                true,
+                true,
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
             UsernamePasswordAuthenticationToken auth =
                 new UsernamePasswordAuthenticationToken(
                     userPrincipal, null, userPrincipal.getAuthorities());

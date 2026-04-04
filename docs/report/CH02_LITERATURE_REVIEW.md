@@ -162,7 +162,7 @@ The testing pyramid (Cohn, 2009) recommends:
 Finance Tracker implements all three levels:
 - **103 backend integration tests** (MockMvc + H2 in-memory DB)
 - **18 frontend unit tests** (Vitest + React Testing Library)
-- **47 end-to-end tests** (Playwright — 43 UI, 3 API)
+- **46 end-to-end tests** (Playwright — 43 UI, 3 API)
 
 ---
 

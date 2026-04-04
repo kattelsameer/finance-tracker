@@ -368,7 +368,7 @@ Nginx serves two roles:
 2. **Reverse proxy:** Forwards `/api/*` requests to the Spring Boot backend while preserving the `/api` prefix in the upstream request path.
 
 ```nginx
-location /api/ {
+location /api {
     proxy_pass http://backend:8080;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;

@@ -291,7 +291,7 @@ Tests are executed automatically on every push and pull request via **GitHub Act
 ```yaml
 # .github/workflows/ci.yml (excerpt)
 jobs:
-  backend-tests:
+  backend-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -299,22 +299,26 @@ jobs:
         with: { java-version: '21' }
       - run: cd backend && ./gradlew test
 
-  frontend-tests:
+  frontend-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: cd frontend && npm ci && npm run test:run
 
-  e2e-tests:
+  e2e-test:
     runs-on: ubuntu-latest
+    needs: [docker-build, backend-test, frontend-test]
     steps:
       - uses: actions/checkout@v4
-      - name: Build Docker images
-        uses: docker/build-push-action@v6
+      - name: Download pre-built Docker images
+        uses: actions/download-artifact@v4
         with:
-          context: ./backend
-          load: true
-          tags: finance-tracker-backend:ci
+          name: docker-images
+          path: /tmp/docker-images
+      - name: Load Docker images
+        run: |
+          docker load -i /tmp/docker-images/backend-image.tar
+          docker load -i /tmp/docker-images/frontend-image.tar
       - name: Start services
         run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
       - name: Install dependencies
