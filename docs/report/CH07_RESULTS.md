@@ -20,13 +20,13 @@ This chapter presents the outcomes of the Finance Tracker project, comparing del
 | Account management | 6 account types, CRUD | 6 account types + soft delete + display order | ✅ Achieved |
 | Transaction management | INCOME/EXPENSE/TRANSFER + filters | Full CRUD + pagination + Specification filters + CSV | ✅ Achieved |
 | Budget tracking | Period budgets + alert % | Alert threshold + notification trigger | ✅ Achieved |
-| Recurring transactions | Automated scheduler | Spring `@Scheduled` daily + notification on creation | ✅ Achieved |
-| Category hierarchy | Parent → child | 2-level hierarchy + system defaults + materialized path | ✅ Achieved |
-| Reports & charts | Income/expense charts | Interactive Recharts + date range + category breakdown | ✅ Achieved |
-| CSV import/export | Basic import/export | Flexible column mapping + 4 date formats | ✅ Achieved |
-| NPR support | Default currency | NPR seeded as default + multi-currency framework | ✅ Achieved |
-| Notifications | Budget alerts | Budget + recurring + system notifications + preferences | ✅ Exceeded |
-| Containerisation | `docker compose up` | 5 Compose profiles (dev, demo, prod, CI) | ✅ Exceeded |
+| Recurring transactions | Automated scheduler | Automated daily processing with user notifications | ✅ Achieved |
+| Category hierarchy | Parent → child | Two-level hierarchy with system defaults and efficient lookups | ✅ Achieved |
+| Reports & charts | Income/expense charts | Interactive charts with date range and category filters | ✅ Achieved |
+| CSV import/export | Basic import/export | Flexible column mapping with support for four date formats | ✅ Achieved |
+| NPR support | Default currency | NPR as the system default with a multi-currency framework | ✅ Achieved |
+| Notifications | Budget alerts | Budget, recurring-transaction, and system notifications with per-user preferences | ✅ Exceeded |
+| Containerisation | Single-command deployment | Single-command deployment with multiple environment profiles | ✅ Exceeded |
 | Test coverage | ≥ 150 tests | **168 tests** (103 backend + 18 frontend + 47 E2E) | ✅ Exceeded |
 | Advanced search | Not planned | Saved search queries + full-text filters | ⭐ Bonus |
 | Currency exchange rates | Not planned | Currency table + exchange rate storage | ⭐ Bonus |
@@ -42,7 +42,7 @@ This chapter presents the outcomes of the Finance Tracker project, comparing del
 | Metric | Planned | Actual |
 |--------|---------|--------|
 | Flyway migrations | 12 (V1–V12) | **20 (V1–V20)** |
-| Tables created | 12 | **16 tables** |
+| Tables created | 12 | **15 tables** |
 | Seed data migrations | 1 | **4** |
 
 8 additional migrations were added to support multi-currency, notifications, saved searches, and NPR localisation.
@@ -52,7 +52,7 @@ This chapter presents the outcomes of the Finance Tracker project, comparing del
 | Metric | Planned | Actual |
 |--------|---------|--------|
 | Controllers | ~10 | **14** |
-| Total endpoints | Not specified | **82** |
+| Total endpoints | Not specified | **73** |
 
 4 additional controllers (Currency, Notification, Search, UserSettings) were implemented beyond the original plan.
 
@@ -84,29 +84,7 @@ This chapter presents the outcomes of the Finance Tracker project, comparing del
 
 **Figure 7.1 — Login Page**
 
-```
-┌───────────────────────────────────────────────────────────┐
-│                                                           │
-│                    💰 Finance Tracker                     │
-│                   Personal Finance Manager                │
-│                                                           │
-│         ┌────────────────────────────────────┐            │
-│         │  Username or Email                  │            │
-│         │  ________________________________  │            │
-│         │  Password                          │            │
-│         │  ________________________________  │            │
-│         │  ☐  Remember Me    Forgot Password?│            │
-│         │                                    │            │
-│         │  ┌──────────────────────────────┐ │            │
-│         │  │          Sign In             │ │            │
-│         │  └──────────────────────────────┘ │            │
-│         │  Don't have an account? Register   │            │
-│         └────────────────────────────────────┘            │
-│                                                           │
-└───────────────────────────────────────────────────────────┘
-
-Demo credentials: demo / Demo123!
-```
+The login screen presents a clean, centred card containing a username or email field, a password field, a "Remember Me" option, and a primary sign-in button. A link to the registration form is provided below for new users, and a password-reset link is available for returning users who have forgotten their credentials.
 
 > *[Screenshot Placeholder — Figure 7.1: Login Page]*  
 > *To add: `docs/report/images/fig7-1-login.png`*
@@ -116,8 +94,9 @@ Demo credentials: demo / Demo123!
 **Figure 7.2 — Dashboard Overview**
 
 The dashboard displays:
+
 - **4 Summary Cards:** Total Balance, Monthly Income, Monthly Expenses, Net Savings
-- **Monthly Trend Chart:** Income vs. Expense bar chart (Recharts) with 6-month history
+- **Monthly Trend Chart:** Income vs. expense bar chart with six-month history
 - **Category Breakdown:** Pie chart of top expense categories
 - **Recent Transactions:** Latest 5 transactions with quick-view details
 - **Budget Progress:** Active budgets with visual progress bars and alert indicators
@@ -130,6 +109,7 @@ The dashboard displays:
 **Figure 7.3 — Transactions Page**
 
 The transactions page features:
+
 - Paginated table with date, payee, category, account, and amount columns
 - Type badges: 🟢 INCOME, 🔴 EXPENSE, 🔵 TRANSFER
 - Filter panel: date range, account, category, type, text search
@@ -144,6 +124,7 @@ The transactions page features:
 **Figure 7.4 — Budget Management**
 
 Budget cards show:
+
 - Category name + period (Monthly, Quarterly, etc.)
 - Spent / Total amount in NPR
 - Visual progress bar (green → orange → red as threshold approached)
@@ -157,6 +138,7 @@ Budget cards show:
 **Figure 7.5 — Financial Reports**
 
 Report page includes:
+
 - Date range selector (Last 30 days, 3 months, 6 months, 1 year, custom)
 - Income vs. Expense bar chart with monthly breakdown
 - Top expense categories horizontal bar chart
@@ -172,12 +154,12 @@ Report page includes:
 
 | Metric | Observation |
 |--------|-------------|
-| **Initial page load** | ~1.2s on local Docker stack (Vite build, gzip enabled in Nginx) |
-| **Transaction list (500 records)** | <500ms with Spring Data pagination and indexed query |
-| **Dashboard summary** | <800ms (aggregated query in DashboardService) |
-| **CSV export (1000 transactions)** | ~2-3s (acceptable for batch operation) |
-| **JWT validation** | <1ms (in-memory crypto operation) |
-| **Database query (with userId index)** | <10ms for typical user dataset |
+| **Initial page load** | Approximately 1.2 seconds on the local Docker stack with compression enabled |
+| **Transaction list (500 records)** | Under 500ms using server-side pagination and indexed database queries |
+| **Dashboard summary** | Under 800ms for aggregated calculations across all accounts |
+| **CSV export (1000 transactions)** | 2–3 seconds, acceptable for a batch operation of this scale |
+| **Authentication token validation** | Under 1ms — a fast, in-memory cryptographic operation |
+| **Typical filtered database query** | Under 10ms for a realistic per-user dataset |
 
 All observed values are within or better than NFR-07's 2-second threshold for typical usage.
 
@@ -187,13 +169,13 @@ All observed values are within or better than NFR-07's 2-second threshold for ty
 
 | Security Requirement | Verification Method | Result |
 |---------------------|--------------------|----|
-| JWT in HttpOnly cookie | Browser DevTools → Cookies → HttpOnly=✓ | ✅ |
-| CSRF token required for mutations | Remove X-XSRF-TOKEN → 403 returned | ✅ |
-| Cross-user data isolation | AuthControllerIntegrationTest | ✅ |
-| Account lockout after 5 failures | testAccountLockout integration test | ✅ |
-| Token revocation on logout | RevokedToken table checked on each request | ✅ |
-| BCrypt password hashing | Password stored as `$2a$10$...` in DB | ✅ |
-| SQL injection prevention | JPA Parameterised queries; no string concatenation | ✅ |
+| Authentication token stored inaccessible to browser scripts | Confirmed via browser security inspection | ✅ |
+| Security token required for all data-modifying requests | Removed token from request; server returned an authorisation error | ✅ |
+| Cross-user data isolation | Dedicated integration test confirmed no cross-user access | ✅ |
+| Account lockout after five consecutive failures | Integration test confirmed lockout behaviour and duration | ✅ |
+| Token revocation enforced on logout | Revocation status checked on every subsequent protected request | ✅ |
+| Passwords stored as irreversible hashes | Confirmed via database inspection | ✅ |
+| SQL injection prevention | All queries use parameterised values; no string concatenation in queries | ✅ |
 
 ---
 
@@ -209,7 +191,7 @@ Referring back to Table 2.1, Finance Tracker compares favourably:
 | **Data sovereignty** | ✅ Your server | ❌ US/EU cloud |
 | **API access** | ✅ Full REST | Limited (YNAB) |
 | **E2E test suite** | ✅ 47 Playwright tests | Unknown |
-| **Setup time** | `docker compose up` (~60s) | Web signup only |
+| **Setup time** | Single deployment command (~60s) | Web signup only |
 
 ---
 
@@ -228,17 +210,18 @@ Referring back to Table 2.1, Finance Tracker compares favourably:
 
 ## 7.9 Lessons Learned
 
-1. **Database-first pays dividends:** Starting with Flyway migrations clarified the domain model before writing a single line of application code.
-2. **CSRF complexity:** Implementing the CSRF double-submit pattern for an SPA required careful coordination between the backend `CookieCsrfTokenRepository` and the frontend Axios interceptor — the single most complex integration challenge.
-3. **TanStack Query significantly simplifies state:** Replacing manual `useEffect` + `useState` with React Query hooks reduced component complexity dramatically.
-4. **Docker Compose profiles:** Having separate profiles for dev, demo, and CI (rather than a single compose file) saved significant time during testing.
-5. **MapStruct eliminates runtime overhead:** Compile-time DTO mapping is far superior to Jackson-based mapping utilities for large response sets.
+1. **Database-first pays dividends:** Defining the database schema at the start of each new feature, before any application code was written, consistently produced a clearer and better-structured data model.
+2. **Cross-site security is non-trivial:** Correctly implementing a double-submit security token for a browser-based single-page application required careful coordination between the server and client — this was the single most complex integration challenge in the project.
+3. **Declarative data fetching reduces complexity:** Adopting a dedicated server-state management library to replace manually written asynchronous fetch logic reduced the complexity of nearly every screen in the application.
+4. **Multiple deployment profiles are worth the setup effort:** Having distinct environment profiles for development, demonstration, and automated testing — rather than a single shared configuration — saved significant time during integration and testing.
+5. **Explicit data mapping aids comprehension:** Writing dedicated, hand-coded data transformation functions, rather than relying on automated mapping libraries, keeps conversion logic transparent and co-located with business logic — a useful discipline for maintainability.
 
 ---
 
 ## 7.10 Summary
 
 Finance Tracker has:
+
 - Delivered all 12 planned objectives and 2 bonus features.
 - Exceeded the planned test count (168 vs. ≥150).
 - Added 4 bonus controllers and 8 bonus migrations.

@@ -6,376 +6,214 @@
 
 ## 6.1 Introduction
 
-A comprehensive, multi-layered testing strategy was employed throughout the development of Finance Tracker. This chapter describes the testing philosophy, tools, test structure, coverage outcomes, and CI integration. A total of **168 automated tests** were written and maintained, organised across three layers of the testing pyramid.
+Software quality assurance is the systematic process of verifying that a system behaves correctly, reliably, and securely across the full range of conditions it is likely to encounter. For an application that manages personal financial data, correctness is especially critical — an error in a balance calculation, a gap in access control, or a flaw in authentication could have real financial consequences for users. This chapter describes the testing strategy employed throughout the development of Finance Tracker, the methods used at each level of the system, and the quality outcomes achieved.
+
+A total of **168 automated tests** were written and maintained across three distinct testing layers.
 
 ---
 
 ## 6.2 Testing Strategy
 
-The testing pyramid guides the distribution of test types:
+The project follows the **testing pyramid** model (Cohn, 2009), which prescribes a layered approach to automated verification. The shape of the pyramid reflects the deliberate trade-off between test speed, breadth, and confidence:
+
+**Figure 6.1 — Testing Pyramid**
 
 ```
-                    ▲
-                   / \
-                  /   \   E2E Tests (Playwright)
-                 / 47  \  ← Slow, test full user journeys
-                /-------\
-               /         \
-              / Unit/Integ \  Frontend Unit (Vitest) — 18
-             /    Tests    \  Backend Integration (JUnit 5) — 103
-            /---------------\
-           /                 \
+              ┌─────────────────────────┐
+              │   End-to-End Tests      │  47 tests — full browser journeys
+              │   Slowest; highest      │  Catch integration failures
+              │   confidence            │
+              └──────────┬──────────────┘
+        ┌─────────────────┴──────────────────┐
+        │   Integration Tests                │  103 tests — API and business logic
+        │   Medium speed; tests component    │  Catch logic and security defects
+        │   boundaries                       │
+        └──────────┬─────────────────────────┘
+    ┌──────────────┴───────────────────────────────┐
+    │   Unit Tests                                  │  18 tests — individual functions
+    │   Fastest; narrowest scope                    │  Catch data handling errors
+    └───────────────────────────────────────────────┘
 ```
+
+Many fast, narrow tests catch the majority of defects cheaply at the unit level. Fewer integration tests verify that system components interact correctly. A small set of comprehensive end-to-end tests confirm that complete user workflows function as intended. This distribution ensures the test suite is efficient — most defects are caught at the cheapest level, and the most expensive tests are reserved for high-value user journeys.
 
 **Table 6.1 — Test Coverage Summary**
 
-| Layer | Framework | Count | Scope |
-|-------|-----------|-------|-------|
-| Backend Integration | JUnit 5 + MockMvc + H2 | 103 | Controllers, services, auth flow |
-| Frontend Unit | Vitest + React Testing Library | 18 | Service mocking, component rendering |
-| End-to-End | Playwright | 47 | Full user journeys in Chrome/Firefox |
+| Layer | Approach | Count | Coverage Area |
+|-------|---------|-------|--------------|
+| Backend Integration | Simulated API requests against an in-memory database | 103 | All service endpoints, authentication, business rules |
+| Frontend Unit | Isolated tests with simulated network responses | 18 | Service functions and component rendering |
+| End-to-End | Automated browser interaction | 47 | Complete user journeys in Chrome and Firefox |
 | **Total** | | **168** | |
 
 ---
 
-## 6.3 Backend Testing
+## 6.3 Backend Integration Testing
 
-### 6.3.1 Framework and Setup
+### 6.3.1 Framework and Approach
 
-- **JUnit 5** for test lifecycle and assertions
-- **MockMvc** for HTTP request simulation without starting a real server
-- **H2 in-memory database** for fast, isolated test runs (no MySQL dependency)
-- **Spring Boot Test** `@SpringBootTest(webEnvironment = MOCK)` for full Spring context
-- **AssertJ** for fluent, readable assertions
+Backend integration tests verify the application's behaviour from the HTTP request level down through the business logic to the database — covering the complete vertical slice through the server-side system. Each test sends a structured HTTP request to the application and asserts that the response matches expectations: checking the status code, the content of the response body, and any side effects such as changes to account balances.
 
-### 6.3.2 BaseIntegrationTest
+A lightweight in-memory database is used throughout backend testing. This provides two key advantages: tests execute quickly because there is no network connection to an external database server, and each test run starts with a clean, predictable state — no accumulated test data can interfere with subsequent runs.
 
-All controller integration tests extend `BaseIntegrationTest`, which provides:
+All controller tests share a common base configuration that handles user registration and login automatically, so each individual test can proceed directly to asserting the feature under test.
 
-```java
-public abstract class BaseIntegrationTest {
+### 6.3.2 Backend Test Structure
 
-    @Autowired protected MockMvc mockMvc;
-    @Autowired protected ObjectMapper objectMapper;
+Tests are organised to mirror the application's functional structure, with one dedicated test class per feature area:
 
-    protected Cookie registerAndLogin(String username, String email, String password)
-            throws Exception {
-        // 1. Register user
-        mockMvc.perform(post("/api/v1/auth/register")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(toJson(new RegisterRequest(username, email, password))))
-            .andExpect(status().isCreated());
+**Table 6.2 — Backend Test Classes and Coverage**
 
-        // 2. Login and capture auth cookie
-        MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(toJson(new LoginRequest(username, password))))
-            .andExpect(status().isOk())
-            .andReturn();
+| Test Class | Feature Area Covered |
+|-----------|---------------------|
+| Authentication | User registration, login, logout, session management, CSRF enforcement, account lockout |
+| Accounts | Account creation, retrieval, update, soft deletion, automatic balance tracking |
+| Transactions | All transaction types, filter and pagination combinations, user data isolation |
+| Categories | Hierarchy management, system versus user-created categories |
+| Budgets | Budget creation, spending progress calculation, alert threshold logic |
+| Budget Subcategory Spending | Spending aggregation from subcategories up to parent budget totals |
+| Recurring Transactions | Template management and automated daily processing |
+| Tags | Tag operations and their associations with transactions |
+| Reports | Data aggregation and date range filtering |
+| Dashboard | Summary metric calculations across all user accounts |
+| Import and Export | CSV import parsing and export file correctness |
+| Notifications | Notification creation, read and unread state management |
+| Search | Full-text transaction search and saved search management |
+| Account and Budget Services | Core balance update logic and alert threshold calculations |
 
-        return extractAuthCookie(result);
-    }
-}
-```
+### 6.3.3 Key Backend Test Scenarios
 
-### 6.3.3 Backend Test Structure
+**Authentication and Security:**
 
-```
-backend/src/test/java/com/financetracker/
-├── ApiTestSuite.java                         ← JUnit 5 Suite runner
-├── BaseIntegrationTest.java                  ← Shared setup
-├── controller/
-│   ├── AuthControllerIntegrationTest.java    ← Registration, login, logout, CSRF
-│   ├── AccountControllerIntegrationTest.java ← CRUD, balance calculations
-│   ├── TransactionControllerIntegrationTest.java ← All transaction types, filters
-│   ├── CategoryControllerIntegrationTest.java ← Hierarchy, system vs. custom
-│   ├── BudgetControllerIntegrationTest.java  ← Budget CRUD, alert threshold
-│   ├── RecurringTransactionControllerIntegrationTest.java
-│   ├── TagControllerIntegrationTest.java
-│   ├── ReportControllerIntegrationTest.java
-│   ├── DashboardControllerIntegrationTest.java
-│   ├── ImportExportControllerIntegrationTest.java
-│   └── NotificationControllerIntegrationTest.java
-└── service/
-    └── RecurringTransactionServiceTest.java  ← Scheduler logic
-```
+| Scenario Tested | Expected Outcome |
+|----------------|-----------------|
+| Valid registration with all required fields | Account created successfully |
+| Registration with an already-used username | Request rejected with an appropriate error code |
+| Successful login with correct credentials | Authentication token issued |
+| Login attempt with an incorrect password | Request rejected |
+| Five consecutive failed login attempts | Account locked; further attempts blocked for fifteen minutes |
+| Accessing a protected endpoint without a valid token | Request rejected with an authentication error |
+| Data-modifying request submitted without the required security token | Request rejected |
+| Logging out | Token added to the revocation list; cannot be reused |
 
-### 6.3.4 Sample Backend Test Cases
+**Transaction and Business Logic:**
 
-**Authentication Tests (AuthControllerIntegrationTest):**
-
-| Test | Scenario | Expected |
-|------|----------|----------|
-| `testRegisterSuccess` | Valid username/email/password | 201 Created |
-| `testRegisterDuplicateUsername` | Existing username | 400 with error code 1002 |
-| `testLoginSuccess` | Correct credentials | 200, `auth_token` cookie set |
-| `testLoginFailure` | Wrong password | 401 |
-| `testAccountLockout` | 5 failed logins | 423 (account locked) |
-| `testLogout` | Valid session | 200, token revoked |
-| `testAccessWithExpiredToken` | Expired JWT | 401 |
-| `testCsrfRequired` | POST without CSRF token | 403 |
-
-**Transaction Tests (TransactionControllerIntegrationTest):**
-
-| Test | Scenario | Expected |
-|------|----------|----------|
-| `testCreateIncome` | Valid income transaction | 201, balance increased |
-| `testCreateExpense` | Valid expense transaction | 201, balance decreased |
-| `testCreateTransfer` | Transfer between accounts | 201, both balances updated |
-| `testTransferCreatesLinkedPair` | Transfer | Two transactions with matching IDs |
-| `testFilterByDateRange` | Date range filter | Paginated results in range |
-| `testFilterByCategory` | Category filter | Only matching transactions |
-| `testUserIsolation` | User A accessing User B's transaction | 404 (not exposed) |
-| `testDeleteCascadesTransferPair` | Delete one transfer leg | Both legs removed |
-
-### 6.3.5 Running Backend Tests
-
-```bash
-source ~/.bash_profile
-cd backend
-
-# All tests
-./gradlew test
-
-# Specific controller suite
-./gradlew test --tests "*ControllerIntegrationTest"
-
-# Single class
-./gradlew test --tests "com.financetracker.controller.AuthControllerIntegrationTest"
-
-# HTML report
-open build/reports/tests/test/index.html
-```
+| Scenario Tested | Expected Outcome |
+|----------------|-----------------|
+| Recording an income transaction | Account balance increases by the recorded amount |
+| Recording an expense transaction | Account balance decreases by the recorded amount |
+| Recording a transfer between two accounts | Source balance decreases; destination balance increases; two linked records created |
+| Deleting one record of a transfer pair | The paired record is also deleted; both account balances are restored |
+| Filtering transactions by a date range | Only transactions within the specified dates are returned |
+| Filtering transactions by category | Only transactions in the matching category are returned |
+| One user attempting to access another user's transaction | Not found — no cross-user data is revealed |
+| Recording spending that crosses a budget's alert threshold | A notification is automatically generated |
 
 ---
 
-## 6.4 Frontend Testing
+## 6.4 Frontend Unit Testing
 
-### 6.4.1 Framework and Setup
+### 6.4.1 Framework and Approach
 
-- **Vitest** (v4.0.16) — Vite-native test runner; faster than Jest for TypeScript projects
-- **React Testing Library** (v16.3.0) — component testing from a user perspective
-- **jsdom** — DOM simulation environment
-- **vi.mock()** — module mocking for `apiClient`
+Frontend unit tests verify that individual service functions and user interface components behave correctly in isolation. Because these tests run without a live server, network calls are replaced by mock functions returning predetermined responses. This allows tests to confirm that components display correct information given known data, and that service functions make the correct calls with the expected parameters.
 
-### 6.4.2 Service Test Pattern
+### 6.4.2 What is Tested
 
-```typescript
-// src/services/__tests__/transaction.service.test.ts
-vi.mock('../../lib/api-client', () => ({
-  apiClient: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  },
-}));
+**Service function tests** verify that each data service correctly:
 
-describe('transactionService', () => {
-  it('getAll returns paginated transactions', async () => {
-    const mockResponse = { content: [mockTransaction], totalPages: 1 };
-    vi.mocked(apiClient.get).mockResolvedValue(mockResponse);
+- Calls the appropriate API endpoint for each operation
+- Passes parameters and filter values through accurately
+- Returns the server response data to the calling component without modification
 
-    const result = await transactionService.getAll();
+**Component rendering tests** verify that key interface components correctly:
 
-    expect(apiClient.get).toHaveBeenCalledWith(ENDPOINTS.TRANSACTIONS, { params: undefined });
-    expect(result).toEqual(mockResponse);
-  });
-});
-```
-
-### 6.4.3 Component Test Pattern
-
-```typescript
-// src/components/__tests__/SummaryCard.test.tsx
-describe('SummaryCard', () => {
-  it('displays formatted amount in NPR', () => {
-    render(<SummaryCard title="Balance" amount={150000} currency="NPR" />);
-    expect(screen.getByText(/NPR/)).toBeInTheDocument();
-    expect(screen.getByText('Balance')).toBeInTheDocument();
-  });
-});
-```
-
-### 6.4.4 Running Frontend Tests
-
-```bash
-cd frontend
-
-# Single run
-npm run test:run
-
-# Watch mode (development)
-npm run test
-
-# Coverage report
-npm run test:coverage
-```
+- Display the values provided to them
+- Format currency amounts and dates according to the user's locale and preferences
+- Render distinct states — loading, empty, and error — as appropriate
+- Respond correctly to user interactions such as button clicks and form submissions
 
 ---
 
 ## 6.5 End-to-End Testing
 
-### 6.5.1 Framework and Setup
+### 6.5.1 Framework and Approach
 
-- **Playwright** (v1.57.0) — E2E testing framework
-- **Chromium** — browser tested in CI
-- **Workers:** 1 in CI, 4 locally (for speed)
-- **Dev server:** Started automatically when `PLAYWRIGHT_START_DEV_SERVER=true`
+End-to-end tests automate a real web browser — navigating between pages, clicking buttons, filling in forms, and asserting that the correct content appears on screen — exactly as a real user would interact with the application. This provides the highest level of confidence that the system functions correctly as an integrated whole, catching issues that emerge only when all layers work together.
 
-### 6.5.2 E2E Test Structure
+Tests are executed against the full application stack — both frontend and backend with a real database. During the continuous integration process they run in a headless browser for speed; during local development they can run in a visible browser window so test execution can be observed directly.
 
-```
-tests/                              ← Root example Playwright spec
-└── example.spec.ts
-frontend/e2e/                      ← Main E2E directory used by Playwright
-├── auth.spec.ts                   ← Registration, login, logout, lockout
-├── accounts.spec.ts               ← Account CRUD
-├── transactions.spec.ts           ← Transaction creation, edit, delete, filters
-├── additional-features.spec.ts    ← Advanced features
-├── demo.spec.ts                   ← Demo mode tests
-├── recurring-transactions.spec.ts ← Recurring template CRUD
-├── smoke.spec.ts                  ← Smoke tests
-└── fixtures/                      ← Shared test fixtures
-```
+### 6.5.2 End-to-End Test Coverage
 
-### 6.5.3 Sample E2E Test — Transaction Flow
+**Table 6.3 — End-to-End Test Coverage by Feature**
 
-```typescript
-// transactions.spec.ts
-test('create and verify expense transaction', async ({ page }) => {
-  await loginHelper(page);
-  await page.goto('/transactions');
+| Feature Area | Scenarios Covered |
+|-------------|-------------------|
+| Authentication | Registration, login, session persistence, logout, account lockout, redirect for unauthenticated access |
+| Accounts | Account creation, editing, deletion, balance display, account type selection |
+| Transactions | Creating income, expense, and transfer records; editing and deletion; filter panel; pagination; CSV export |
+| Recurring Transactions | Template creation with multiple frequency settings, pausing, and deletion |
+| Additional Features | Budget creation and progress, category management, notifications, currency preferences, saved searches |
+| Demo Data | Verification that the pre-seeded demonstration dataset displays correctly across all major sections |
+| Smoke Tests | Rapid critical-path checks across all pages to detect regressions |
 
-  // Open new transaction form
-  await page.getByRole('button', { name: 'Add Transaction' }).click();
+### 6.5.3 Selected Journey Descriptions
 
-  // Fill form
-  await page.getByLabel('Type').selectOption('EXPENSE');
-  await page.getByLabel('Amount').fill('2500');
-  await page.getByLabel('Account').selectOption('Checking Account');
-  await page.getByLabel('Category').selectOption('Food');
-  await page.getByLabel('Description').fill('Grocery shopping');
-  await page.getByRole('button', { name: 'Save' }).click();
+**User registration and first login:** The test navigates to the registration page, completes the form with a valid username, email, and password, submits the form, and verifies that the user is redirected to the dashboard with their username visible in the navigation header.
 
-  // Verify transaction appears in list
-  await expect(page.getByText('Grocery shopping')).toBeVisible();
-  await expect(page.getByText('NPR 2,500.00')).toBeVisible();
-});
-```
+**Recording an expense:** After logging in, the test opens the transaction form, selects expense type, enters an amount and category, saves the record, and verifies it appears in the list with the correct amount formatted in NPR.
 
-### 6.5.4 Running E2E Tests
+**Budget threshold alert:** A budget is created with an alert threshold of eighty percent. Expenses are recorded until total spending exceeds that threshold. The test verifies a notification appears in the application header.
 
-```bash
-cd frontend
-
-# Headless (CI mode)
-npm run test:e2e
-
-# Visible browser (debug)
-npm run test:e2e:headed
-
-# Specific file
-npx playwright test auth.spec.ts
-
-# Generate HTML report
-npx playwright show-report
-```
+**Recurring transaction processing:** A monthly recurring expense template is created. The test triggers the processing cycle and verifies that a transaction record is created and the associated account balance updated.
 
 ---
 
-## 6.6 CI/CD Integration
+## 6.6 Continuous Integration
 
-Tests are executed automatically on every push and pull request via **GitHub Actions**:
+All 168 tests execute automatically on every code change through a continuous integration pipeline. The pipeline proceeds through the following stages in order:
 
-```yaml
-# .github/workflows/ci.yml (excerpt)
-jobs:
-  backend-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with: { java-version: '21' }
-      - run: cd backend && ./gradlew test
+1. **Compilation:** The backend and frontend are compiled, catching any syntax or type errors immediately.
+2. **Backend tests:** All 103 integration tests run against the in-memory database.
+3. **Frontend unit tests:** All 18 frontend tests run in isolation.
+4. **Production build:** Application packages are assembled as they would be for deployment.
+5. **End-to-end tests:** The full application stack is launched in containers and all 47 browser-based tests execute against it.
 
-  frontend-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: cd frontend && npm ci && npm run test:run
-
-  e2e-test:
-    runs-on: ubuntu-latest
-    needs: [docker-build, backend-test, frontend-test]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download pre-built Docker images
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-images
-          path: /tmp/docker-images
-      - name: Load Docker images
-        run: |
-          docker load -i /tmp/docker-images/backend-image.tar
-          docker load -i /tmp/docker-images/frontend-image.tar
-      - name: Start services
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
-      - name: Install dependencies
-        working-directory: ./frontend
-        run: npm ci
-      - name: Install Playwright Browsers
-        working-directory: ./frontend
-        run: npx playwright install --with-deps chromium
-      - name: Run Playwright tests
-        working-directory: ./frontend
-        run: npx playwright test
-        env:
-          PLAYWRIGHT_BASE_URL: 'http://localhost'
-          PLAYWRIGHT_API_V1_BASE_URL: 'http://localhost:8080/api/v1'
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: frontend/playwright-report/
-```
+A code change that causes any test to fail is not accepted for integration, ensuring that regressions are caught before they reach the main codebase. Test reports are preserved as build artefacts so that any failure can be investigated in detail after the fact.
 
 ---
 
 ## 6.7 Quality Assurance Practices
 
-Beyond automated testing, the following QA practices were followed:
+Beyond the automated test suite, several additional practices were maintained throughout development:
 
-| Practice | Tool/Method |
-|----------|-------------|
-| **TypeScript strict mode** | `tsconfig.json` with `strict: true` — catches null/undefined at compile time |
-| **ESLint** | `npm run lint` — enforces React best practices |
-| **Gradle build checks** | `./gradlew compileJava` catches Java compilation errors |
-| **Bean Validation** | `@Valid`, `@NotNull`, `@Size` on all DTOs — rejects malformed requests at entry point |
-| **User isolation tests** | Every controller test includes a "cross-user access returns 404" case |
-| **CSRF tests** | Dedicated tests verify CSRF rejection on mutation endpoints |
+| Practice | Benefit |
+|----------|---------|
+| Strict type checking in the frontend codebase | Type mismatches are caught at compile time, before the application runs |
+| Automated code style enforcement | Consistent patterns are maintained and common mistakes are flagged |
+| Input validation at every API boundary | Malformed or missing data is rejected before it reaches any business logic |
+| Cross-user access tested in every controller test class | Data isolation is confirmed across all endpoints, not just selected ones |
+| Security mechanisms each have dedicated test coverage | CSRF protection, token revocation, and account lockout are each explicitly verified |
 
 ---
 
 ## 6.8 Known Test Limitations
 
+**Table 6.5 — Testing Limitations**
+
 | Limitation | Description |
 |-----------|-------------|
-| **Frontend coverage** | Service tests cover 100% of service functions; component coverage is selective |
-| **Performance tests** | No load testing was conducted; NFR-07 (2s page load) is based on manual observation |
-| **Accessibility** | No automated a11y testing (axe-core); manual review only |
-| **Browser matrix** | E2E tested on Chromium and Firefox; Safari tested manually only |
+| Frontend component coverage | Service-level tests cover all service functions; component tests are selective rather than exhaustive |
+| Performance testing | No formal load testing was conducted; performance observations are based on manual usage with a realistic dataset |
+| Accessibility testing | No automated accessibility checks were applied; review was conducted manually |
+| Browser matrix | End-to-end tests ran on Chrome and Firefox; Safari was checked manually only |
 
 ---
 
 ## 6.9 Summary
 
-Finance Tracker maintains **168 automated tests** across backend integration, frontend unit, and E2E layers. Key highlights:
-- Security is tested explicitly: CSRF, JWT expiry, cross-user isolation, account lockout.
-- Business logic is tested end-to-end: transfer atomic updates, scheduler, budget alerts.
-- CI runs all tests on every push, blocking merges on failure.
+Finance Tracker achieved comprehensive, three-layer automated testing totalling 168 tests. Backend integration tests verify all service endpoints and business logic, with particular attention to security boundaries, financial calculation accuracy, and cross-user data isolation. Frontend unit tests confirm that service functions and interface components behave correctly in isolation. End-to-end browser tests verify that complete user journeys function correctly in a real application environment. All tests execute automatically on each code change, providing continuous quality assurance throughout the development lifecycle.
 
-Chapter 7 presents the results, screenshots, and comparison with the original objectives.
+Chapter 7 presents the completed system against its original objectives, covering performance observations, security validation, and known limitations.
 
 ---
 

@@ -31,7 +31,6 @@ All endpoints are prefixed with `/api/v1`. Authentication required (JWT cookie) 
 | DELETE | `/accounts/{id}` | ✅ | Delete/deactivate account |
 | GET | `/accounts/net-worth` | ✅ | Total net worth (assets minus liabilities) |
 | GET | `/accounts/types` | ✅ | List account type options |
-| GET | `/accounts/{id}/transactions` | ✅ | Paginated transactions for account |
 
 ### A.3 Transaction Endpoints
 
@@ -42,7 +41,6 @@ All endpoints are prefixed with `/api/v1`. Authentication required (JWT cookie) 
 | GET | `/transactions/{id}` | ✅ | Get transaction by ID |
 | PUT | `/transactions/{id}` | ✅ | Update transaction |
 | DELETE | `/transactions/{id}` | ✅ | Delete transaction |
-| GET | `/transactions/summary` | ✅ | Aggregated totals by period |
 
 ### A.4 Category Endpoints
 
@@ -92,9 +90,8 @@ All endpoints are prefixed with `/api/v1`. Authentication required (JWT cookie) 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | GET | `/dashboard/stats` | ✅ | Summary statistics (balances, income, expenses, savings) |
-| GET | `/reports/spending` | ✅ | Spending by category/period |
-| GET | `/reports/income` | ✅ | Income breakdown |
-| GET | `/reports/cash-flow` | ✅ | Monthly cash flow trend |
+| GET | `/reports/transactions` | ✅ | Transaction report with filters (category, date range, type) |
+| GET | `/reports/transactions/export` | ✅ | Export filtered report as CSV file |
 
 ### A.9 Import / Export Endpoints
 
@@ -107,8 +104,15 @@ All endpoints are prefixed with `/api/v1`. Authentication required (JWT cookie) 
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/currencies` | ✅ | List all currencies with exchange rates |
-| POST | `/currencies/convert` | ✅ | Convert amount between currencies (request body: `{amount, fromCurrency, toCurrency}`) |
+| GET | `/currencies` | ✅ | List active currencies with exchange rates |
+| GET | `/currencies/all` | ✅ | List all currencies (including inactive) |
+| GET | `/currencies/{code}` | ✅ | Get currency by ISO code (e.g., NPR, USD) |
+| GET | `/currencies/base` | ✅ | Get the current base/default currency |
+| POST | `/currencies/convert` | ✅ | Convert amount between two currencies |
+| POST | `/currencies/update-rates` | ✅ | Bulk update exchange rates |
+| POST | `/currencies/refresh-rates` | ✅ | Refresh rates (alias for update-rates) |
+| PUT | `/currencies/exchange-rate` | ✅ | Update a single currency’s exchange rate |
+| POST | `/currencies/initialize` | ✅ | Initialise currency data (admin use) |
 
 ### A.11 Notification Endpoints
 
@@ -120,22 +124,29 @@ All endpoints are prefixed with `/api/v1`. Authentication required (JWT cookie) 
 | PATCH | `/notifications/{id}/read` | ✅ | Mark notification as read |
 | PATCH | `/notifications/read-all` | ✅ | Mark all notifications as read |
 | DELETE | `/notifications/{id}` | ✅ | Delete notification |
+| GET | `/notifications/preferences` | ✅ | Get notification preferences |
+| PUT | `/notifications/preferences` | ✅ | Update notification preferences |
+| DELETE | `/notifications/cleanup` | ✅ | Delete all read notifications (bulk cleanup) |
 
 ### A.12 Search Endpoints
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| POST | `/search/transactions` | ✅ | Advanced search with filters |
+| POST | `/search/transactions` | ✅ | Advanced transaction search with multiple filters |
+| GET | `/search/saved` | ✅ | List all saved searches for current user |
+| GET | `/search/saved/{id}` | ✅ | Get a specific saved search by ID |
+| POST | `/search/saved` | ✅ | Save a new search query |
+| PUT | `/search/saved/{id}` | ✅ | Update an existing saved search |
+| DELETE | `/search/saved/{id}` | ✅ | Delete a saved search |
+| PATCH | `/search/saved/{id}/set-default` | ✅ | Set a saved search as the default |
 
 ### A.13 Settings Endpoints
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| POST | `/settings/currency-change` | ✅ | Change user's default currency |
-| GET | `/notifications/preferences` | ✅ | Get notification preferences |
-| PUT | `/notifications/preferences` | ✅ | Update notification preferences |
+| POST | `/settings/currency-change` | ✅ | Change user’s default currency (recalculates account balances) |
 
-**Total: 55 documented endpoints** (82 including all controller variants)
+**Total: 73 endpoints** across 14 controllers.
 
 ---
 
@@ -210,29 +221,31 @@ All API URLs centralised in `src/config/api.ts`:
 
 ```typescript
 export const ENDPOINTS = {
+  // Auth
   AUTH: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    LOGOUT: '/auth/logout',
-    ME: '/auth/me',
-    CSRF_TOKEN: '/auth/csrf-token',
-    CHANGE_PASSWORD: '/auth/change-password',
+    LOGIN: 'auth/login',
+    REGISTER: 'auth/register',
+    LOGOUT: 'auth/logout',
+    ME: 'auth/me',
+    CHANGE_PASSWORD: 'auth/change-password',
+    CSRF_TOKEN: 'auth/csrf-token',
   },
-  ACCOUNTS: '/accounts',
-  TRANSACTIONS: '/transactions',
-  CATEGORIES: '/categories',
-  BUDGETS: '/budgets',
-  RECURRING_TRANSACTIONS: '/recurring-transactions',
-  TAGS: '/tags',
-  DASHBOARD: '/dashboard/stats',
-  REPORTS: { SPENDING: '/reports/spending', INCOME: '/reports/income', CASH_FLOW: '/reports/cash-flow' },
-  CURRENCIES: '/currencies',
-  NOTIFICATIONS: '/notifications',
-  SEARCH: '/search/transactions',
-  IMPORT: '/import/csv',
-  EXPORT: '/export/transactions/csv',
-  SETTINGS: '/settings',
-};
+  // Accounts
+  ACCOUNTS: 'accounts',
+  ACCOUNT_TYPES: 'accounts/types',
+  // Categories
+  CATEGORIES: 'categories',
+  // Transactions
+  TRANSACTIONS: 'transactions',
+  // Tags
+  TAGS: 'tags',
+  // Budgets
+  BUDGETS: 'budgets',
+  // Settings
+  SETTINGS: {
+    CURRENCY_CHANGE: 'settings/currency-change',
+  },
+} as const;
 ```
 
 ---
@@ -240,6 +253,7 @@ export const ENDPOINTS = {
 ## Appendix D — Default Category Seeds (V12)
 
 ### Income Categories
+
 - Salary
 - Freelance / Consulting
 - Business Income
@@ -250,6 +264,7 @@ export const ENDPOINTS = {
 - Other Income
 
 ### Expense Categories
+
 - 🍔 Food & Dining → Groceries, Restaurants, Coffee & Tea
 - 🚗 Transportation → Fuel, Public Transport, Taxi/Ride Share, Vehicle Maintenance
 - 🏠 Housing → Rent, Electricity, Water, Internet, Gas, Household Supplies
@@ -278,7 +293,7 @@ export const ENDPOINTS = {
 | **HttpOnly** | Cookie attribute preventing JavaScript access; protects against XSS |
 | **JPA** | Java Persistence API; standard ORM specification implemented by Hibernate |
 | **JWT** | JSON Web Token; compact, signed token used for authentication |
-| **MapStruct** | Compile-time DTO ↔ entity mapper; no reflection at runtime |
+| **MapStruct** | Compile-time DTO ↔ entity mapping framework (declared as dependency; services use equivalent hand-written `mapToResponse()` methods) |
 | **MockMvc** | Spring test framework for simulating HTTP requests without a real server |
 | **NPR** | Nepali Rupee; ISO 4217 currency code `NPR` |
 | **REST** | Representational State Transfer; architectural style for HTTP APIs |

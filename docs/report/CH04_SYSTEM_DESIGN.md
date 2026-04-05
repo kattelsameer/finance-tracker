@@ -18,19 +18,19 @@ This chapter documents the architectural decisions, system diagrams, database de
 
 | Technology | Version | Justification |
 |------------|---------|---------------|
-| **React** | 19.2.0 | Latest stable; Actions, transitions, improved async patterns |
-| **TypeScript** | 5.9.3 | Type safety catches errors at compile-time |
-| **Vite** | 7.2.4 | Fast HMR dev server; optimised production builds |
-| **Tailwind CSS** | 4.1.17 | Utility-first CSS; no runtime overhead; dark mode ready |
-| **React Router** | 7.9.6 | SPA routing with nested layouts |
-| **TanStack Query** | 5.90.16 | Server-state caching, background refetching, optimistic updates |
-| **React Hook Form** | 7.70.0 | Performant forms with minimal re-renders |
-| **Zod** | 4.3.4 | Schema-first runtime + type validation |
-| **Recharts** | 3.5.0 | Composable chart library built on D3 |
-| **Axios** | 1.13.2 | HTTP client with interceptor support for CSRF tokens |
-| **Zustand** | 5.0.8 | Minimal global state for UI flags |
-| **Lucide React** | 0.562.0 | Consistent icon set, tree-shakeable |
-| **date-fns** | 4.1.0 | Lightweight date manipulation without Moment.js overhead |
+| **React** | 19.2.0 | Industry-leading component framework for building interactive user interfaces |
+| **TypeScript** | 5.9.3 | Typed superset of JavaScript; catches data shape errors at development time |
+| **Vite** | 7.2.4 | Modern build tool providing fast development refresh and optimised production output |
+| **Tailwind CSS** | 4.1.17 | Utility-based styling system enabling consistent, responsive design without custom CSS |
+| **React Router** | 7.9.6 | Client-side routing for the single-page application navigation model |
+| **TanStack Query** | 5.90.16 | Server-state management with built-in caching, background synchronisation, and deduplication |
+| **React Hook Form** | 7.70.0 | Performant form state management with minimal component re-rendering |
+| **Zod** | 4.3.4 | Schema-first validation library; validates both at runtime and generates TypeScript types |
+| **Recharts** | 3.5.0 | Composable, declarative charting library for financial visualisations |
+| **Axios** | 1.13.2 | HTTP client with request and response interceptor support for automated token handling |
+| **Zustand** | 5.0.8 | Lightweight global state management for UI-level shared state |
+| **Lucide React** | 0.562.0 | Consistent, accessible icon library with minimal bundle footprint |
+| **date-fns** | 4.1.0 | Modular date manipulation library covering all required formatting and calculation needs |
 
 ### 4.2.2 Backend Stack
 
@@ -38,67 +38,84 @@ This chapter documents the architectural decisions, system diagrams, database de
 
 | Technology | Version | Justification |
 |------------|---------|---------------|
-| **Spring Boot** | 3.2.5 | Production-grade Java framework; auto-configuration |
-| **Spring Security** | 6.x | Enterprise-grade auth; JWT + CSRF support |
-| **Spring Data JPA** | 3.2.x | Repository abstraction; pagination built-in |
-| **Hibernate** | 6.x | ORM; avoids raw SQL for standard CRUD |
-| **MySQL** | 8.0 | Robust ACID-compliant RDBMS; JSON support |
-| **Flyway** | 10.x | Version-controlled schema evolution |
-| **Lombok** | 1.18.30 | Reduces boilerplate; `@Getter`, `@Setter`, `@Builder` |
-| **MapStruct** | 1.5.x | Compile-time DTO ↔ entity mapping; zero-runtime overhead |
-| **JJWT (io.jsonwebtoken)** | 0.12.x | JWT generation and validation |
-| **BCrypt** | Spring Security built-in | Password hashing at strength 10 |
-| **Gradle** | 8.x | Dependency management; faster than Maven |
+| **Spring Boot** | 3.2.5 | Widely-adopted Java web application framework with comprehensive auto-configuration |
+| **Spring Security** | 6.x | Enterprise-grade security framework; selected for its robust JWT filter chain and CSRF support |
+| **Spring Data JPA** | 3.2.x | Data access abstraction layer with built-in pagination and dynamic query support |
+| **Hibernate** | 6.x | Object-relational mapper; eliminates most handwritten SQL for standard operations |
+| **MySQL** | 8.0 | Proven, ACID-compliant relational database management system |
+| **Flyway** | 10.x | Version-controlled incremental database migration tool |
+| **Lombok** | 1.18.30 | Annotation-based code generation to reduce repetitive boilerplate in entity classes |
+| **JJWT** | 0.12.5 | Authentication token generation and validation library |
+| **BCrypt** | Spring Security built-in | Industry-standard adaptive password hashing algorithm |
+| **Gradle** | 8.x | Flexible build system and dependency management tool |
 
 ---
 
 ## 4.3 High-Level System Architecture
 
+**Figure 4.1 — System Architecture Overview**
+
+```mermaid
+graph TB
+    Browser["🌐 User Browser<br/>Single-Page Application"]
+
+    subgraph Docker["Container Network"]
+        direction TB
+
+        subgraph UI["Frontend Container"]
+            Nginx["Web Server<br/>Static file server<br/>+ Reverse Proxy (/api/*)"]
+        end
+
+        subgraph API["Backend Container"]
+            Security["Security Filter<br/>(Authentication + CSRF)"]
+            Controllers["REST Controllers"]
+            Services["Service Layer"]
+            Repos["Repository Layer"]
+        end
+
+        subgraph DB["Database Container"]
+            MySQL["Relational Database<br/>15 tables · 20 migrations"]
+        end
+    end
+
+    Browser -->|"HTTP/HTTPS port 80/443"| Nginx
+    Nginx -->|"Static assets"| Browser
+    Nginx -->|"Proxy /api/* → backend"| Security
+    Security --> Controllers
+    Controllers --> Services
+    Services --> Repos
+    Repos -->|"SQL queries"| MySQL
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                          User Browser                                │
-│                   React 19 SPA (TypeScript + Vite)                   │
-└─────────────────────────────┬────────────────────────────────────────┘
-                              │ HTTP/HTTPS (port 80/443)
-                              ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                     Nginx Reverse Proxy                              │
-│  ┌──────────────────┐        ┌───────────────────────────────────┐   │
-│  │ Static React     │        │  /api/* → http://backend:8080     │   │
-│  │ Files (dist/)    │        │  CORS headers, gzip, SSL termination│  │
-│  └──────────────────┘        └───────────────────────────────────┘   │
-└─────────────────────────────┬────────────────────────────────────────┘
-                              │ Internal Docker network
-                              ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                   Spring Boot API (port 8080)                        │
-│                                                                      │
-│  ┌────────────┐  ┌─────────────┐  ┌──────────────┐  ┌───────────┐  │
-│  │ Security   │  │ Controllers │  │  Services    │  │ Repositories│ │
-│  │ Filter     │  │ (REST Layer)│  │ (Logic Layer)│  │ (Data Layer)│ │
-│  │ Chain      │  │             │  │              │  │             │  │
-│  └────────────┘  └─────────────┘  └──────────────┘  └───────────┘  │
-└─────────────────────────────┬────────────────────────────────────────┘
-                              │ JDBC/JPA
-                              ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                   MySQL 8.0 (port 3306)                              │
-│                  finance_tracker database                            │
-│              15 tables, Flyway-managed migrations                    │
-└──────────────────────────────────────────────────────────────────────┘
+
+### 4.3.1 Application Container Stack
+
+**Figure 4.2 — Application Container Stack**
+
+```mermaid
+graph LR
+    subgraph "Container Deployment"
+        DB["Database Container<br/>Relational database<br/>port 3306"]
+        API["Backend Container<br/>Java Application<br/>port 8080<br/>depends_on: database"]
+        UI["Frontend Container<br/>Web Server + Application<br/>port 80<br/>depends_on: backend"]
+    end
+
+    DB -->|"healthcheck passes"| API
+    API -->|"healthcheck passes"| UI
+
+    style DB fill:#4CAF50,color:#fff
+    style API fill:#2196F3,color:#fff
+    style UI fill:#FF9800,color:#fff
 ```
 
-### 4.3.1 Docker Compose Service Stack
+Three containers communicate over an internal bridge network:
 
-Three named containers communicate over an internal bridge network:
+| Container | Role | Internal Port |
+|-----------|------|---------------|
+| Database | Relational database storing all application data | 3306 |
+| Backend | Java application serving the REST API | 8080 |
+| Frontend | Web server delivering the application and proxying API calls | 80 |
 
-| Service | Container | Image | Internal Port |
-|---------|-----------|-------|--------------|
-| `finance-db` | MySQL database | mysql:8.0 | 3306 |
-| `finance-api` | Spring Boot app | custom Gradle build | 8080 |
-| `finance-ui` | Nginx + React | custom multi-stage build | 80 |
-
-Health checks ensure the API container waits for the database to be ready before accepting connections.
+Health checks ensure each container waits for its dependency to be ready before accepting connections.
 
 ---
 
@@ -106,83 +123,63 @@ Health checks ensure the API container waits for the database to be ready before
 
 ### 4.4.1 Layered Architecture
 
-```
-┌──────────────────────────────────────┐
-│         REST Controllers             │  ← @RestController, @RequestMapping
-│  Handles HTTP, input validation,     │
-│  auth principal extraction           │
-├──────────────────────────────────────┤
-│           Service Layer              │  ← @Service, @Transactional
-│  Business logic, transaction         │
-│  management, event generation        │
-├──────────────────────────────────────┤
-│         Repository Layer             │  ← extends JpaRepository
-│  Database access, JPQL queries,      │
-│  Specifications for dynamic filters  │
-├──────────────────────────────────────┤
-│           Entity Layer               │  ← @Entity, @Table (JPA)
-│  Domain model; mapped to DB tables   │
-└──────────────────────────────────────┘
+**Figure 4.3 — Backend Layered Architecture**
+
+```mermaid
+graph TB
+    subgraph "Spring Boot Application"
+        C["Controllers (14)\nReceive HTTP requests\nValidate input\nReturn structured responses"]
+        S["Service Layer\nBusiness rules\nBalance calculations\nNotification triggers\nScheduled automation"]
+        R["Repository Layer\nDatabase read and write\nDynamic query filtering\nPagination support"]
+        E["Entity Layer (13 entities)\nUser, Account, Transaction\nBudget, Category, Tag\nand supporting tables"]
+    end
+
+    C --> S
+    S --> R
+    R --> E
+    E --> DB[(MySQL 8.0)]
 ```
 
 ### 4.4.2 Security Architecture
 
-```
-HTTP Request
-     │
-     ▼
-JwtAuthenticationFilter (OncePerRequestFilter)
-     │  reads auth_token cookie
-     │  validates JWT signature + expiry
-     │  checks revoked_tokens table
-     │  populates SecurityContext
-     ▼
-CSRF Filter (CookieCsrfTokenRepository)
-     │  reads XSRF-TOKEN cookie
-     │  validates X-XSRF-TOKEN request header
-     │  (exempt: GET, HEAD, OPTIONS, /auth/login, /auth/register)
-     ▼
-Authorization
-     │  all /api/v1/** requires ROLE_USER
-     ▼
-Controller Method
-     │  @AuthenticationPrincipal UserPrincipal → userId
-     │  every query scoped to userId
-     ▼
-Response
-```
+Every incoming request passes through a two-stage security check before reaching any application logic:
 
-JWT Cookie Properties (default profile):
+**Stage 1 — Authentication verification:** The system reads the authentication token from the browser cookie attached to the request. It verifies the token's digital signature, confirms it has not expired, and checks the server-side revocation list to ensure it has not been invalidated by a previous logout. If any check fails, the request is rejected with a 401 (Unauthorised) response.
 
-| Property | Value |
-|----------|-------|
-| Cookie name | `auth_token` |
-| HttpOnly | `true` |
-| Secure | `true` |
-| SameSite | `Strict` |
-| Expiry (default) | 1 hour |
-| Expiry (rememberMe) | 30 days |
-| Algorithm | HS512 |
+**Stage 2 — Cross-site request forgery protection:** For any request that modifies data (create, update, or delete operations), the system also checks for a separately issued security token in the request header. Ordinary browser navigation or a forged request from another website cannot include this header token, so such requests are rejected with a 403 (Forbidden) response. Read-only requests (data retrieval) are not subject to this check.
+
+If both checks pass, the authenticated user's identity is made available to the controller, and all subsequent database queries are automatically scoped to that user's data.
+
+**Table 4.5 — Authentication Token Properties**
+
+| Property | Configuration |
+|----------|---------------|
+| Storage mechanism | Browser cookie inaccessible to page scripts |
+| Transmission security | Flagged to prevent transmission over unencrypted connections |
+| Cross-site protection | Configured to prevent the cookie being sent on cross-origin requests |
+| Default expiry | 1 hour |
+| Extended expiry (Remember Me) | 30 days |
+| Signing algorithm | Cryptographic hash-based message authentication (HMAC) |
 
 ### 4.4.3 Controllers Overview
 
-| Controller | Base Path | Endpoint Count |
-|-----------|-----------|---------------|
-| `AuthController` | `/api/v1/auth` | 7 |
-| `AccountController` | `/api/v1/accounts` | 8 |
-| `TransactionController` | `/api/v1/transactions` | 6 |
-| `CategoryController` | `/api/v1/categories` | 5 |
-| `BudgetController` | `/api/v1/budgets` | 7 |
-| `RecurringTransactionController` | `/api/v1/recurring-transactions` | 6 |
-| `TagController` | `/api/v1/tags` | 5 |
-| `DashboardController` | `/api/v1/dashboard` | 1 |
-| `ReportController` | `/api/v1/reports` | 4 |
-| `ImportExportController` | `/api/v1/import-export` | 4 |
-| `CurrencyController` | `/api/v1/currencies` | 8 |
-| `NotificationController` | `/api/v1/notifications` | 10 |
-| `SearchController` | `/api/v1/search` | 7 |
-| `UserSettingsController` | `/api/v1/settings` | 4 |
-| **Total** | | **82 endpoints** |
+| Feature Area | Endpoint Count |
+|-------------|---------------|
+| Authentication and user profile | 7 |
+| Financial accounts | 7 |
+| Transactions | 5 |
+| Categories | 5 |
+| Budgets | 7 |
+| Recurring transactions | 6 |
+| Tags | 5 |
+| Dashboard summary | 1 |
+| Financial reports | 2 |
+| Data import and export | 2 |
+| Currencies | 9 |
+| Notifications | 9 |
+| Advanced search | 7 |
+| User settings | 1 |
+| **Total** | **73 endpoints** |
 
 ---
 
@@ -190,59 +187,54 @@ JWT Cookie Properties (default profile):
 
 ### 4.5.1 Application Layer Structure
 
-```
-src/
-├── main.tsx              ← Entry point; ReactDOM.createRoot
-├── App.tsx               ← Route definitions (React Router v7)
-├── config/
-│   └── api.ts            ← ENDPOINTS constant (centralised URL registry)
-├── lib/
-│   └── api-client.ts     ← Axios instance; CSRF token interceptor; 401 redirect
-├── contexts/
-│   └── AuthContext.tsx   ← Global auth state; useAuth() hook
-├── services/             ← One file per feature; calls apiClient
-│   ├── auth.service.ts
-│   ├── account.service.ts
-│   ├── transaction.service.ts
-│   └── ...
-├── hooks/                ← TanStack Query hooks per feature
-│   ├── useAccounts.ts
-│   ├── useBudgets.ts
-│   └── ...
-├── components/           ← Reusable UI components (35+)
-│   ├── ui/               ← Primitive components (Button, Modal, Table…)
-│   ├── layout/           ← AppLayout, Sidebar, Header
-│   ├── dashboard/
-│   ├── transactions/
-│   └── ...
-├── pages/                ← Route-level page components (14 pages)
-└── store/                ← Zustand stores for client-side global state
+**Figure 4.4 — Frontend Application Layer Diagram**
+
+```mermaid
+graph TD
+    subgraph "Application Structure"
+        Entry["Application Entry\nInitialises providers and routing"]
+        App["Router\nMaps URLs to page components"]
+
+        subgraph "Core Infrastructure"
+            ApiClient["API Client\nHTTP transport\nAutomatic token attachment\nSession expiry handling"]
+            Auth["Authentication Context\nGlobal login state\naccessible from any component"]
+        end
+
+        subgraph "Data Layer"
+            Services["Service Files (15)\nOne per feature area\nMake API calls via API Client"]
+            Hooks["Data Hooks (7)\nCaching and synchronisation\nQuery invalidation on change"]
+        end
+
+        subgraph "Presentation Layer"
+            Pages["Pages (14)\nDashboard, Transactions\nAccounts, Budgets, Reports..."]
+            Components["Components (35+)\nInput controls, tables\ncharts, modals, layout"]
+            Store["UI State Store\nModal visibility\nTemporary UI flags"]
+        end
+    end
+
+    Entry --> App
+    App --> Auth
+    App --> Pages
+    Pages --> Hooks
+    Pages --> Components
+    Hooks --> Services
+    Services --> ApiClient
+    Store --> Components
 ```
 
 ### 4.5.2 Data Flow Pattern
 
-```
-Page Component
-    │ uses React Query hook
-    ▼
-useTransactions() hook    ← TanStack Query (cache, stale-while-revalidate)
-    │ calls service method
-    ▼
-transactionService.getAll()
-    │ uses apiClient
-    ▼
-apiClient (Axios)
-    │ attaches auth_token cookie (browser auto)
-    │ attaches X-XSRF-TOKEN header (interceptor)
-    ▼
-nginx → Spring Boot API → DB → response JSON
-    │
-    ▼
-TanStack Query caches response
-    │ cache invalidated on mutation
-    ▼
-React re-renders UI
-```
+When a user navigates to a page that displays data, the following sequence occurs:
+
+1. The page component requests data through a data hook.
+2. The hook checks whether a sufficiently recent copy is already cached in memory.
+3. If the data is fresh (within 30 seconds), it is returned from the cache immediately — no network request is made.
+4. If the data is stale or absent, the hook calls the appropriate service function.
+5. The service function passes the request to the API client, which attaches the authentication cookie and security token automatically.
+6. The request travels through the web server proxy to the backend application, which queries the database and returns the response.
+7. The response is stored in the cache and returned to the page component, which re-renders with the new data.
+
+When the user creates, modifies, or deletes a record, the hook invalidates the relevant cached queries, triggering a background refresh so that the interface remains consistent with the server's actual state.
 
 ---
 
@@ -250,31 +242,173 @@ React re-renders UI
 
 ### 4.6.1 Entity Relationship Diagram
 
-```
-users ──────────────────────────────────────────────────────────────────┐
-  │                                                                      │
-  ├──< accounts                                                          │
-  │       │                                                              │
-  │       ├──< transactions >──< transaction_tags >──< tags             │
-  │       │       │                                                      │
-  │       │       └── category_id FK                                    │
-  │       │                                                              │
-  │       └──< recurring_transactions                                   │
-  │                                                                      │
-  ├──< categories (self-referencing via parent_id)                       │
-  │                                                                      │
-  ├──< budgets (linked to category)                                      │
-  │                                                                      │
-  ├──< notifications                                                     │
-  │                                                                      │
-  ├──< notification_preferences                                          │
-  │                                                                      │
-  ├──< saved_searches                                                    │
-  │                                                                      │
-  ├──< revoked_tokens                                                    │
-                                                                         │
-currencies (independent reference table, linked to accounts/transactions)│
-account_types (lookup table: CHECKING, SAVINGS, CREDIT_CARD, CASH…)    │
+**Figure 4.5 — Entity Relationship Diagram**
+
+```mermaid
+erDiagram
+    users {
+        bigint id PK
+        varchar username UK
+        varchar email UK
+        varchar password_hash
+        boolean is_locked
+        int failed_attempts
+        timestamp locked_until
+        varchar timezone
+        varchar preferred_currency
+        timestamp created_at
+    }
+    account_types {
+        bigint id PK
+        varchar type_name UK
+    }
+    accounts {
+        bigint id PK
+        bigint user_id FK
+        bigint account_type_id FK
+        varchar account_name
+        varchar currency
+        decimal initial_balance
+        decimal current_balance
+        varchar institution_name
+        boolean is_active
+        boolean include_in_net_worth
+        timestamp created_at
+    }
+    categories {
+        bigint id PK
+        bigint user_id FK
+        bigint parent_id FK
+        varchar name
+        varchar type
+        varchar color_code
+        varchar icon
+        boolean is_system
+        varchar path
+    }
+    transactions {
+        bigint id PK
+        bigint user_id FK
+        bigint account_id FK
+        bigint category_id FK
+        bigint recurring_transaction_id FK
+        bigint transfer_to_account_id FK
+        bigint transfer_transaction_id FK
+        varchar transaction_type
+        decimal amount
+        date transaction_date
+        varchar description
+        varchar notes
+        varchar reference_number
+        boolean is_pending
+        boolean is_reconciled
+        timestamp created_at
+    }
+    tags {
+        bigint id PK
+        bigint user_id FK
+        varchar name UK
+    }
+    transaction_tags {
+        bigint transaction_id FK
+        bigint tag_id FK
+    }
+    budgets {
+        bigint id PK
+        bigint user_id FK
+        bigint category_id FK
+        decimal budget_amount
+        varchar period_type
+        date start_date
+        date end_date
+        int alert_threshold
+        boolean is_active
+    }
+    recurring_transactions {
+        bigint id PK
+        bigint user_id FK
+        bigint account_id FK
+        bigint category_id FK
+        varchar frequency
+        decimal amount
+        date next_occurrence
+        date end_date
+        boolean is_active
+        varchar description
+    }
+    currencies {
+        bigint id PK
+        varchar code UK
+        varchar name
+        varchar symbol
+        decimal exchange_rate
+        boolean is_base
+        boolean is_active
+    }
+    saved_searches {
+        bigint id PK
+        bigint user_id FK
+        varchar name
+        json search_criteria
+        boolean is_default
+    }
+    notifications {
+        bigint id PK
+        bigint user_id FK
+        varchar type
+        varchar title
+        text message
+        boolean is_read
+        varchar priority
+        boolean is_sent
+        timestamp created_at
+    }
+    notification_preferences {
+        bigint id PK
+        bigint user_id FK
+        boolean budget_alerts
+        boolean recurring_reminders
+        boolean system_notifications
+    }
+    revoked_tokens {
+        bigint id PK
+        varchar token_hash UK
+        timestamp revoked_at
+        timestamp expires_at
+    }
+    audit_log {
+        bigint id PK
+        bigint user_id FK
+        varchar entity_type
+        bigint entity_id
+        varchar action
+        json old_values
+        json new_values
+        timestamp created_at
+    }
+
+    users ||--o{ accounts : "owns"
+    users ||--o{ categories : "creates"
+    users ||--o{ transactions : "records"
+    users ||--o{ budgets : "sets"
+    users ||--o{ recurring_transactions : "defines"
+    users ||--o{ tags : "creates"
+    users ||--o{ saved_searches : "saves"
+    users ||--o{ notifications : "receives"
+    users ||--|| notification_preferences : "has"
+
+    accounts ||--o{ transactions : "contains"
+    accounts ||--o{ recurring_transactions : "sources"
+    account_types ||--o{ accounts : "classifies"
+
+    categories ||--o{ transactions : "classifies"
+    categories ||--o{ budgets : "tracks"
+    categories ||--o{ recurring_transactions : "classifies"
+    categories |o--o{ categories : "parent→child"
+
+    transactions ||--o{ transaction_tags : "tagged with"
+    tags ||--o{ transaction_tags : "applied to"
+    recurring_transactions |o--o{ transactions : "generates"
 ```
 
 ### 4.6.2 Database Tables Summary
@@ -312,40 +446,22 @@ account_types (lookup table: CHECKING, SAVINGS, CREDIT_CARD, CASH…)    │
 - **`DECIMAL(15,2)`** for all monetary columns — no floating-point precision loss.
 - **`is_pending`, `is_reconciled`, `is_void`** — lifecycle flags for transaction state.
 
-### 4.6.4 Categories Hierarchical Design
+### 4.6.4 Category Hierarchical Design
 
-```
-categories table:
-  parent_id NULL  → root category (level 0)
-  parent_id = x  → subcategory of x (level 1)
-  path = "1/5"   → materialized path for efficient subtree queries
-  is_system = true → seeded defaults; non-deletable by users
-```
+Categories support a two-level hierarchy — a parent category can have multiple subcategories (for example, "Food" → "Groceries" and "Restaurants"). Each category stores its full ancestor path as a text string alongside the parent reference. This materialised path approach enables efficient subtree queries without recursive processing (Celko, 2004). Categories seeded by the system during initial setup cannot be deleted by users, protecting the integrity of the default classification scheme.
 
-This design supports a two-level hierarchy: **Category → Subcategory**, enabling precise expense tracking (e.g., "Food → Groceries", "Food → Restaurants").
+This design supports precise expense tracking — for example, a budget on "Food" automatically captures spending recorded against any of its subcategories.
 
 ---
 
 ## 4.7 API Design Principles
 
-1. **Resource-oriented URIs:** `/api/v1/{resource}/{id}` — nouns not verbs.
-2. **HTTP verb semantics:** GET (read), POST (create), PUT (replace), PATCH (partial update), DELETE (remove).
-3. **Consistent pagination:** Spring Data `Pageable` with `page`, `size`, `sort` query params.
-4. **Standardised error format:**
-   ```json
-   {
-     "errorCode": 3001,
-     "message": "Transaction not found",
-     "timestamp": "2026-04-01T12:00:00Z",
-     "path": "/api/v1/transactions/999"
-   }
-   ```
-5. **Error code taxonomy:**
-   - `1xxx` — Authentication errors
-   - `2xxx` — Validation errors
-   - `3xxx` — Not-found errors
-   - `4xxx` — Business logic errors
-   - `5xxx` — Server errors
+The REST API follows a set of consistent conventions across all endpoints (Fielding, 2000):
+
+1. **Resource-oriented addresses:** Each endpoint identifies a resource by type and, optionally, identifier — for example, `/api/v1/transactions/{id}`. Verbs are expressed through the HTTP method, not the address.
+2. **Standard HTTP methods:** GET for retrieval, POST for creation, PUT for replacement, and DELETE for removal.
+3. **Consistent paginated responses:** List responses include page number, page size, and total record count so the client can implement navigation without additional requests.
+4. **Standardised error responses:** All errors return the same structure: a numeric error code, a human-readable message, a timestamp, and the request path. Error codes are grouped by category — authentication (1xxx), validation (2xxx), not found (3xxx), business rules (4xxx), and server errors (5xxx).
 
 ---
 
@@ -361,30 +477,24 @@ This design supports a two-level hierarchy: **Category → Subcategory**, enabli
 | CI | `docker-compose.ci.yml` | GitHub Actions integration tests |
 | Production | `docker-compose.prod.yml` | SSL, env secrets, production settings |
 
-### 4.8.2 Nginx Configuration
+### 4.8.2 Web Server Configuration
 
-Nginx serves two roles:
-1. **Static file server:** Serves React build artifacts from `/usr/share/nginx/html`.
-2. **Reverse proxy:** Forwards `/api/*` requests to the Spring Boot backend while preserving the `/api` prefix in the upstream request path.
+The web server in the frontend container serves two roles simultaneously:
 
-```nginx
-location /api {
-    proxy_pass http://backend:8080;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-}
-```
+1. **Static file server:** Delivers the pre-built user interface files to the browser.
+2. **Reverse proxy:** Forwards any request beginning with `/api/` to the backend application container on its internal port, so the browser only ever communicates with a single host and port — simplifying both configuration and CORS handling.
 
 ---
 
 ## 4.9 Summary
 
 This chapter has presented:
+
 - The complete technology stack with rationale for each choice.
 - A three-tier layered architecture (Controller → Service → Repository).
-- The security model: JWT HttpOnly cookies + CSRF double-submit.
+- The security model: token-based authentication in protected browser cookies combined with anti-forgery request tokens.
 - The database schema with 20 Flyway migrations.
-- The frontend layer structure and TanStack Query data flow.
+- The frontend layer structure and data caching flow.
 - The Docker Compose deployment model.
 
 Chapter 5 covers the implementation details of all major components.

@@ -26,6 +26,7 @@ The core problem addressed by this project can be stated as:
 > *There is no freely available, locally-relevant, full-featured web-based personal finance management system that supports Nepali Rupee (NPR) natively, provides multi-account tracking, budget alerts, recurring transactions, and financial reporting in a single secure application.*
 
 Existing solutions either:
+
 1. Require a paid subscription for core functionality (YNAB, Quicken);
 2. Are discontinued or data-privacy–compromised (Mint, shut down in January 2024);
 3. Do not support NPR or local account structures;
@@ -40,30 +41,30 @@ The primary objectives of this project are:
 
 1. **Design and develop** a full-stack web application for personal finance management.
 2. **Implement core financial features:** multi-account management, income/expense/transfer tracking, hierarchical categories, budget management, and recurring transactions.
-3. **Ensure security:** JWT-based authentication with HttpOnly cookies, CSRF protection, and per-user data isolation.
+3. **Ensure security:** Token-based authentication, anti-forgery protection, and strict per-user data isolation.
 4. **Support NPR natively** while providing multi-currency capability.
 5. **Automate routine tasks:** scheduled recurring transactions, budget threshold alerts, and in-app notifications.
 6. **Provide actionable insights:** financial reports with interactive charts.
 7. **Enable data portability:** CSV import/export.
-8. **Deploy via Docker** to make the application accessible on any server or local machine.
+8. **Deploy with minimal effort** to make the application accessible on any server or local machine using a single command.
 9. **Achieve comprehensive test coverage:** unit, integration, and end-to-end tests.
 
 ### 1.3.1 Specific Objectives
 
 | # | Objective | Measurement of Success |
 |---|-----------|----------------------|
-| 1 | User authentication & authorisation | JWT login/logout, account lockout after 5 failures |
-| 2 | Account management | Support ≥ 6 account types; CRUD operations |
-| 3 | Transaction management | INCOME / EXPENSE / TRANSFER with pagination and filters |
-| 4 | Budget tracking | Period-based budgets with configurable alert thresholds |
-| 5 | Recurring transactions | Automated creation via Spring Scheduler |
-| 6 | Category hierarchy | System defaults + user-defined subcategories |
-| 7 | Reports & charts | Interactive Recharts with date range filters |
-| 8 | CSV import/export | Multiple date formats, column name variations |
-| 9 | NPR support | Default currency set to NPR; exchange rates stored |
+| 1 | User authentication and authorisation | Secure login and logout, automatic account lockout after repeated failures |
+| 2 | Account management | Support at least six account types with full create, read, update, and delete operations |
+| 3 | Transaction management | Support income, expense, and transfer types with pagination and multi-criteria filtering |
+| 4 | Budget tracking | Period-based budgets with a configurable alert threshold percentage |
+| 5 | Recurring transactions | Automatically create transactions from templates on a daily schedule |
+| 6 | Category hierarchy | System defaults plus user-defined subcategories |
+| 7 | Reports and charts | Interactive charts with date range filtering |
+| 8 | CSV import and export | Accept multiple date formats and column name conventions from other finance tools |
+| 9 | NPR support | Nepali Rupee as the default system currency |
 | 10 | Notifications | Budget alerts and system notifications |
-| 11 | Containerisation | `docker compose up -d` deploys full stack |
-| 12 | Test coverage | ≥ 150 automated tests across all layers |
+| 11 | Containerisation | Complete application stack deployable with a single command |
+| 12 | Test coverage | At least 150 automated tests across all layers |
 
 ---
 
@@ -71,11 +72,11 @@ The primary objectives of this project are:
 
 ### 1.4.1 In Scope
 
-- **Backend REST API** built with Spring Boot 3.2 / Java 21
-- **Frontend single-page application** built with React 19 / TypeScript 5 / Vite 7
-- **Relational database** with MySQL 8.0 managed through Flyway migrations
-- **Docker-based deployment** (Docker Compose)
-- **Automated testing:** JUnit 5 integration tests, Vitest unit tests, Playwright E2E tests
+- **Backend REST API** built with a modern Java web framework
+- **Frontend single-page application** built with a component-based JavaScript framework
+- **Relational database** managed through incremental, versioned migration scripts
+- **Container-based deployment** enabling consistent setup across different environments
+- **Automated testing:** server-side integration tests, frontend unit tests, and browser-based end-to-end tests
 - **Documentation:** API reference, architecture guide, development guide, deployment guide, user guide, and this academic report
 
 ### 1.4.2 Out of Scope
@@ -95,7 +96,7 @@ This project is significant for several reasons:
 
 1. **Open-source contribution:** Finance Tracker is freely available under an open license, making it accessible to any individual or organisation in Nepal or elsewhere.
 2. **Local relevance:** First-class NPR support positions the tool for immediate adoption in the Nepali market without configuration overhead.
-3. **Modern architecture blueprint:** The layered Spring Boot + React architecture with JWT security, Docker containerisation, and comprehensive testing provides a replicable pattern for future student projects.
+3. **Modern architecture blueprint:** The layered backend-and-frontend architecture, with industry-standard security, container deployment, and comprehensive automated testing, provides a replicable reference pattern for future student projects.
 4. **Financial literacy enablement:** By making spending patterns visible through charts and budget alerts, the system helps users develop better financial habits.
 5. **Academic contribution:** The project demonstrates how enterprise-grade practices (CSRF protection, database migrations, E2E testing, containerisation) can be applied at the student project level.
 

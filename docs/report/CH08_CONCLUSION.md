@@ -11,27 +11,30 @@ This project set out to design and implement a full-stack personal finance manag
 ### 8.1.1 Summary of Achievements
 
 **Technical achievements:**
-- A production-ready REST API with **82 endpoints** across 14 controllers, built with Spring Boot 3.2 / Java 21, secured with JWT + CSRF, and containerised via Docker.
-- A modern single-page application built with React 19 / TypeScript / Vite, employing TanStack Query, React Hook Form + Zod, and Recharts for interactive financial visualisations.
-- A version-controlled relational database with **20 Flyway migrations** creating 15 tables, with NPR as the default currency.
-- **168 automated tests** across three layers (103 backend integration, 18 frontend unit, 47 E2E) running in GitHub Actions CI.
+
+- A production-ready REST API with **73 endpoints** across 14 functional areas, built on a modern Java web framework, secured with industry-standard authentication and anti-forgery protections, and packaged for container deployment.
+- A modern single-page web application employing server-state caching, schema-validated forms, and interactive financial charts for reporting.
+- A version-controlled relational database with **20 incremental migrations** creating 15 tables, with Nepali Rupee (NPR) as the default currency.
+- **168 automated tests** across three layers (103 backend integration, 18 frontend unit, 47 end-to-end browser tests) running automatically on every code change.
 
 **Feature achievements:**
-- Multi-account management (6 types), transaction tracking (INCOME/EXPENSE/TRANSFER), hierarchical categories, budget management with alert thresholds, automated recurring transactions via Spring Scheduler, in-app notifications, CSV import/export, advanced search with saved queries, and multi-currency support.
+
+- Multi-account management (six account types), transaction tracking (income, expense, and transfer), hierarchical categories, budget management with configurable alert thresholds, automated recurring transactions, in-application notifications, CSV import and export, advanced search with saved queries, and multi-currency support.
 
 **Process achievements:**
-- Comprehensive documentation (9 technical documents + this 11-part academic report).
-- Five Docker Compose deployment profiles (standard, dev, demo, CI, production).
-- All security NFRs verified: HttpOnly JWT cookies, CSRF double-submit, BCrypt hashing, account lockout, token revocation, per-user data isolation.
+
+- Comprehensive documentation (nine technical reference documents and this eleven-part academic report).
+- Five distinct deployment environment profiles (development, demonstration, automated testing, staging, production).
+- All security requirements verified: authentication tokens protected from script access, anti-forgery tokens, irreversible password storage, account lockout, token revocation, and per-user data isolation.
 
 ### 8.1.2 Research Questions Answered
 
 | Research Question | Answer |
 |------------------|--------|
-| Can a feature-complete PFM system be built with open-source tools? | ✅ Yes — React 19 + Spring Boot 3.2 + MySQL 8 + Docker |
-| Can NPR be a native first-class currency in a web PFM? | ✅ Yes — V19/V20 migrations set NPR as default |
-| Can enterprise-grade security be applied at student project scale? | ✅ Yes — JWT, CSRF, BCrypt, lockout, token revocation |
-| Can 168 automated tests be maintainable in a student project? | ✅ Yes — with clear base class patterns and CI |
+| Can a feature-complete PFM system be built with open-source tools? | ✅ Yes — all components of the stack are open-source, widely adopted technologies |
+| Can NPR be a native first-class currency in a web PFM? | ✅ Yes — NPR was set as the system default via database migrations |
+| Can enterprise-grade security be applied at student project scale? | ✅ Yes — authentication tokens, anti-forgery protection, account lockout, and token revocation all implemented |
+| Can 168 automated tests be maintainable in a student project? | ✅ Yes — using a shared base class pattern and automated testing on every code change |
 
 ---
 
@@ -44,14 +47,14 @@ This project set out to design and implement a full-stack personal finance manag
 | FR-03 Transaction Management | ✅ Achieved | Atomic transfers, pagination, CSV |
 | FR-04 Category Management | ✅ Achieved | 2-level hierarchy, system defaults |
 | FR-05 Budget Management | ✅ Achieved | Alert threshold, notifications |
-| FR-06 Recurring Transactions | ✅ Achieved | Spring Scheduler, daily processing |
-| FR-07 Notifications | ✅ Exceeded | Budget + recurring + system types |
-| FR-08 Financial Reports | ✅ Achieved | Interactive Recharts, date filters |
-| FR-09 Currency Support | ✅ Exceeded | NPR default, multi-currency table |
+| FR-06 Recurring Transactions | ✅ Achieved | Automated daily processing with notifications |
+| FR-07 Notifications | ✅ Exceeded | Budget, recurring, and system notification types |
+| FR-08 Financial Reports | ✅ Achieved | Interactive charts with date range and category filters |
+| FR-09 Currency Support | ✅ Exceeded | NPR as default; multi-currency framework |
 | FR-10 Advanced Search | ⭐ Bonus | Saved search queries |
-| NFR Security (7 items) | ✅ All verified | Integration tests + manual |
-| NFR Performance | ✅ Observed | <2s on all core pages |
-| NFR Portability | ✅ Achieved | `docker compose up` in ~60s |
+| NFR Security (7 items) | ✅ All verified | Integration tests and manual verification |
+| NFR Performance | ✅ Observed | Under 2s on all core pages |
+| NFR Portability | ✅ Achieved | Single-command deployment in approximately 60 seconds |
 
 ---
 
@@ -60,8 +63,8 @@ This project set out to design and implement a full-stack personal finance manag
 Finance Tracker makes the following contributions:
 
 1. **Open-source NPR-native PFM:** The first open-source, self-hostable, Docker-deployable personal finance application with NPR as the system default currency — filling a genuine gap in the Nepali fintech ecosystem.
-2. **Architecture blueprint:** The three-tier Spring Boot + React architecture, with JWT/CSRF security, Flyway migrations, and Playwright E2E tests, serves as a replicable reference design for future student projects.
-3. **Localisation approach:** The V19/V20 migration pattern for setting regional currency defaults provides a reproducible method for other open-source projects targeting emerging markets.
+2. **Architecture blueprint:** The three-tier layered architecture combining a Java backend, a component-based frontend, and a containerised database — with incremental schema migrations and comprehensive automated testing — serves as a replicable reference design for future student projects.
+3. **Localisation approach:** The two-migration pattern for setting a regional default currency provides a reproducible method for other open-source projects targeting emerging markets.
 
 ---
 

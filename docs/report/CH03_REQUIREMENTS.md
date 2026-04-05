@@ -31,7 +31,7 @@ This chapter formally defines the requirements of the Finance Tracker system. It
 |----|-------------|----------|
 | FR-01.1 | Users shall be able to register with a unique username, email, and password (minimum 12 characters) | Must Have |
 | FR-01.2 | Users shall be able to log in with username/email and password | Must Have |
-| FR-01.3 | The system shall issue a JWT stored in an HttpOnly cookie upon successful login | Must Have |
+| FR-01.3 | The system shall issue a secure authentication token stored in a browser cookie inaccessible to client-side scripts upon successful login | Must Have |
 | FR-01.4 | Users shall be able to log out, revoking the active JWT | Must Have |
 | FR-01.5 | The system shall lock an account for 15 minutes after 5 consecutive failed login attempts | Must Have |
 | FR-01.6 | Users shall be able to change their password | Must Have |
@@ -109,7 +109,7 @@ This chapter formally defines the requirements of the Finance Tracker system. It
 | FR-08.2 | An income vs. expense chart shall be available with monthly breakdown | Must Have |
 | FR-08.3 | A spending-by-category pie/bar chart shall be available | Must Have |
 | FR-08.4 | Reports shall support date range filtering | Must Have |
-| FR-08.5 | Reports shall use interactive Recharts visualisations | Should Have |
+| FR-08.5 | Reports shall include interactive charts with date range and category breakdown | Should Have |
 
 ### FR-09: Currency Support
 
@@ -161,7 +161,63 @@ This chapter formally defines the requirements of the Finance Tracker system. It
 - **Registered User:** A person who has created an account and uses the system for personal finance management.
 - **System Scheduler:** An automated background process that runs recurring tasks.
 
-### 3.5.2 Use Case Summary
+### 3.5.2 Use Case Diagram
+
+**Figure 3.1 — System Use Case Diagram**
+
+```mermaid
+graph TD
+    User(["👤 Registered User"])
+    Scheduler(["⏱️ System Scheduler"])
+
+    subgraph "Finance Tracker System"
+        UC01["UC-01: Register Account"]
+        UC02["UC-02: Login / Logout"]
+        UC03["UC-03: Manage Financial Accounts"]
+        UC04["UC-04: Record Income Transaction"]
+        UC05["UC-05: Record Expense Transaction"]
+        UC06["UC-06: Record Transfer"]
+        UC07["UC-07: Edit / Delete Transaction"]
+        UC08["UC-08: Filter & Search Transactions"]
+        UC09["UC-09: Create Budget"]
+        UC10["UC-10: View Budget Progress"]
+        UC11["UC-11: Receive Budget Alert"]
+        UC12["UC-12: Create Recurring Template"]
+        UC13["UC-13: Auto-Create Recurring Transactions"]
+        UC14["UC-14: View Dashboard Summary"]
+        UC15["UC-15: View Financial Reports"]
+        UC16["UC-16: Export Transactions CSV"]
+        UC17["UC-17: Import Transactions CSV"]
+        UC18["UC-18: Save Search Query"]
+        UC19["UC-19: Change Display Currency"]
+        UC20["UC-20: View & Dismiss Notifications"]
+    end
+
+    User --- UC01
+    User --- UC02
+    User --- UC03
+    User --- UC04
+    User --- UC05
+    User --- UC06
+    User --- UC07
+    User --- UC08
+    User --- UC09
+    User --- UC10
+    User --- UC11
+    User --- UC12
+    User --- UC14
+    User --- UC15
+    User --- UC16
+    User --- UC17
+    User --- UC18
+    User --- UC19
+    User --- UC20
+
+    Scheduler --- UC13
+    Scheduler --- UC11
+```
+
+### 3.5.3 Use Case Summary
 
 **Table 3.3 — Use Case Summary**
 
@@ -193,6 +249,7 @@ This chapter formally defines the requirements of the Finance Tracker system. It
 **Actor:** Registered User  
 **Pre-condition:** User is logged in; source and destination accounts both exist.  
 **Main Flow:**
+
 1. User navigates to "New Transaction" and selects type "Transfer."
 2. User selects source account, destination account, amount, and date.
 3. System creates two linked transaction records:
@@ -209,6 +266,7 @@ This chapter formally defines the requirements of the Finance Tracker system. It
 **Actor:** System Scheduler  
 **Pre-condition:** At least one active recurring transaction template has `next_occurrence <= today`.  
 **Main Flow:**
+
 1. Spring Scheduler triggers daily at midnight (configured via `@Scheduled`).
 2. System queries all active recurring templates where `next_occurrence <= CURRENT_DATE`.
 3. For each template, a new transaction is created using the template's details.
@@ -224,38 +282,64 @@ This chapter formally defines the requirements of the Finance Tracker system. It
 
 ### 3.6.1 Authentication Data Flow
 
-```
-Browser → POST /api/v1/auth/login (username, password)
-         → Spring Security filters → AuthService.login()
-         → BCryptPasswordEncoder.matches()
-         → JwtTokenProvider.generateToken()
-         → ResponseCookie (HttpOnly, Secure, SameSite=Strict)
-         → 200 OK + Set-Cookie: auth_token=<jwt>
-```
+**Figure 3.2 — Authentication Sequence Diagram**
 
-On subsequent requests:
-```
-Browser (auto-sends auth_token cookie) → JwtAuthenticationFilter
-→ JwtTokenProvider.validateToken()
-→ SecurityContext populated with UserPrincipal
-→ Controller method @AuthenticationPrincipal UserPrincipal resolved
+```mermaid
+sequenceDiagram
+    participant Browser as User Browser
+    participant Proxy as Web Proxy
+    participant Backend as Backend Application
+    participant DB as Database
+
+    Browser->>Proxy: POST login credentials
+    Proxy->>Backend: Forward request
+    Backend->>DB: Look up user record
+    DB-->>Backend: User record returned
+    Backend->>Backend: Verify password against stored hash
+    Backend->>Backend: Generate signed authentication token
+    Backend-->>Browser: Success + authentication token set in secure cookie
+
+    Note over Browser,DB: Subsequent authenticated requests
+
+    Browser->>Proxy: Any request (cookie sent automatically)
+    Proxy->>Backend: Forward with authentication cookie
+    Backend->>Backend: Extract and verify authentication token
+    Backend->>DB: Check token has not been revoked
+    DB-->>Backend: Token is valid
+    Backend->>Backend: Identify the requesting user
+    Backend->>Backend: Process the request
 ```
 
 ### 3.6.2 Transaction Creation Data Flow
 
-```
-User fills form → React Hook Form validates (Zod schema)
-→ apiClient.post('/api/v1/transactions', payload)   [adds X-XSRF-TOKEN header]
-→ nginx /api/* proxy → Spring Boot
-→ CSRF filter validates X-XSRF-TOKEN
-→ JwtAuthenticationFilter authenticates user
-→ TransactionController.createTransaction()
-→ TransactionService.createTransaction(userId, request)
-→ TransactionRepository.save(transaction)
-→ AccountService.updateBalance(accountId, amount, type)
-→ TransactionMapper.toResponse(savedTransaction)
-→ 201 Created + TransactionResponse JSON
-→ TanStack Query cache invalidated → UI re-renders with new transaction
+**Figure 3.3 — Transaction Creation Sequence Diagram**
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant Form as Transaction Form
+    participant Client as HTTP Client
+    participant Proxy as Web Proxy
+    participant Security as Security Layer
+    participant Backend as Backend Service
+    participant DB as Database
+
+    U->>Form: Complete transaction details
+    Form->>Form: Validate input on submission
+    Form->>Client: Send validated data
+    Client->>Client: Attach authentication and anti-forgery tokens
+    Client->>Proxy: POST with tokens attached
+    Proxy->>Security: Forward request
+    Security->>Security: Verify authentication and anti-forgery tokens
+    Security->>Backend: Create transaction (user, details)
+    Backend->>DB: Save transaction record
+    Backend->>DB: Update account balance
+    alt Transfer between accounts
+        Backend->>DB: Save linked record for destination account
+        Backend->>DB: Update destination account balance
+    end
+    Backend-->>U: 201 Created + transaction details
+    U->>U: Display updated automatically
 ```
 
 ---
@@ -275,6 +359,7 @@ User fills form → React Hook Form validates (Zod schema)
 ## 3.8 Summary
 
 This chapter has established a comprehensive and traceable set of requirements for the Finance Tracker system. Key highlights:
+
 - 10 functional requirement groups covering authentication, accounts, transactions, categories, budgets, recurring automations, notifications, reports, currency, and search.
 - 17 non-functional requirements ensuring security, performance, maintainability, and portability.
 - 20 documented use cases of which all "Must Have" items were delivered.

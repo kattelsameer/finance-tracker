@@ -81,31 +81,17 @@ Finally, I thank **GitHub** and all AI-assisted coding tools that helped acceler
 
 ## Abstract
 
-**Background:** Digital personal finance management has become increasingly important in Nepal as smartphone penetration grows and digital banking services expand. However, most available finance applications are either too complex, not localised for Nepali financial contexts, or require paid subscriptions for core features.
+**Background:** The growth of digital banking and mobile internet access in Nepal has created an unmet need for personal finance management tools that are free, locally relevant, and suitable for self-hosting. Existing applications are predominantly foreign-developed, subscription-based, and designed around currencies and financial conventions that do not reflect the Nepali context.
 
-**Objective:** This project develops **Finance Tracker**, a full-stack, open-source personal finance management web application that allows users to track income and expenses, manage multiple bank accounts, set budgets, receive automated notifications, and generate financial reports — with first-class support for Nepali Rupee (NPR).
+**Objective:** This project designs, implements, and evaluates Finance Tracker — an open-source, full-stack personal finance management web application with native support for Nepali Rupee (NPR). The system enables individuals to track income and expenditure across multiple accounts, manage budgets, automate recurring transactions, receive in-application notifications, and analyse spending patterns through interactive financial reports.
 
-**Methodology:** The system was developed using an iterative agile approach. The backend was built with Spring Boot 3.2 and Java 21, exposing a RESTful API secured by JWT authentication stored in HttpOnly cookies with CSRF protection. The frontend was developed with React 19, TypeScript 5, Vite 7, and Tailwind CSS 4. MySQL 8 was used as the relational database, with schema changes managed through 20 Flyway migrations. The entire system is containerised with Docker Compose.
+**Methodology:** Development followed an iterative, feature-driven approach in which each functional area progressed through database design, server-side implementation, user interface development, and automated testing before work on the next feature began. The backend exposes a structured REST API secured by industry-standard token-based authentication with anti-forgery protection. The frontend is a component-based single-page application incorporating schema-validated forms and server-state caching for a responsive user experience. Schema changes are managed through twenty incremental, versioned migration scripts, ensuring the database structure is reproducible across all deployment environments. The entire system is packaged for portable container deployment.
 
-**Key Features Implemented:**
-- Multi-account management (Checking, Savings, Credit Card, Cash, Investment, Loan)
-- Income, Expense, and Transfer transaction recording
-- Hierarchical category system with system defaults
-- Budget tracking with configurable alert thresholds
-- Recurring transaction automation via Spring Scheduler
-- Advanced search and saved searches
-- CSV import/export
-- In-app notification system
-- Financial reports with interactive Recharts visualisations
-- NPR as system-default currency with multi-currency support
+**Results:** All twelve originally planned objectives were delivered, with two additional features — advanced search with saved queries and a multi-currency framework — implemented beyond the original scope. The system encompasses seventy-three API endpoints, fifteen database tables, and thirty-five reusable interface components. A suite of 168 automated tests — comprising backend integration tests, frontend unit tests, and browser-based end-to-end tests — executes automatically on every code change. All seven security requirements were verified, and observed response times fell within the two-second threshold defined in the non-functional requirements.
 
-**Testing:** 168 automated tests were written, comprising 103 backend integration tests (JUnit 5 / MockMvc), 18 frontend unit tests (Vitest / React Testing Library), and 47 end-to-end tests (Playwright).
+**Conclusion:** Finance Tracker demonstrates that a secure, feature-complete personal finance management system can be built at student project scale using open-source technologies. The system is well-positioned for community adoption in Nepal and comparable emerging markets, and provides a clear architectural reference for future projects in the domain. Identified avenues for future development include a native mobile application, live exchange rate integration, and direct bank data feed connectivity.
 
-**Results:** All originally planned features were delivered and 2 significant enhancements were added beyond scope. The system achieved 97% alignment with the original specification while extending it with multi-currency, notification, and advanced-search capabilities.
-
-**Conclusion:** Finance Tracker demonstrates that a secure, feature-complete personal finance management system can be built with modern open-source technologies. The project is well-positioned for community adoption in Nepal and similar emerging markets, with clear pathways for future enhancement including mobile applications and bank API integration.
-
-**Keywords:** Personal Finance, Web Application, Spring Boot, React, Nepal, NPR, REST API, JWT Authentication, MySQL, Docker, Budget Tracking, Financial Reports
+**Keywords:** Personal Finance Management, Web Application, Nepal, Nepali Rupee, REST API, Token-Based Authentication, Relational Database, Container Deployment, Budget Tracking, Financial Reporting
 
 ---
 
@@ -129,18 +115,17 @@ Finally, I thank **GitHub** and all AI-assisted coding tools that helped acceler
 | Figure | Caption | Chapter |
 |--------|---------|---------|
 | 4.1 | System Architecture Overview | Ch. 4 |
-| 4.2 | Docker Compose Service Stack | Ch. 4 |
-| 4.3 | Entity Relationship Diagram | Ch. 4 |
+| 4.2 | Application Container Stack | Ch. 4 |
+| 4.3 | Backend Layered Architecture | Ch. 4 |
 | 4.4 | Frontend Application Layers | Ch. 4 |
-| 4.5 | JWT Authentication Flow | Ch. 4 |
-| 5.1 | Flyway Migration Timeline (V1–V20) | Ch. 5 |
-| 5.2 | Backend Package Structure | Ch. 5 |
-| 5.3 | Frontend Component Hierarchy | Ch. 5 |
+| 4.5 | Entity Relationship Diagram | Ch. 4 |
+| 5.1 | Database Migration Timeline (V1–V20) | Ch. 5 |
 | 6.1 | Test Distribution by Type | Ch. 6 |
-| 7.1 | Dashboard — Summary Cards | Ch. 7 |
-| 7.2 | Transactions Page | Ch. 7 |
-| 7.3 | Budget Tracking View | Ch. 7 |
-| 7.4 | Reports — Income vs. Expense Chart | Ch. 7 |
+| 7.1 | Login Page | Ch. 7 |
+| 7.2 | Dashboard Overview | Ch. 7 |
+| 7.3 | Transactions Page | Ch. 7 |
+| 7.4 | Budget Tracking View | Ch. 7 |
+| 7.5 | Financial Reports Page | Ch. 7 |
 
 ---
 
@@ -155,8 +140,8 @@ Finally, I thank **GitHub** and all AI-assisted coding tools that helped acceler
 | 4.1 | Frontend Technology Stack | Ch. 4 |
 | 4.2 | Backend Technology Stack | Ch. 4 |
 | 4.3 | Database Tables Summary | Ch. 4 |
-| 5.1 | Flyway Migrations V1–V20 | Ch. 5 |
-| 5.2 | API Controllers and Endpoint Count | Ch. 5 |
+| 5.1 | Database Migration Scripts V1–V20 | Ch. 5 |
+| 5.2 | API Functional Areas and Endpoint Count | Ch. 5 |
 | 6.1 | Test Coverage Summary | Ch. 6 |
 | 7.1 | Planned vs. Actual Delivery | Ch. 7 |
 

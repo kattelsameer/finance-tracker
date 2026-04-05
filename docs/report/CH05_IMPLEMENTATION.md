@@ -6,32 +6,39 @@
 
 ## 5.1 Introduction
 
-This chapter describes the implementation of Finance Tracker's major components: the database schema, backend API, frontend application, security layer, recurring scheduler, and deployment configuration. Code snippets illustrate key patterns; full source code is available in the project repository.
+This chapter describes how the Finance Tracker system was built, explaining the reasoning and approach behind each major implementation decision. Rather than presenting source code, the focus here is on how the system operates, what principles guided the engineering choices, and what challenges arose during development. The chapter follows the sequence in which work was carried out: database structure first, then server-side logic, then the user interface.
 
 ---
 
 ## 5.2 Development Methodology
 
-Development followed an **iterative approach** with feature branches and pull requests:
+Development followed an **iterative, feature-driven approach**, where each new functional area moved through a consistent four-step sequence before work began on the next:
 
-1. **Database-first:** Each feature began with a Flyway migration defining the schema.
-2. **Backend-first:** Entity → Repository → Service → Controller, verified with integration tests.
-3. **Frontend-last:** Service → Hook → Component → Page, verified with Vitest unit tests and Playwright E2E.
-4. **Documentation:** Docs updated at each milestone.
+1. **Define the data model** — specify what information needs to be stored and how it relates to existing data.
+2. **Implement server-side logic** — write the business rules, calculations, and operations that act on the data.
+3. **Build the user interface** — create screens and forms that expose the underlying logic to the user.
+4. **Verify with tests** — automated tests confirm the feature works correctly before development moves on.
 
-**Tools used:**
-- Git + GitHub for version control and code review.
-- Gradle (backend) and npm (frontend) for build management.
-- Docker Compose for local integration testing of the full stack.
-- IntelliJ IDEA (backend), VS Code (frontend).
+This database-first discipline ensures that the underlying data structure is deliberate and well-formed, rather than retrofitted around hastily written code. All changes to the database schema were managed through numbered migration scripts, providing a clear, auditable history of every structural change made during the project.
+
+**Table 5.1 — Development Tools and Purposes**
+
+| Category | Tool | Purpose |
+|----------|------|---------|
+| Version control | Git and GitHub | Source code history, branching, and peer review |
+| Backend build | Gradle | Dependency management and compilation |
+| Frontend build | npm and Vite | Package management and production bundling |
+| Local integration | Docker Compose | Running the full application stack locally for testing |
+| Backend IDE | IntelliJ IDEA | Java development environment |
+| Frontend IDE | Visual Studio Code | TypeScript and React development environment |
 
 ---
 
 ## 5.3 Database Implementation
 
-### 5.3.1 Flyway Migration Timeline
+### 5.3.1 Database Migration Timeline
 
-**Figure 5.1 — Flyway Migration Timeline V1–V20**
+**Figure 5.1 — Database Migration Timeline V1–V20**
 
 ```
 V1  users
@@ -83,191 +90,72 @@ V20 NPR default for accounts/transactions ────────────�
 | V19 | — | NPR set as system default |
 | V20 | — | NPR applied to existing accounts/transactions |
 
-### 5.3.2 Key Schema Decisions
+### 5.3.2 Key Schema Design Decisions
 
-**Monetary precision:** All financial amounts use `DECIMAL(15,2)` — this supports values up to 999,999,999,999,999.99 with two decimal places, avoiding any floating-point rounding errors.
+**Financial precision:** All monetary amounts are stored in a fixed-point decimal format, supporting values up to fifteen digits with two decimal places. This directly avoids the rounding errors inherent in floating-point representations, which are entirely unsuitable for financial calculations (Goldberg, 1991).
 
-**Soft deletes vs. CASCADE:** Accounts, categories, and tags use `is_active` flags for soft deletion. Transactions use `CASCADE DELETE` from accounts to maintain referential integrity while allowing account removal.
+**Soft deletion:** Accounts, categories, and tags are deactivated rather than permanently removed. This preserves the full history of financial records — a user who deactivates an account can still see all transactions that were associated with it. Permanent removal is reserved for cases where referential integrity must be maintained jointly, such as both sides of a transfer.
 
-**Materialized paths for categories:** The `path` column in `categories` stores the ancestor chain (e.g., `"1/5/12"`), enabling efficient subtree queries without recursive CTEs.
+**Hierarchical category paths:** Each category stores the full chain of its ancestors as a text path, enabling efficient retrieval of an entire category subtree without requiring recursive database queries. This technique — the materialised path pattern (Celko, 2004) — keeps category lookups fast even as the hierarchy grows.
 
 ---
 
 ## 5.4 Backend Implementation
 
-### 5.4.1 Package Structure
+### 5.4.1 Layered Architecture
 
-**Figure 5.2 — Backend Package Structure**
+The server-side application is structured around four clearly separated layers. This architectural pattern, well-established in enterprise software design (Fowler, 2002), ensures that each layer has a single, well-defined responsibility and interacts only with the layer directly adjacent to it:
 
-```
-com.financetracker/
-├── FinanceTrackerApplication.java   ← @SpringBootApplication entry point
-├── config/
-│   ├── SecurityConfig.java          ← Spring Security; JWT filter chain; CSRF
-│   ├── JwtProperties.java           ← @ConfigurationProperties for JWT settings
-│   ├── CorsConfig.java              ← CORS for dev profile (origin: localhost:5173)
-│   ├── OpenApiConfig.java           ← SpringDoc/Swagger configuration
-│   └── SchedulerConfig.java         ← @EnableScheduling
-├── controller/                      ← 14 REST controllers
-├── dto/                             ← Request + Response DTOs with Bean Validation
-├── entity/                          ← 13 JPA entities with @Getter/@Setter (Lombok)
-├── repository/                      ← JpaRepository extensions + JPA Specifications
-├── service/                         ← Business logic (@Transactional)
-├── security/
-│   ├── JwtTokenProvider.java        ← Token generation/validation (HS512)
-│   ├── JwtAuthenticationFilter.java ← OncePerRequestFilter; extracts JWT from cookie
-│   └── UserPrincipal.java           ← Spring Security UserDetails implementation
-├── exception/
-│   ├── GlobalExceptionHandler.java  ← @ControllerAdvice; standardised error format
-│   ├── ApiException.java            ← Custom runtime exception with ErrorCode
-│   └── ErrorCode.java               ← Enum: 1xxx auth, 2xxx validation, 3xxx not-found
-├── mapper/                          ← MapStruct interfaces (entity ↔ DTO)
-└── specification/                   ← JPA Specification builders for dynamic filters
-```
+**Table 5.3 — Backend Application Layers**
 
-### 5.4.2 Entity Design
+| Layer | Responsibility | Isolation Principle |
+|-------|---------------|---------------------|
+| **Controller** | Receives incoming requests, validates input, and returns structured responses | Has no knowledge of database internals |
+| **Service** | Applies business rules and coordinates multi-step operations | Where all decisions and calculations are made |
+| **Repository** | Reads and writes data to the database | Has no knowledge of HTTP or business rules |
+| **Entity** | Represents a database table as a structured data object | Contains no logic, only data shape |
 
-Entities use `@Getter` / `@Setter` from Lombok rather than `@Data`, avoiding broken JPA equals/hashCode. The `Transaction` entity illustrates key patterns:
+This strict separation means that the database access strategy can be changed without affecting business rules, and business rules can be tested without simulating HTTP requests. Supporting modules handle security (authentication filtering and CSRF verification), standardised error responses, and composable query building for complex transaction filter combinations.
 
-```java
-@Entity
-@Table(name = "transactions")
-@Getter
-@Setter
-public class Transaction {
+### 5.4.2 Business Logic and Data Integrity
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+The service layer contains the core intelligence of the system. Several processes illustrate how correctness is enforced throughout the application:
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+**Account balance management:** When a transaction is recorded, the associated account balance is updated within the same operation. The system guarantees that either both the transaction record and the balance change succeed together, or neither takes effect. This property — atomicity — is a fundamental principle of reliable database systems (Gray & Reuter, 1992) and prevents the account from reaching an inconsistent state where a transaction appears but the balance is not updated.
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
+**Transfer transactions:** Recording a transfer between two accounts creates two linked records simultaneously: a debit from the source and a credit to the destination. The two entries are linked so that deleting one automatically removes the other, preventing orphaned records that would distort account balances.
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TransactionType type;
+**User data isolation:** Every database query includes a mandatory filter for the currently authenticated user's identifier. This is enforced architecturally — it is structurally impossible for one user's request to read or modify another user's financial data.
 
-    @Column(nullable = false, precision = 15, scale = 2)
-    private BigDecimal amount;
+**Budget monitoring:** Each time an expense is recorded within a budgeted category, the system recalculates total spending for the current period. If spending crosses the user's configured alert threshold, a notification is generated automatically.
 
-    @Column(name = "transaction_date", nullable = false)
-    private LocalDate transactionDate;
+### 5.4.3 Security Architecture
 
-    // Self-referencing for transfer pairs
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "transfer_transaction_id")
-    private Transaction transferTransaction;
+Security was incorporated from the beginning of development rather than applied retrospectively — a practice consistently advocated by software security frameworks (OWASP, 2021). The principal threats and countermeasures are:
 
-    // ... remaining fields
-}
-```
+**Table 5.4 — Security Threats and Countermeasures**
 
-### 5.4.3 Service Layer Pattern
+| Threat | Countermeasure | Effect |
+|--------|---------------|--------|
+| Session token theft via browser scripts | Token stored in a cookie inaccessible to JavaScript | Page scripts cannot read or copy the token |
+| Cross-site request forgery | Data-modifying requests require a separately issued security token in the header | Forged requests from another site cannot include this token |
+| Automated password-guessing | Account locked for fifteen minutes after five consecutive failures | Brute-force attempts are blocked |
+| Credential exposure if the database is compromised | Passwords stored as irreversible cryptographic hashes | Original passwords cannot be recovered from the database |
+| Token reuse after logout | Logged-out tokens recorded in a server-side blocklist | Captured tokens cannot be replayed |
+| Cross-user data access | User identifier applied structurally to every database query | Data boundaries are enforced by design, not convention |
 
-Services are annotated with `@Service` and `@Transactional` for write operations. Every query is scoped to `userId` to enforce user data isolation:
+Upon a successful login, the server issues a digitally signed authentication token. This token is stored in a special browser cookie that cannot be accessed by any script running on the page, guarding against the most prevalent class of web application attack. The server verifies the token's authenticity and checks it has not been revoked before processing any protected request.
 
-```java
-@Service
-@Transactional(readOnly = true)
-public class TransactionService {
+### 5.4.4 Recurring Transaction Automation
 
-    public Page<TransactionResponse> getTransactions(Long userId,
-            TransactionFilter filter, Pageable pageable) {
-        Specification<Transaction> spec = TransactionSpecification
-            .forUser(userId)           // ← ALWAYS filter by userId
-            .and(TransactionSpecification.withFilter(filter));
+A scheduled background process runs once per day. It inspects all active recurring transaction templates, identifies those whose next scheduled date falls on or before the current date, creates the corresponding transaction records, updates account balances, advances each template's next due date, and generates an in-application notification for the user. Supported frequency options include daily, weekly, fortnightly, monthly, quarterly, and yearly. Calendar edge cases — such as a monthly template originally scheduled for the 31st of a month — are handled correctly by rescheduling to the last valid day of shorter months.
 
-        return transactionRepository.findAll(spec, pageable)
-            .map(transactionMapper::toResponse);
-    }
+### 5.4.5 CSV Data Import and Export
 
-    @Transactional
-    public TransactionResponse createTransaction(Long userId,
-            CreateTransactionRequest request) {
-        // 1. Load user + account (verify ownership)
-        // 2. Create and save transaction
-        // 3. Update account balance
-        // 4. Handle transfer pair if type == TRANSFER
-        // 5. Map and return response
-    }
-}
-```
+To support data portability and migration from other finance tools, the system provides flexible CSV import and export functionality:
 
-### 5.4.4 Security Implementation
-
-**JWT Token Provider** generates tokens signed with HS512:
-
-```java
-public String generateToken(UserDetails userDetails, boolean rememberMe) {
-    long expiration = rememberMe ? REMEMBER_ME_DURATION_MS : jwtProperties.getExpirationMs();
-    return Jwts.builder()
-        .subject(userDetails.getUsername())
-        .issuedAt(new Date())
-        .expiration(new Date(System.currentTimeMillis() + expiration))
-        .signWith(getSigningKey(), Jwts.SIG.HS512)
-        .compact();
-}
-```
-
-**JWT Authentication Filter** extracts the token from the HttpOnly cookie:
-
-```java
-@Override
-protected void doFilterInternal(HttpServletRequest request,
-        HttpServletResponse response, FilterChain filterChain) {
-
-    String token = extractTokenFromCookie(request);  // reads "auth_token" cookie
-    if (token != null && tokenProvider.validateToken(token)) {
-        String tokenHash = tokenProvider.hashToken(token);
-
-        if (!revokedTokenRepository.existsByTokenHash(tokenHash)) {
-            String username = tokenProvider.getUsernameFromToken(token);
-            Long userId = tokenProvider.getUserIdFromToken(token);
-            UserPrincipal userPrincipal = new UserPrincipal(
-                userId,
-                username,
-                null,
-                true,
-                true,
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
-            UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(
-                    userPrincipal, null, userPrincipal.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(auth);
-        }
-    }
-    filterChain.doFilter(request, response);
-}
-```
-
-### 5.4.5 Recurring Transaction Scheduler
-
-A Spring `@Scheduled` task runs daily, finds all due templates, and creates transactions:
-
-```java
-@Scheduled(cron = "0 0 0 * * *")   // midnight daily
-@Transactional
-public void processRecurringTransactions() {
-    LocalDate today = LocalDate.now();
-    List<RecurringTransaction> due = recurringRepo
-        .findByIsActiveTrueAndNextOccurrenceLessThanEqual(today);
-
-    for (RecurringTransaction template : due) {
-        createTransactionFromTemplate(template);
-        advanceNextOccurrence(template);
-        notificationService.createRecurringNotification(template);
-    }
-}
-```
-
-### 5.4.6 CSV Import/Export
-
-The `ImportExportService` supports flexible CSV column name mapping:
+- **Export:** Any filtered transaction view can be downloaded as a comma-separated values file for use in spreadsheet software.
+- **Import:** The import function recognises multiple column naming conventions used by different banks and finance applications.
 
 | Field | Accepted Header Variants |
 |-------|--------------------------|
@@ -280,227 +168,144 @@ The `ImportExportService` supports flexible CSV column name mapping:
 
 Supported date formats: `yyyy-MM-dd`, `MM/dd/yyyy`, `dd/MM/yyyy`, `M/d/yyyy`.
 
-### 5.4.7 Error Handling
+### 5.4.6 Standardised Error Responses
 
-`GlobalExceptionHandler` maps exceptions to standardised error responses:
+All error responses from the system follow a consistent, structured format: a machine-readable numeric error code, a human-readable message, and a timestamp. This predictable structure allows client applications to handle errors programmatically without parsing unstructured text. Error codes are organised by category:
 
-```java
-@ExceptionHandler(ApiException.class)
-public ResponseEntity<ErrorResponse> handleApiException(ApiException ex) {
-    return ResponseEntity.status(ex.getHttpStatus())
-        .body(ErrorResponse.builder()
-            .errorCode(ex.getErrorCode().getCode())
-            .message(ex.getMessage())
-            .timestamp(Instant.now())
-            .build());
-}
-```
+| Code Range | Error Category |
+|-----------|---------------|
+| 1000–1999 | Authentication and authorisation |
+| 2000–2999 | Input validation |
+| 3000–3999 | Resource not found |
+| 4000–4999 | Business rule violations |
+| 5000–5999 | Unexpected server errors |
 
-**Table 5.2 — API Controllers and Endpoint Count**
+### 5.4.7 API Surface
 
-| Controller | Endpoints |
-|-----------|-----------|
-| AuthController | 7 |
-| AccountController | 8 |
-| TransactionController | 6 |
-| CategoryController | 5 |
-| BudgetController | 7 |
-| RecurringTransactionController | 6 |
-| TagController | 5 |
-| DashboardController | 1 |
-| ReportController | 4 |
-| ImportExportController | 4 |
-| CurrencyController | 8 |
-| NotificationController | 10 |
-| SearchController | 7 |
-| UserSettingsController | 4 |
-| **Total** | **82** |
+The backend exposes a total of 73 distinct service endpoints across 14 functional areas:
+
+**Table 5.6 — API Areas and Endpoint Counts**
+
+| Functional Area | Endpoint Count |
+|----------------|---------------|
+| Authentication and user profile | 7 |
+| Financial accounts | 7 |
+| Transactions | 5 |
+| Categories | 5 |
+| Budgets | 7 |
+| Recurring transactions | 6 |
+| Tags | 5 |
+| Dashboard summary | 1 |
+| Financial reports | 2 |
+| Data import and export | 2 |
+| Currencies | 9 |
+| Notifications | 9 |
+| Advanced search | 7 |
+| User settings | 1 |
+| **Total** | **73** |
 
 ---
 
 ## 5.5 Frontend Implementation
 
-### 5.5.1 Application Entry Point
+### 5.5.1 Application Structure
 
-```tsx
-// src/main.tsx
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </QueryClientProvider>
-  </React.StrictMode>
-);
-```
+The user interface is delivered as a single-page application — the browser loads the application once and then dynamically updates the displayed content as the user navigates, without triggering full page reloads. This approach, increasingly standard in modern web development (Mikkonen & Taivalsaari, 2008), produces a more fluid experience resembling a native desktop application.
 
-### 5.5.2 API Client with CSRF Handling
+The application is organised into distinct horizontal layers, each with a limited and well-defined responsibility:
 
-The `ApiClient` class wraps Axios with automatic CSRF token management:
+**Table 5.7 — Frontend Application Layers**
 
-```typescript
-// src/lib/api-client.ts
-class ApiClient {
-  private csrfToken: string | null = null;
+| Layer | Role | Description |
+|-------|------|-------------|
+| **Pages** | Screen-level views | One per major section: Dashboard, Transactions, Budgets, Reports, and others |
+| **Components** | Reusable interface blocks | Charts, data tables, forms, dialogs, and input controls — 35+ in total |
+| **Hooks** | Data coordination | Manage fetching, caching, and synchronisation of server data |
+| **Services** | Network communication | One file per feature area, responsible for making API calls |
+| **API Client** | Shared HTTP transport | Centrally configured to attach authentication and security tokens to every request |
 
-  private setupInterceptors() {
-    this.client.interceptors.request.use(async (config) => {
-      const isMutation = ['post','put','patch','delete']
-        .includes(config.method?.toLowerCase() ?? '');
-      const isAuthRoute = config.url?.includes('auth/login') ||
-                          config.url?.includes('auth/register');
+### 5.5.2 Server Communication and Caching
 
-      if (isMutation && !isAuthRoute) {
-        if (!this.csrfToken) await this.fetchCsrfToken();
-        config.headers['X-XSRF-TOKEN'] = this.csrfToken;
-      }
-      return config;
-    });
-  }
+Communication with the backend is abstracted so that individual interface components never need to handle token management, authentication errors, or retry logic. A shared API client manages these concerns automatically across all requests.
 
-  private async fetchCsrfToken() {
-    const res = await this.client.get<{ token: string }>(ENDPOINTS.CSRF_TOKEN);
-    this.csrfToken = res.data.token;
-  }
-}
-```
+Above this sits a data caching layer that holds recently fetched data in memory. When a component requests the current transaction list, the cache is checked first. If a sufficiently fresh copy exists, it is returned immediately without a network round-trip. If the cached data is older than thirty seconds, a background refresh is triggered whilst the existing data continues to be displayed — a pattern known as stale-while-revalidate (Nottingham, 2010). When the user records a new transaction, the relevant cached datasets are automatically marked stale and refreshed, ensuring the interface remains consistent with the server state.
 
-### 5.5.3 Service Layer
+### 5.5.3 State Management
 
-Each feature has a dedicated service file:
+Different kinds of application state are managed by mechanisms suited to their nature:
 
-```typescript
-// src/services/transaction.service.ts
-export const transactionService = {
-  async getAll(params?: TransactionFilter): Promise<PageResponse<TransactionResponse>> {
-    return apiClient.get<PageResponse<TransactionResponse>>(ENDPOINTS.TRANSACTIONS, { params });
-  },
-  async create(data: CreateTransactionRequest): Promise<TransactionResponse> {
-    return apiClient.post<TransactionResponse>(ENDPOINTS.TRANSACTIONS, data);
-  },
-  async update(id: number, data: UpdateTransactionRequest): Promise<TransactionResponse> {
-    return apiClient.put<TransactionResponse>(`${ENDPOINTS.TRANSACTIONS}/${id}`, data);
-  },
-  async delete(id: number): Promise<void> {
-    return apiClient.delete<void>(`${ENDPOINTS.TRANSACTIONS}/${id}`);
-  },
-};
-```
+- **Server state** — data originating from the backend — is managed by the caching layer described above.
+- **Form state** — data currently being entered by the user — is managed locally within each form component, with immediate validation feedback.
+- **Global interface state** — such as whether a modal dialog is open — is managed by a lightweight global store.
 
-### 5.5.4 TanStack Query Hooks
+This intentional separation prevents the complexity that arises when a single state management solution is required to handle concerns beyond its intended scope (Abramov, 2015).
 
-```typescript
-// src/hooks/useTransactions.ts
-export function useTransactions(filter?: TransactionFilter) {
-  return useQuery({
-    queryKey: ['transactions', filter],
-    queryFn: () => transactionService.getAll(filter),
-    staleTime: 30_000,  // 30 seconds before background refetch
-  });
-}
+### 5.5.4 Form Validation
 
-export function useCreateTransaction() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: transactionService.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['accounts'] });  // balance update
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-    },
-  });
-}
-```
+All user-facing forms implement client-side validation before any data is submitted to the server. Validation rules are defined as structured schemas — declarative specifications of what constitutes valid input — that enforce constraints such as: amounts must be positive numbers; a transaction date is required; a description may not exceed 500 characters.
 
-### 5.5.5 Form Validation with Zod
+These schemas serve two purposes simultaneously: they generate the runtime validation logic that provides immediate feedback to the user, and they define the data types used throughout the frontend codebase — eliminating a category of type-related bugs before the application is run (Pierce, 2002). Validation is also applied independently on the server so that neither layer relies on the other for data integrity.
 
-React Hook Form + Zod provides type-safe, schema-driven form validation:
+### 5.5.5 Financial Visualisation
 
-```typescript
-const transactionSchema = z.object({
-  accountId: z.number({ required_error: 'Account is required' }),
-  type: z.enum(['INCOME', 'EXPENSE', 'TRANSFER']),
-  amount: z.number().positive('Amount must be positive'),
-  transactionDate: z.string().min(1, 'Date is required'),
-  categoryId: z.number().optional(),
-  description: z.string().max(500).optional(),
-});
+The reporting section presents financial data through interactive charts:
 
-type TransactionFormData = z.infer<typeof transactionSchema>;
-```
+- **Income versus expense bar chart:** A month-by-month comparison showing total income and total expenses side by side, making surpluses and deficits immediately visible.
+- **Spending by category:** A horizontal bar chart ranked by total expenditure per category, identifying the user's largest expense areas at a glance.
+- **Net savings trend:** A line chart showing the cumulative difference between income and expenses over the selected time period.
 
-### 5.5.6 Component Architecture
+All charts respond to the date range filter applied in the report controls, and amounts are formatted in the user's selected display currency.
 
-**Figure 5.3 — Frontend Component Hierarchy (Transactions example)**
+### 5.5.6 Component Organisation
 
-```
-TransactionsPage (page)
-  ├── TransactionFilters (filter sidebar/bar)
-  │     └── DateRangePicker, CategorySelect, AccountSelect
-  ├── TransactionTable (data display)
-  │     ├── Table (ui/Table.tsx — generic)
-  │     ├── TransactionRow
-  │     │     └── Badge, CurrencyDisplay
-  │     └── Pagination
-  └── TransactionFormModal (create/edit)
-        ├── Modal (ui/Modal.tsx)
-        ├── Input, Select, Textarea (ui primitives)
-        └── useMutation → transactionService.create/update
-```
+User interface components are organised into functional families:
 
-### 5.5.7 Recharts Financial Visualisations
-
-Income vs. Expense bar chart implemented with Recharts:
-
-```tsx
-<BarChart data={monthlyData} margin={{ top: 20, right: 30, left: 20 }}>
-  <CartesianGrid strokeDasharray="3 3" />
-  <XAxis dataKey="month" />
-  <YAxis tickFormatter={(val) => formatCurrency(val, currency)} />
-  <Tooltip formatter={(val) => formatCurrency(Number(val), currency)} />
-  <Legend />
-  <Bar dataKey="income" fill="#10B981" name="Income" radius={[4, 4, 0, 0]} />
-  <Bar dataKey="expense" fill="#EF4444" name="Expenses" radius={[4, 4, 0, 0]} />
-</BarChart>
-```
+- **Primitive controls:** Consistent building blocks — buttons, text fields, dropdown lists, date pickers, and modal dialogs — used throughout all screens.
+- **Layout components:** Navigation sidebar, page header with notification indicator, and responsive page wrappers.
+- **Feature components:** Higher-level assemblies combining primitives to implement specific functions, such as the transaction table, budget progress card, and category selector.
+- **Report components:** The summary statistics panel, account breakdown table, category breakdown table, and report filter controls.
 
 ---
 
-## 5.6 Demo Data Implementation
+## 5.6 Demonstration Data
 
-For demo/evaluation purposes, Flyway demo migrations (V100–V107 under `db/demo/`) seed:
-- A demo user (`demo` / `Demo123!`)
-- Multiple accounts (Checking, Savings, Credit Card, eSewa Wallet)
-- 90+ sample transactions across 3 months
-- Pre-configured budgets and recurring transactions
-- Realistic NPR amounts (e.g., salary of NPR 80,000, rent NPR 25,000)
+A self-contained demonstration deployment is provided for evaluation purposes. When activated, it automatically populates the database with a realistic dataset representing three months of financial activity for a fictional Nepali household. The demonstration data includes:
+
+- A pre-configured user account (`demo` / `Demo123!`)
+- Multiple financial accounts: a salary bank account, a savings account, a credit card, and a digital wallet
+- Over ninety transactions spread across three months, covering both income and a range of expense categories
+- Pre-configured monthly budgets with limits expressed in Nepali Rupees
+- Active recurring transaction templates representing salary deposits, rent payments, and subscription fees
+
+All amounts use realistic NPR values — for example, a monthly salary of NPR 80,000 and a rent payment of NPR 25,000 — making the charts and reports immediately meaningful in a local context without requiring any manual data entry.
 
 ---
 
-## 5.7 Implementation Challenges & Solutions
+## 5.7 Implementation Challenges and Solutions
 
-| Challenge | Solution |
-|-----------|----------|
-| CSRF token for SPA | Fetch-on-demand before first mutation; cache in ApiClient; refresh on 403 |
-| Transfer atomic balance update | Spring `@Transactional` wraps both account balance updates |
-| Recurring tx next-occurrence logic | Dedicated `FrequencyCalculator` utility; handles BIWEEKLY, QUARTERLY edge cases |
-| Dynamic transaction filtering | JPA Specifications (Criteria API) avoid N+1 and support complex AND/OR predicates |
-| Category hierarchy | Materialized path column + self-referencing `parent_id` FK |
-| NPR formatting | `Intl.NumberFormat` with `currency: 'NPR'` and fallback for environments without NPR support |
+The following challenges arose during development and were resolved through well-established engineering approaches:
+
+**Table 5.8 — Implementation Challenges and Solutions**
+
+| Challenge | Solution Adopted |
+|-----------|-----------------|
+| Protecting browser-based mutation requests from cross-site request forgery | The frontend fetches a dedicated security token once from the server and caches it in the HTTP client, which attaches it automatically to every data-modifying request |
+| Ensuring both accounts in a fund transfer are always updated together | Both transaction records and both balance changes are executed within a single database transaction — all changes succeed or all are rolled back |
+| Calculating correct next-due dates for recurring transactions across different frequency types | A dedicated scheduling calculation handles each frequency independently, including edge cases for fortnightly and quarterly intervals near month or quarter boundaries |
+| Filtering transactions by multiple optional criteria that may be combined in any combination | A composable query approach assembles each active filter independently and combines them, avoiding a large number of fixed query variants |
+| Displaying NPR-formatted amounts correctly across all browser environments | A currency formatting utility uses the operating system's built-in internationalisation support with a graceful fallback where NPR is not natively available |
 
 ---
 
 ## 5.8 Summary
 
-This chapter has covered:
-- Database-first iterative development using Flyway migrations.
-- Spring Boot backend: entity design, service patterns, security, scheduler, and CSV handling.
-- React frontend: API client, service layer, TanStack Query hooks, form validation, and charts.
-- Demo data seeding for evaluation.
-- Key implementation challenges and their solutions.
+This chapter described the implementation of Finance Tracker across its three primary layers:
 
-Chapter 6 covers the testing strategy and results.
+- **Database:** Twenty incremental migration scripts define a fifteen-table schema, with design decisions prioritising financial precision through fixed-point arithmetic, data preservation through soft deletion, and efficient hierarchical category querying.
+- **Backend:** A four-layer architecture enforces clean separation of concerns. Business rules in the service layer govern balance management, transfer atomicity, and budget monitoring. A layered security model addresses the principal threats identified by OWASP. A daily scheduled process automates recurring transactions.
+- **Frontend:** A single-page application with layered data access, schema-validated forms, and interactive financial charts. A caching layer keeps server data current without burdening individual components with network concerns.
+
+A demonstration deployment with realistic Nepali financial data supports project evaluation. Chapter 6 presents the testing strategy and quality assurance outcomes.
 
 ---
 
