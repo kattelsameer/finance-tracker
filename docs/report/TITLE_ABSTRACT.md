@@ -99,9 +99,9 @@ Finally, I thank **GitHub** and all AI-assisted coding tools that helped acceler
 - Financial reports with interactive Recharts visualisations
 - NPR as system-default currency with multi-currency support
 
-**Testing:** 168 automated tests were written, comprising 93 backend integration tests (JUnit 5 / MockMvc), 18 frontend unit tests (Vitest / React Testing Library), and 46 end-to-end tests (Playwright).
+**Testing:** 168 automated tests were written, comprising 103 backend integration tests (JUnit 5 / MockMvc), 18 frontend unit tests (Vitest / React Testing Library), and 47 end-to-end tests (Playwright).
 
-**Results:** All originally planned features were delivered and 5 significant enhancements were added beyond scope. The system achieved 97% alignment with the original specification while extending it with multi-currency, notification, and advanced-search capabilities.
+**Results:** All originally planned features were delivered and 2 significant enhancements were added beyond scope. The system achieved 97% alignment with the original specification while extending it with multi-currency, notification, and advanced-search capabilities.
 
 **Conclusion:** Finance Tracker demonstrates that a secure, feature-complete personal finance management system can be built with modern open-source technologies. The project is well-positioned for community adoption in Nepal and similar emerging markets, with clear pathways for future enhancement including mobile applications and bank API integration.
 

@@ -100,23 +100,25 @@ All endpoints are prefixed with `/api/v1`. Authentication required (JWT cookie) 
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| POST | `/import/csv` | ✅ | Import transactions from CSV file |
-| GET | `/export/transactions/csv` | ✅ | Export transactions to CSV (with filters) |
+| POST | `/import-export/import/csv` | ✅ | Import transactions from CSV file |
+| GET | `/import-export/export/csv` | ✅ | Export transactions to CSV (date range via `startDate` and `endDate`) |
 
 ### A.10 Currency Endpoints
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | GET | `/currencies` | ✅ | List all currencies with exchange rates |
-| GET | `/currencies/convert` | ✅ | Convert amount between currencies |
+| POST | `/currencies/convert` | ✅ | Convert amount between currencies (request body: `{amount, fromCurrency, toCurrency}`) |
 
 ### A.11 Notification Endpoints
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | GET | `/notifications` | ✅ | List notifications (paginated, by type) |
-| PUT | `/notifications/{id}/read` | ✅ | Mark notification as read |
-| PUT | `/notifications/mark-all-read` | ✅ | Mark all notifications as read |
+| GET | `/notifications/unread` | ✅ | List unread notifications |
+| GET | `/notifications/unread/count` | ✅ | Get unread notification count |
+| PATCH | `/notifications/{id}/read` | ✅ | Mark notification as read |
+| PATCH | `/notifications/read-all` | ✅ | Mark all notifications as read |
 | DELETE | `/notifications/{id}` | ✅ | Delete notification |
 
 ### A.12 Search Endpoints
@@ -129,10 +131,9 @@ All endpoints are prefixed with `/api/v1`. Authentication required (JWT cookie) 
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/settings` | ✅ | Get user settings |
-| PUT | `/settings` | ✅ | Update user settings |
-| GET | `/settings/notification-preferences` | ✅ | Get notification preferences |
-| PUT | `/settings/notification-preferences` | ✅ | Update notification preferences |
+| POST | `/settings/currency-change` | ✅ | Change user's default currency |
+| GET | `/notifications/preferences` | ✅ | Get notification preferences |
+| PUT | `/notifications/preferences` | ✅ | Update notification preferences |
 
 **Total: 55 documented endpoints** (82 including all controller variants)
 
