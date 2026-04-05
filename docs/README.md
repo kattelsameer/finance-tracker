@@ -1,7 +1,7 @@
 # Finance Tracker - Documentation
 
 > **Version**: 1.0.0  
-> **Last Updated**: December 3, 2025  
+> **Last Updated**: March 18, 2026  
 > **Status**: Production Ready
 
 Welcome to the comprehensive documentation for the Finance Tracker application. This directory contains all technical and user documentation organized by category.
@@ -35,18 +35,18 @@ docs/
 │
 ├── architecture/                          # System architecture
 │   ├── ARCHITECTURE.md                    # High-level architecture
-│   └── DATABASE.md                        # Database schema (17 migrations)
+│   └── DATABASE.md                        # Database schema (20 migrations)
 │
 ├── api/                                   # API documentation
 │   └── API_REFERENCE.md                   # All 73+ REST endpoints
 │
 ├── development/                           # Development guides
 │   ├── DEVELOPMENT_GUIDE.md               # Local setup and workflow
-│   ├── FRONTEND_GUIDE.md                  # React development (13 pages, 35+ components)
-│   └── BACKEND_GUIDE.md                   # Spring Boot development (13 controllers)
+│   ├── FRONTEND_GUIDE.md                  # React development (14 pages, 35+ components)
+│   └── BACKEND_GUIDE.md                   # Spring Boot development (14 controllers)
 │
 ├── testing/                               # Testing documentation
-│   └── TESTING_GUIDE.md                   # 157 tests (93 backend + 18 frontend + 46 E2E)
+│   └── TESTING_GUIDE.md                   # 168 tests (103 backend + 18 frontend + 47 E2E)
 │
 └── deployment/                            # Deployment guides
     └── DEPLOYMENT.md                      # Docker Compose deployment
@@ -106,7 +106,7 @@ Start with the **[User Guide](USER_GUIDE.md)** to learn how to use all features:
 | | MySQL | 8.0 |
 | | Flyway | 10.x |
 | **Testing** | JUnit 5 | 5.x |
-| | Vitest | 3.2.4 |
+| | Vitest | 4.0.16 |
 | | Playwright | 1.57.0 |
 | **Deployment** | Docker | 24.x+ |
 | | Docker Compose | 2.x+ |
@@ -156,18 +156,18 @@ For complete feature documentation, see [User Guide](USER_GUIDE.md).
 
 | Metric | Count |
 |--------|-------|
-| **Backend Controllers** | 13 |
+| **Backend Controllers** | 14 |
 | **REST API Endpoints** | 73+ |
 | **Database Tables** | 15 |
-| **Flyway Migrations** | 17 |
-| **Frontend Pages** | 13 |
+| **Flyway Migrations** | 20 |
+| **Frontend Pages** | 14 |
 | **React Components** | 35+ |
-| **Service Files** | 13 |
-| **Custom Hooks** | 6 |
-| **Backend Tests** | 93 |
+| **Service Files** | 15 |
+| **Custom Hooks** | 7 |
+| **Backend Tests** | 103 |
 | **Frontend Unit Tests** | 18 |
-| **E2E Tests** | 46 |
-| **Total Test Coverage** | 157 tests |
+| **E2E Tests** | 47 |
+| **Total Test Coverage** | 168 tests |
 
 For deviation analysis, see [Project Deviation Report](PROJECT_DEVIATION_REPORT.md).
 
@@ -279,6 +279,6 @@ See root directory for license information.
 
 ---
 
-**Last Updated**: December 3, 2025  
+**Last Updated**: March 18, 2026  
 **Documentation Version**: 1.0.0  
 **Project Status**: ✅ Production Ready

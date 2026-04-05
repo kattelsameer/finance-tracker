@@ -1,7 +1,7 @@
 # Finance Tracker User Guide
 
 > **Version**: 1.0.0  
-> **Last Updated**: December 4, 2025
+> **Last Updated**: March 18, 2026
 
 Welcome to Finance Tracker! This guide documents implemented features and how to navigate them.
 
@@ -34,7 +34,7 @@ Welcome to Finance Tracker! This guide documents implemented features and how to
 3. Fill in your details:
    - **Username**: Your unique username (3-20 characters)
    - **Email**: Your email address
-   - **Password**: Must be at least 8 characters
+   - **Password**: Must be at least 12 characters (with uppercase, lowercase, digit, and special character)
    - **Display Name**: How you want to be addressed
 4. Click **"Create Account"**
 5. You'll be automatically logged in
@@ -619,5 +619,5 @@ Need assistance?
 
 ---
 
-**Last Updated**: December 4, 2025  
+**Last Updated**: March 18, 2026  
 **Document Version**: 1.0.0

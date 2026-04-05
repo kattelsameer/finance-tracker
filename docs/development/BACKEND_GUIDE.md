@@ -1,7 +1,7 @@
 # Backend Development Guide
 
 > **Version**: 1.0.0  
-> **Last Updated**: December 4, 2025  
+> **Last Updated**: March 18, 2026  
 > **Audience**: Backend Developers
 
 ---
@@ -12,7 +12,7 @@
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Stack \& Architecture](#stack--architecture)
-    - [Controllers (13)](#controllers-13)
+    - [Controllers (14)](#controllers-14)
     - [DTO Pattern](#dto-pattern)
   - [Security (JWT + CSRF)](#security-jwt--csrf)
   - [Error Handling](#error-handling)
@@ -35,8 +35,19 @@ This document describes the Spring Boot 3.2.x + Java 21 backend of Finance Track
 - Spring Boot 3.2.x, Java 21
 - JPA/Hibernate with MySQL (dev/test profiles as in `copilot-instructions.md`)
 - Layered architecture: Controller → Service → Repository → Entity
+
+```mermaid
+graph TD
+    Client["HTTP Client"] -->|REST Request| Ctrl["Controller Layer<br/>14 controllers<br/>Validation, Auth"]
+    Ctrl --> Svc["Service Layer<br/>17 services<br/>Business logic, @Transactional"]
+    Svc --> Repo["Repository Layer<br/>JPA interfaces<br/>User-scoped queries"]
+    Repo --> DB["MySQL / H2<br/>15 tables, 20 migrations"]
+    Ctrl -.->|DTO mapping| DTO["DTOs<br/>Request / Response objects"]
+    Svc -.->|Entity| Entity["JPA Entities<br/>13 entity classes"]
+```
+
 - Package layout:
-  - `controller/` (13 controllers)
+  - `controller/` (14 controllers)
   - `service/` (business logic)
   - `repository/` (Spring Data JPA interfaces)
   - `entity/` (JPA entities)
@@ -46,7 +57,7 @@ This document describes the Spring Boot 3.2.x + Java 21 backend of Finance Track
   - `specification/` (query specifications for filtering/search)
   - `config/` (app-level configuration)
 
-### Controllers (13)
+### Controllers (14)
 
 Located in `backend/src/main/java/com/financetracker/controller/`:
 
@@ -63,6 +74,7 @@ Located in `backend/src/main/java/com/financetracker/controller/`:
 - `SearchController.java`
 - `TagController.java`
 - `TransactionController.java`
+- `UserSettingsController.java`
 
 Controllers follow a standardized pattern: inject `@AuthenticationPrincipal UserPrincipal` to get `userId`, validate requests with DTOs, delegate to services, and return typed responses.
 
@@ -104,7 +116,7 @@ public ResponseEntity<TransactionResponse> create(
 ## Flyway Migrations
 
 - Location: `backend/src/main/resources/db/migration/`
-- Total: 17 files (`V1`–`V17`)
+- Total: 20 files (`V1`–`V20`)
 - Examples include:
   - `V1__create_users_table.sql`
   - `V5__create_transactions_table.sql`
@@ -129,7 +141,7 @@ Rules:
 Example: Adding Savings Goals API (`/api/v1/goals`).
 
 1. Create entities under `entity/Goal.java` with proper relationships.
-2. Add Flyway migration: `V18__create_goals_table.sql` defining schema.
+2. Add Flyway migration: `V21__create_goals_table.sql` defining schema.
 3. Define DTOs in `dto/goal/` (`CreateGoalRequest`, `GoalResponse`, `UpdateGoalRequest`) with validation.
 4. Add repository: `repository/GoalRepository.java` with user-scoped queries (e.g., `findAllByUserId`).
 5. Implement service: `service/GoalService.java` with `@Transactional` for writes and business rules.
@@ -170,7 +182,7 @@ public class GoalController {
 ```java
 @Test
 void testEndpoint() throws Exception {
-  Cookie authCookie = registerAndLogin("user", "user@test.com", "password");
+  Cookie authCookie = registerAndLogin("user", "user@test.com", "SecureP@ssw0rd!");
   mockMvc.perform(get("/api/v1/endpoint").cookie(authCookie))
       .andExpect(status().isOk());
 }

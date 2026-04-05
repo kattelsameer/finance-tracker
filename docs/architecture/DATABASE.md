@@ -1,7 +1,7 @@
 # Finance Tracker - Database Documentation
 
 > **Version**: 1.0.0  
-> **Last Updated**: December 3, 2025  
+> **Last Updated**: March 18, 2026  
 > **Database**: MySQL 8.0  
 > **Migration Tool**: Flyway 10.x
 
@@ -31,7 +31,7 @@ The Finance Tracker database uses **MySQL 8.0** with **Flyway** for version-cont
 - **Primary Keys**: BIGINT AUTO_INCREMENT
 - **Timestamps**: Automatic created_at/updated_at
 
-**Total Migrations**: 17 (V1-V17)  
+**Total Migrations**: 20 (V1-V20)  
 **Total Tables**: 14 core tables + 1 junction table + Flyway metadata
 
 ---
@@ -57,8 +57,11 @@ The Finance Tracker database uses **MySQL 8.0** with **Flyway** for version-cont
 | V15 | `V15__create_saved_searches_table.sql` | User-saved search filters | Enhancement |
 | V16 | `V16__create_notifications_table.sql` | In-app notifications | Enhancement |
 | V17 | `V17__create_notification_preferences_table.sql` | User notification settings | Enhancement |
+| V18 | `V18__add_additional_currencies.sql` | Additional currency support | Enhancement |
+| V19 | `V19__set_npr_as_default_currency.sql` | Set NPR as system default currency | Enhancement |
+| V20 | `V20__set_npr_as_default_account_transaction_currency.sql` | Set NPR default for accounts and transactions | Enhancement |
 
-**Deviation from Plan**: Original README.md planned 12 migrations (V1-V12), but 5 additional migrations were added for enhanced features (currencies, saved searches, notifications).
+**Deviation from Plan**: Original README.md planned 12 migrations (V1-V12), but 8 additional migrations were added for enhanced features (currencies, saved searches, notifications, NPR default currency).
 
 ---
 
@@ -77,7 +80,8 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     display_name VARCHAR(100),
-    default_currency CHAR(3) DEFAULT 'USD',
+    default_currency CHAR(3) DEFAULT 'NPR',
+    secondary_currency CHAR(3) DEFAULT NULL,
     timezone VARCHAR(50) DEFAULT 'UTC',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -95,7 +99,8 @@ CREATE TABLE users (
 - `password_hash`: BCrypt hashed password (cost factor 12)
 - `failed_login_attempts`: Account lockout tracking (max 5 attempts)
 - `locked_until`: Temporary account lock (15 minutes)
-- `default_currency`: User's preferred currency (3-letter ISO code)
+- `default_currency`: User's preferred currency (3-letter ISO code); defaults to `NPR` (Nepalese Rupee) after migration V19
+- `secondary_currency`: Optional secondary display currency (added by V19); display-only, no data stored in this currency
 
 ---
 
@@ -156,7 +161,7 @@ CREATE TABLE accounts (
 **Key Fields**:
 
 - `balance`: Current account balance (calculated from transactions)
-- `currency`: Account currency (defaults to USD)
+- `currency`: Account currency (originally defaults to USD; changed to `NPR` by migration V20)
 - `account_number_last4`: Last 4 digits for identification (optional)
 
 ---
@@ -560,24 +565,68 @@ CREATE TABLE notification_preferences (
 
 ## Table Relationships
 
-```
-users (1) ───── (M) accounts
-  │                 │
-  │                 └── (M) transactions ── (M) tags (via transaction_tags)
-  │                           │
-  ├─── (M) categories ────────┘
-  │         │
-  │         └── (M) budgets
-  │
-  ├─── (M) recurring_transactions
-  ├─── (M) tags
-  ├─── (M) saved_searches
-  ├─── (M) notifications
-  └─── (1) notification_preferences
+```mermaid
+erDiagram
+    users ||--o{ accounts : "has many"
+    users ||--o{ categories : "has many"
+    users ||--o{ tags : "has many"
+    users ||--o{ recurring_transactions : "has many"
+    users ||--o{ saved_searches : "has many"
+    users ||--o{ notifications : "has many"
+    users ||--|| notification_preferences : "has one"
 
-account_types (1) ───── (M) accounts
+    accounts ||--o{ transactions : "has many"
+    categories ||--o{ transactions : "categorizes"
+    categories ||--o{ budgets : "tracked by"
+    categories ||--o{ categories : "parent/child"
 
-currencies (referenced by accounts.currency, transactions.currency)
+    transactions }o--o{ tags : "tagged via transaction_tags"
+    accounts ||--o{ recurring_transactions : "source"
+
+    account_types ||--o{ accounts : "defines type"
+    currencies ||--o{ accounts : "currency"
+    currencies ||--o{ transactions : "currency"
+
+    users {
+        bigint id PK
+        varchar username
+        varchar email
+        varchar password_hash
+    }
+    accounts {
+        bigint id PK
+        bigint user_id FK
+        bigint account_type_id FK
+        varchar currency FK
+        decimal balance
+    }
+    transactions {
+        bigint id PK
+        bigint account_id FK
+        bigint category_id FK
+        varchar currency FK
+        decimal amount
+        date transaction_date
+        enum type
+    }
+    categories {
+        bigint id PK
+        bigint user_id FK
+        bigint parent_category_id FK
+        enum category_type
+        boolean is_system
+    }
+    budgets {
+        bigint id PK
+        bigint category_id FK
+        decimal amount
+        enum period_type
+    }
+    tags {
+        bigint id PK
+        bigint user_id FK
+        varchar tag_name
+    }
 ```
 
 ---
@@ -658,7 +707,7 @@ VALUES
 
 **Database Highlights:**
 
-- ✅ **17 Flyway migrations** (5 more than originally planned)
+- ✅ **20 Flyway migrations** (8 more than originally planned)
 - ✅ **15 tables** (14 core + 1 junction table)
 - ✅ **Full user data isolation** via foreign keys
 - ✅ **Hierarchical categories** with parent/child relationships
@@ -672,5 +721,5 @@ VALUES
 
 **Deviations from Plan:**
 
-- Added V13-V17 for currencies, saved searches, notifications
+- Added V13-V20 for currencies, saved searches, notifications, and NPR default currency
 - No changes to original V1-V12 structure

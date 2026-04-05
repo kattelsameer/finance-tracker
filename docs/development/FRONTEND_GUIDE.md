@@ -1,7 +1,7 @@
 # Frontend Development Guide
 
 > **Version**: 1.0.0  
-> **Last Updated**: December 4, 2025  
+> **Last Updated**: March 18, 2026  
 > **Audience**: Frontend Developers
 
 ---
@@ -31,7 +31,7 @@ This document describes the React/TypeScript frontend of Finance Tracker, reflec
 
 ### Pages
 
-There are 13 pages:
+There are 14 pages (12 main + 2 auth):
 
 - `pages/AccountsPage.tsx`
 - `pages/AdvancedSearchPage.tsx`
@@ -46,6 +46,46 @@ There are 13 pages:
 - `pages/TagsPage.tsx`
 - `pages/TransactionsPage.tsx`
 - `pages/auth/LoginPage.tsx`, `pages/auth/RegisterPage.tsx` (auth group)
+
+### Routing Structure
+
+Routes are defined as top-level siblings in `App.tsx`. `/login` and `/register` are public, while `/` wraps all protected pages via `ProtectedRoute`:
+
+```mermaid
+graph TD
+    Routes["&lt;Routes&gt;"]
+    Login["/login → LoginPage<br/>(public)"]
+    Register["/register → RegisterPage<br/>(public)"]
+    Protected["/ → ProtectedRoute + AppLayout"]
+    Dash["index → DashboardPage"]
+    Acct["/accounts → AccountsPage"]
+    Txn["/transactions → TransactionsPage"]
+    Search["/search → AdvancedSearchPage"]
+    Recur["/recurring-transactions"]
+    IE["/import-export"]
+    Cat["/categories"]
+    Tags["/tags"]
+    Budgets["/budgets"]
+    Reports["/reports"]
+    Settings["/settings"]
+    Wildcard["path='*' → Navigate to /"]
+
+    Routes --> Login
+    Routes --> Register
+    Routes --> Protected
+    Routes --> Wildcard
+    Protected --> Dash
+    Protected --> Acct
+    Protected --> Txn
+    Protected --> Search
+    Protected --> Recur
+    Protected --> IE
+    Protected --> Cat
+    Protected --> Tags
+    Protected --> Budgets
+    Protected --> Reports
+    Protected --> Settings
+```
 
 ### Components
 
@@ -65,7 +105,7 @@ The repo contains 35+ React components across the above folders. Common layout a
 All API calls go through service modules using a shared `apiClient`:
 
 - Location: `src/services/*.service.ts`
-- Examples: `account.service.ts`, `auth.service.ts`, `budget.service.ts`, `category.service.ts`, `currency.service.ts`, `dashboard.service.ts`, `import-export.service.ts`, `notification.service.ts`, `recurring-transaction.service.ts`, `report.service.ts`, `search.service.ts`, `tag.service.ts`, `transaction.service.ts` (13 total)
+- Examples: `account.service.ts`, `auth.service.ts`, `budget.service.ts`, `category.service.ts`, `currency.service.ts`, `dashboard.service.ts`, `exchange-rate.service.ts`, `import-export.service.ts`, `notification.service.ts`, `recurring-transaction.service.ts`, `report.service.ts`, `search.service.ts`, `settings.service.ts`, `tag.service.ts`, `transaction.service.ts` (15 total)
 - `apiClient`: `src/lib/api-client.ts` handles base URL (`VITE_API_BASE_URL`), cookies, and CSRF interceptor as documented in `docs/api/API_REFERENCE.md` and `copilot-instructions.md`.
 
 Service example pattern:
@@ -97,7 +137,7 @@ export const accountService = {
 Feature hooks encapsulate fetching/mutations via React Query:
 
 - Location: `src/hooks/`
-- Available hooks: `useAccounts.ts`, `useAuth.ts`, `useBudgets.ts`, `useCategories.ts`, `useDashboard.ts`, `useTransactions.ts`
+- Available hooks: `useAccounts.ts`, `useAuth.ts`, `useBudgets.ts`, `useCategories.ts`, `useDashboard.ts`, `useDebounce.ts`, `useTransactions.ts`
 
 Typical pattern:
 
@@ -174,7 +214,7 @@ Follow this step-by-step flow to add a feature (e.g., Savings Goals):
 
 - Backend sets HttpOnly cookie `auth_token` on login; do not attempt to read it in the browser.
 - CSRF handled via axios interceptor (`X-XSRF-TOKEN` automatically added).
-- Password policy enforced server-side: min 8 chars, includes uppercase, lowercase, digit, and one special from `@$!%*?&`.
+- Password policy enforced server-side: min 12 chars, includes uppercase, lowercase, digit, and one special from `@$!%*?&`.
 
 ## Environment Configuration
 
