@@ -6,7 +6,7 @@
 
 ## 4.1 Introduction
 
-This chapter documents the architectural decisions, system diagrams, database design, and technology choices that form the foundation of Finance Tracker. The design follows a **three-tier layered architecture** with a clear separation between presentation, business logic, and data layers, all deployed as Docker containers.
+This chapter presents the architectural decisions, system diagrams, database design, and technology choices for Finance Tracker. The system follows a three-tier layered architecture with a clear separation between presentation, business logic, and data layers, deployed as Docker containers.
 
 ---
 
@@ -18,19 +18,19 @@ This chapter documents the architectural decisions, system diagrams, database de
 
 | Technology | Version | Justification |
 |------------|---------|---------------|
-| **React** | 19.2.0 | Industry-leading component framework for building interactive user interfaces |
-| **TypeScript** | 5.9.3 | Typed superset of JavaScript; catches data shape errors at development time |
-| **Vite** | 7.2.4 | Modern build tool providing fast development refresh and optimised production output |
-| **Tailwind CSS** | 4.1.17 | Utility-based styling system enabling consistent, responsive design without custom CSS |
-| **React Router** | 7.9.6 | Client-side routing for the single-page application navigation model |
-| **TanStack Query** | 5.90.16 | Server-state management with built-in caching, background synchronisation, and deduplication |
-| **React Hook Form** | 7.70.0 | Performant form state management with minimal component re-rendering |
-| **Zod** | 4.3.4 | Schema-first validation library; validates both at runtime and generates TypeScript types |
-| **Recharts** | 3.5.0 | Composable, declarative charting library for financial visualisations |
-| **Axios** | 1.13.2 | HTTP client with request and response interceptor support for automated token handling |
-| **Zustand** | 5.0.8 | Lightweight global state management for UI-level shared state |
-| **Lucide React** | 0.562.0 | Consistent, accessible icon library with minimal bundle footprint |
-| **date-fns** | 4.1.0 | Modular date manipulation library covering all required formatting and calculation needs |
+| **React** | 19.2.0 | Component framework with strong TypeScript support; the most widely adopted option for SPAs at the time of development |
+| **TypeScript** | 5.9.3 | Typed superset of JavaScript; catches data shape errors at compile time rather than at runtime |
+| **Vite** | 7.2.4 | Build tool with hot-module replacement under 50ms and optimised production bundling |
+| **Tailwind CSS** | 4.1.17 | Utility-first CSS framework; produces consistent, responsive layouts without maintaining a custom CSS codebase |
+| **React Router** | 7.9.6 | De facto routing library for React SPAs; handles client-side navigation without full page reloads |
+| **TanStack Query** | 5.90.16 | Server-state manager with automatic caching, background refetching, and request deduplication |
+| **React Hook Form** | 7.70.0 | Form library that minimises re-renders; validates against Zod schemas via the official resolver |
+| **Zod** | 4.3.4 | Schema validation library; definitions serve as both runtime validators and TypeScript type sources |
+| **Recharts** | 3.5.0 | Declarative SVG charting library built on D3; chosen for its composable API and React integration |
+| **Axios** | 1.13.2 | HTTP client with request/response interceptor support; used to attach CSRF tokens automatically |
+| **Zustand** | 5.0.8 | Minimal global state library (< 1 kB); used for UI-level shared state that does not belong in server state |
+| **Lucide React** | 0.562.0 | SVG icon library with tree-shaking support; adds no runtime overhead for unused icons |
+| **date-fns** | 4.1.0 | Tree-shakeable date library; covers all date formatting, parsing, and arithmetic operations needed |
 
 ### 4.2.2 Backend Stack
 
@@ -38,16 +38,16 @@ This chapter documents the architectural decisions, system diagrams, database de
 
 | Technology | Version | Justification |
 |------------|---------|---------------|
-| **Spring Boot** | 3.2.5 | Widely-adopted Java web application framework with comprehensive auto-configuration |
-| **Spring Security** | 6.x | Enterprise-grade security framework; selected for its robust JWT filter chain and CSRF support |
-| **Spring Data JPA** | 3.2.x | Data access abstraction layer with built-in pagination and dynamic query support |
-| **Hibernate** | 6.x | Object-relational mapper; eliminates most handwritten SQL for standard operations |
-| **MySQL** | 8.0 | Proven, ACID-compliant relational database management system |
-| **Flyway** | 10.x | Version-controlled incremental database migration tool |
-| **Lombok** | 1.18.30 | Annotation-based code generation to reduce repetitive boilerplate in entity classes |
-| **JJWT** | 0.12.5 | Authentication token generation and validation library |
-| **BCrypt** | Spring Security built-in | Industry-standard adaptive password hashing algorithm |
-| **Gradle** | 8.x | Flexible build system and dependency management tool |
+| **Spring Boot** | 3.2.5 | Java application framework with auto-configuration for web, security, JPA, and scheduling; reduces manual wiring |
+| **Spring Security** | 6.x | Security framework used for its JWT filter chain, CSRF token management, and method-level access control |
+| **Spring Data JPA** | 3.2.x | Repository abstraction providing pagination, sorting, and Specification-based dynamic query composition |
+| **Hibernate** | 6.x | JPA implementation; handles object-relational mapping and eliminates handwritten SQL for standard CRUD operations |
+| **MySQL** | 8.0 | ACID-compliant RDBMS; `DECIMAL(15,2)` support for monetary precision and window functions for reporting queries |
+| **Flyway** | 10.x | Schema migration tool; version-controlled SQL scripts applied in order on startup |
+| **Lombok** | 1.18.30 | Annotation processor generating getters, setters, builders, and constructors from annotations |
+| **JJWT** | 0.12.5 | JWT generation and validation; signs tokens with HMAC-SHA256 |
+| **BCrypt** | Spring Security built-in | Adaptive password hashing algorithm with configurable work factor (cost 10) |
+| **Gradle** | 8.x | Build system managing compilation, test execution, and dependency resolution |
 
 ---
 

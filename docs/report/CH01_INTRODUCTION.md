@@ -6,11 +6,11 @@
 
 ## 1.1 Background
 
-The management of personal finances is a fundamental life skill, yet it remains one of the most neglected areas for individuals worldwide. Without a clear picture of income, expenses, savings, and debts, people struggle to make informed financial decisions, plan for the future, or handle financial emergencies.
+Sound personal finance management — tracking income, expenses, savings, and debts — is a prerequisite for informed financial decision-making. Yet many individuals, particularly in developing economies, have no structured tool for doing so.
 
 In Nepal, the situation presents unique challenges:
 
-- **Rapid digital growth:** Nepal's internet penetration surpassed 75% in 2024 and smartphone usage continues to climb, bringing millions of new users online who need accessible financial tools.
+- **Rapid digital growth:** Nepal's internet penetration surpassed 75% in 2024 [SOURCE NEEDED] and smartphone usage continues to climb, bringing new users online who need accessible financial tools.
 - **Expanding digital banking:** Connectips, eSewa, Khalti, and bank mobile applications have dramatically increased digital transaction volumes, yet a unified view of personal finances across these services is absent.
 - **Limited local tools:** Most widely-used finance apps (Mint, YNAB, Money Manager) are designed for USD/EUR contexts, lack NPR support, require subscriptions, or are unavailable on local app stores.
 - **Financial literacy gap:** Many young Nepali professionals have no structured way to track spending categories, set savings goals, or understand where their money goes each month.

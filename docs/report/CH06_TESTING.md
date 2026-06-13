@@ -6,7 +6,7 @@
 
 ## 6.1 Introduction
 
-Software quality assurance is the systematic process of verifying that a system behaves correctly, reliably, and securely across the full range of conditions it is likely to encounter. For an application that manages personal financial data, correctness is especially critical — an error in a balance calculation, a gap in access control, or a flaw in authentication could have real financial consequences for users. This chapter describes the testing strategy employed throughout the development of Finance Tracker, the methods used at each level of the system, and the quality outcomes achieved.
+For an application that manages personal financial data, correctness is especially critical. An error in a balance calculation, a gap in access control, or a flaw in authentication could have direct financial consequences for users. This chapter describes the testing strategy employed throughout the development of Finance Tracker, the methods used at each level of the system, and the quality outcomes achieved.
 
 A total of **168 automated tests** were written and maintained across three distinct testing layers.
 
@@ -211,7 +211,7 @@ Beyond the automated test suite, several additional practices were maintained th
 
 ## 6.9 Summary
 
-Finance Tracker achieved comprehensive, three-layer automated testing totalling 168 tests. Backend integration tests verify all service endpoints and business logic, with particular attention to security boundaries, financial calculation accuracy, and cross-user data isolation. Frontend unit tests confirm that service functions and interface components behave correctly in isolation. End-to-end browser tests verify that complete user journeys function correctly in a real application environment. All tests execute automatically on each code change, providing continuous quality assurance throughout the development lifecycle.
+Finance Tracker achieved comprehensive, three-layer automated testing totalling 168 tests. Backend integration tests verify all service endpoints and business logic, with particular attention to security boundaries, financial calculation accuracy, and cross-user data isolation. Frontend unit tests confirm that service functions and interface components behave correctly in isolation. End-to-end browser tests verify that complete user journeys function correctly in a real application environment. All tests execute automatically on each code change.
 
 Chapter 7 presents the completed system against its original objectives, covering performance observations, security validation, and known limitations.
 

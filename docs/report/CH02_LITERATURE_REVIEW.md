@@ -6,7 +6,7 @@
 
 ## 2.1 Overview
 
-This chapter surveys the existing body of knowledge and commercial landscape relevant to personal finance management systems. It covers foundational financial management theory, a comparative analysis of existing tools, the Nepal fintech ecosystem, and key software engineering concepts that underpin the technical choices made in this project.
+This chapter situates Finance Tracker within its theoretical, competitive, and technological context. It covers foundational personal finance theory, a comparative analysis of existing tools, the Nepal fintech ecosystem, and the software engineering concepts that informed the project's technical choices.
 
 ---
 
@@ -22,13 +22,9 @@ Personal finance management (PFM) is the process of planning, saving, investing,
 
 ### 2.2.2 Behavioural Finance Insights
 
-Research in behavioural economics (Thaler & Sunstein, 2008; Kahneman, 2011) consistently shows that:
+Research in behavioural economics identifies several tendencies with direct relevance to PFM tool design. Thaler & Sunstein (2008) demonstrate that individuals make systematically suboptimal financial decisions when feedback is delayed or opaque; real-time visibility of spending patterns counteracts this. Kahneman (2011) shows that intuitive (System 1) thinking leads to consistent underestimation of discretionary expenditure [SOURCE NEEDED — specific figure], while deliberate tracking shifts users toward reflective (System 2) decision-making. Automated savings mechanisms, which reduce the need for active decision-making, are shown to increase savings rates (Thaler & Sunstein, 2008).
 
-- People systematically underestimate discretionary spending by 20-30%.
-- Real-time feedback on spending reduces impulse purchases.
-- Automated savings (recurring transactions) increase savings rates.
-
-Finance Tracker addresses all three by making spending visible (dashboards), immediate (real-time balance updates), and automatable (recurring transaction scheduler).
+Finance Tracker addresses each of these: spending is made visible through dashboards and category charts; balance updates are immediate upon each transaction entry; and recurring transactions automate the savings and expense commitments that benefit from reduced decision friction.
 
 ### 2.2.3 Financial Technology (Fintech) Definition
 
@@ -60,7 +56,7 @@ The Financial Stability Board (2017) defines FinTech as "technology-enabled inno
 ### 2.3.2 Key Observations
 
 1. **Mint's shutdown (January 2024)** left a significant gap in the free PFM market, affecting millions of users globally. This validates the demand for an open-source alternative.
-2. **YNAB's pricing** ($179.99/year) is prohibitive for students and users in developing economies.
+2. **YNAB's pricing** ($14.99/month, billed monthly) is prohibitive for students and users in developing economies.
 3. **Mobile-only apps** (Money Manager, Spendee) do not cater to desktop power users or developers who prefer web interfaces.
 4. **None of the major tools are self-hostable**, creating data-sovereignty concerns especially relevant in Nepal where local data residency is preferred.
 5. **NPR support** is an afterthought in all international tools; Finance Tracker makes NPR the system default.
@@ -82,17 +78,17 @@ Finance Tracker occupies a unique niche: a modern web-first, Docker-deployable, 
 
 ### 2.4.1 Digital Payments Landscape
 
-Nepal's digital payments sector has grown rapidly:
+Nepal's digital payments sector has expanded significantly over the past decade:
 
-- **eSewa** (launched 2009) and **Khalti** (launched 2017) are the dominant mobile wallets with millions of registered users.
+- **eSewa** (launched 2009) and **Khalti** (launched 2017) are the dominant mobile wallets [SOURCE NEEDED — registered user counts].
 - **ConnectIPS** (Nepal Clearing House Ltd., 2024) enables real-time interbank transfers.
 - **Nepal Rastra Bank (NRB)** issued a Payment System Directive in 2019 and has progressively updated regulations to accommodate digital finance.
-- QR-code payments (NEPALPAY QR) are now accepted by over 100,000 merchants nationally.
+- QR-code payments (NEPALPAY QR) are accepted by merchants nationwide [SOURCE NEEDED — merchant count].
 
 ### 2.4.2 Challenges in Nepali Financial Context
 
 1. **Multi-account fragmentation:** A typical Nepali professional may have accounts at 2–3 banks, an eSewa/Khalti wallet, and cash — Finance Tracker aggregates all of these.
-2. **Salary in NPR, remittances in USD/AED:** Multi-currency support is essential given Nepal's large remittance economy (remittances constituted ~27% of GDP in 2023).
+2. **Salary in NPR, remittances in USD/AED:** Multi-currency support is essential given Nepal's large remittance economy (remittances constituted approximately 27% of GDP in 2023 [SOURCE NEEDED — World Bank or NRB citation]).
 3. **Limited credit card penetration:** Cash and debit transactions dominate. Finance Tracker supports all transaction types without forcing credit-card-centric workflows.
 4. **Low financial literacy:** Visual dashboards and budget alerts educate users about their financial habits incrementally.
 
@@ -106,7 +102,7 @@ Nepal Rastra Bank (NRB) regulations relevant to a PFM tool:
 
 ### 2.4.4 Market Opportunity
 
-Given approximately 11 million smartphone users in Nepal (NTA, 2024) and a 35% urban internet penetration rate among working-age adults, even a 1% adoption rate would represent over 100,000 potential users — a sizeable user base for an open-source project.
+Given approximately 11 million smartphone users in Nepal (NTA, 2024 [SOURCE NEEDED — full report citation]) and an estimated urban internet penetration rate among working-age adults [SOURCE NEEDED], even a 1% adoption rate would represent over 100,000 potential users.
 
 ---
 
@@ -159,14 +155,14 @@ This distribution ensures that most defects are caught quickly and cheaply at th
 
 ## 2.6 Summary
 
-This chapter has established the theoretical, competitive, and technological context for Finance Tracker:
+The review of PFM theory, competing tools, Nepal's fintech context, and relevant software engineering concepts yields four conclusions that directly shaped the project's design:
 
-- PFM theory validates the need for budgeting, categorisation, and recurring automation features.
-- Competitive analysis reveals a gap for a free, self-hostable, NPR-native web PFM tool.
-- Nepal's growing fintech ecosystem creates a genuine, underserved market.
-- Available open-source technologies provide a production-grade foundation that is suitable for a student-scale project yet scalable to real-world deployment.
+- Budgeting, categorisation, and recurring automation are the core features a PFM tool must support, as established by Ramsey (2003), Pyhrr (1970), and behavioural economics research.
+- No free, self-hostable, NPR-native web PFM tool currently exists; Finance Tracker targets this gap explicitly.
+- Nepal's expanding digital payments ecosystem and remittance economy create concrete demand for a locally relevant tool.
+- The chosen open-source technology stack (Spring Boot, React, MySQL, Docker) provides a production-grade foundation appropriate for this project's scope and future growth.
 
-The next chapter translates these findings into detailed system requirements.
+Chapter 3 translates these findings into formal system requirements.
 
 ---
 

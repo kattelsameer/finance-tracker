@@ -61,7 +61,7 @@ This chapter presents the outcomes of the Finance Tracker project, comparing del
 | Metric | Planned | Actual |
 |--------|---------|--------|
 | Pages | 12 | **14** |
-| Components | "reusable" | **35+** |
+| Components | "reusable" | **50+** |
 | Service files | Not specified | **15** |
 | Custom hooks | Not specified | **7** |
 
@@ -185,7 +185,7 @@ Referring back to Table 2.1, Finance Tracker compares favourably:
 
 | Dimension | Finance Tracker | Best Competitor |
 |-----------|----------------|----------------|
-| **Cost** | Free (open source) | YNAB ($15/month) |
+| **Cost** | Free (open source) | YNAB ($14.99/month) |
 | **Self-hostable** | ✅ Docker | ❌ None |
 | **NPR native** | ✅ Default currency | ❌ Manual only |
 | **Data sovereignty** | ✅ Your server | ❌ US/EU cloud |

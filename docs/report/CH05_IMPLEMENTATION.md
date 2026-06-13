@@ -6,7 +6,7 @@
 
 ## 5.1 Introduction
 
-This chapter describes how the Finance Tracker system was built, explaining the reasoning and approach behind each major implementation decision. Rather than presenting source code, the focus here is on how the system operates, what principles guided the engineering choices, and what challenges arose during development. The chapter follows the sequence in which work was carried out: database structure first, then server-side logic, then the user interface.
+This chapter describes the implementation of Finance Tracker: the reasoning behind each major technical decision and the challenges that arose during development. Rather than presenting source code, the focus is on how the system operates and what principles guided the engineering choices. The chapter follows the sequence in which work was carried out: database structure first, then server-side logic, then the user interface.
 
 ---
 
@@ -19,7 +19,7 @@ Development followed an **iterative, feature-driven approach**, where each new f
 3. **Build the user interface** — create screens and forms that expose the underlying logic to the user.
 4. **Verify with tests** — automated tests confirm the feature works correctly before development moves on.
 
-This database-first discipline ensures that the underlying data structure is deliberate and well-formed, rather than retrofitted around hastily written code. All changes to the database schema were managed through numbered migration scripts, providing a clear, auditable history of every structural change made during the project.
+This database-first discipline ensures that the underlying data structure is explicitly designed before application code is written, rather than retrofitted around it. All changes to the database schema were managed through numbered migration scripts, providing a clear, auditable history of every structural change made during the project.
 
 **Table 5.1 — Development Tools and Purposes**
 
@@ -104,7 +104,7 @@ V20 NPR default for accounts/transactions ────────────�
 
 ### 5.4.1 Layered Architecture
 
-The server-side application is structured around four clearly separated layers. This architectural pattern, well-established in enterprise software design (Fowler, 2002), ensures that each layer has a single, well-defined responsibility and interacts only with the layer directly adjacent to it:
+The server-side application is structured around four clearly separated layers. This architectural pattern (Fowler, 2002) ensures that each layer has a single, well-defined responsibility and interacts only with the layer directly adjacent to it:
 
 **Table 5.3 — Backend Application Layers**
 

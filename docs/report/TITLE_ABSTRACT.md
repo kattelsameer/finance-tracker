@@ -67,11 +67,11 @@ This is to certify that the project entitled **"Finance Tracker — Personal Fin
 
 ## Acknowledgements
 
-First and foremost, I would like to express my sincere gratitude to my supervisor, **[Supervisor Name — Placeholder]**, for their invaluable guidance, constructive feedback, and encouragement throughout the development of this project.
+I thank my supervisor, **[Supervisor Name — Placeholder]**, for their guidance, feedback, and encouragement throughout this project.
 
-I am deeply grateful to the faculty members of the **[Department Name — Placeholder]** for their academic support and for fostering a learning environment that encouraged practical, industry-relevant projects.
+I am grateful to the faculty members of the **[Department Name — Placeholder]** for their academic support and for encouraging practical, industry-relevant projects.
 
-My heartfelt thanks go to my family and friends for their unwavering moral support and patience during the long development and documentation phases of this work.
+I thank my family and friends for their support and patience during the development and documentation phases of this work.
 
 I would also like to acknowledge the open-source communities behind **Spring Boot**, **React**, **MySQL**, **Flyway**, **TanStack Query**, **Tailwind CSS**, and all other libraries used in this project. Their collective contributions made this system possible.
 
@@ -87,9 +87,9 @@ Finally, I thank **GitHub** and all AI-assisted coding tools that helped acceler
 
 **Methodology:** Development followed an iterative, feature-driven approach in which each functional area progressed through database design, server-side implementation, user interface development, and automated testing before work on the next feature began. The backend exposes a structured REST API secured by industry-standard token-based authentication with anti-forgery protection. The frontend is a component-based single-page application incorporating schema-validated forms and server-state caching for a responsive user experience. Schema changes are managed through twenty incremental, versioned migration scripts, ensuring the database structure is reproducible across all deployment environments. The entire system is packaged for portable container deployment.
 
-**Results:** All twelve originally planned objectives were delivered, with two additional features — advanced search with saved queries and a multi-currency framework — implemented beyond the original scope. The system encompasses seventy-three API endpoints, fifteen database tables, and thirty-five reusable interface components. A suite of 168 automated tests — comprising backend integration tests, frontend unit tests, and browser-based end-to-end tests — executes automatically on every code change. All seven security requirements were verified, and observed response times fell within the two-second threshold defined in the non-functional requirements.
+**Results:** All twelve originally planned objectives were delivered, with two additional features — advanced search with saved queries and a multi-currency framework — implemented beyond the original scope. The system encompasses seventy-three API endpoints, fifteen database tables, and fifty reusable interface components. A suite of 168 automated tests — comprising backend integration tests, frontend unit tests, and browser-based end-to-end tests — executes automatically on every code change. All seven security requirements were verified, and observed response times fell within the two-second threshold defined in the non-functional requirements.
 
-**Conclusion:** Finance Tracker demonstrates that a secure, feature-complete personal finance management system can be built at student project scale using open-source technologies. The system is well-positioned for community adoption in Nepal and comparable emerging markets, and provides a clear architectural reference for future projects in the domain. Identified avenues for future development include a native mobile application, live exchange rate integration, and direct bank data feed connectivity.
+**Conclusion:** Finance Tracker demonstrates that a secure, feature-complete personal finance management system can be built at student project scale using open-source technologies. The architecture — a containerised three-tier application with incremental schema migrations and three-layer automated testing — is directly replicable in future projects targeting Nepal or comparable emerging markets. Identified avenues for future development include a native mobile application, live exchange rate integration, and direct bank data feed connectivity.
 
 **Keywords:** Personal Finance Management, Web Application, Nepal, Nepali Rupee, REST API, Token-Based Authentication, Relational Database, Container Deployment, Budget Tracking, Financial Reporting
 
